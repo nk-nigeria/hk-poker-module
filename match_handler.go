@@ -32,11 +32,12 @@ const (
 
 	tickRate = 5
 
-	maxEmptySec = 30
+	maxEmptySec = 60 * 5
 
 	delayBetweenGamesSec = 5
 	turnTimeFastSec      = 10
 	turnTimeNormalSec    = 20
+	maxPlayer            = 4
 )
 
 var winningPositions = [][]int32{
@@ -54,8 +55,9 @@ var winningPositions = [][]int32{
 var _ runtime.Match = &MatchHandler{}
 
 type MatchLabel struct {
-	Open int `json:"open"`
-	Fast int `json:"fast"`
+	Open int32  `json:"open"`
+	Bet  int32  `json:"bet"`
+	Code string `json:"code"`
 }
 
 type MatchHandler struct {
@@ -75,51 +77,53 @@ type MatchState struct {
 
 	// True if there's a game currently in progress.
 	playing bool
-	// Current state of the board.
-	board []api.Mark
 	// Mark assignments to player user IDs.
-	marks map[string]api.Mark
+	cards map[string]api.ListCard
 	// Whose turn it currently is.
-	mark api.Mark
+	turn string
 	// Ticks until they must submit their move.
 	deadlineRemainingTicks int64
 	// The winner of the current game.
-	winner api.Mark
-	// The winner positions.
-	winnerPositions []int32
+	result map[string]int
+	//// The winner positions.
+	//winnerPositions []int32
 	// Ticks until the next game starts, if applicable.
 	nextGameRemainingTicks int64
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
-	fast, ok := params["fast"].(bool)
+	logger.Info("match init: %v", params)
+	bet, ok := params["bet"].(int32)
 	if !ok {
-		logger.Error("invalid match init parameter \"fast\"")
+		logger.Error("invalid match init parameter \"bet\"")
 		return nil, 0, ""
 	}
 
 	label := &MatchLabel{
 		Open: 1,
+		Bet:  bet,
+		Code: "blackjack",
 	}
-	if fast {
-		label.Fast = 1
-	}
+
 	labelJSON, err := json.Marshal(label)
 	if err != nil {
 		logger.WithField("error", err).Error("match init failed")
 		labelJSON = []byte("{}")
 	}
 
-	return &MatchState{
-		random: rand.New(rand.NewSource(time.Now().UnixNano())),
-		label:  label,
+	logger.Info("match init label=", string(labelJSON))
 
-		presences: make(map[string]runtime.Presence, 2),
+	return &MatchState{
+		random:    rand.New(rand.NewSource(time.Now().UnixNano())),
+		label:     label,
+		playing:   false,
+		presences: make(map[string]runtime.Presence, maxPlayer),
 	}, tickRate, string(labelJSON)
 }
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
 	s := state.(*MatchState)
+	logger.Info("match join attempt, state=%v, meta=%v", s, metadata)
 
 	// Check if it's a user attempting to rejoin after a disconnect.
 	if presence, ok := s.presences[presence.GetUserId()]; ok {
@@ -134,7 +138,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	}
 
 	// Check if match is full.
-	if len(s.presences)+s.joinsInProgress >= 2 {
+	if len(s.presences)+s.joinsInProgress >= maxPlayer {
 		return s, false, "match full"
 	}
 
@@ -145,7 +149,8 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 
 func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences []runtime.Presence) interface{} {
 	s := state.(*MatchState)
-	t := time.Now().UTC()
+	logger.Info("match join, state=%v, presences=%v", s, presences)
+	//t := time.Now().UTC()
 
 	for _, presence := range presences {
 		s.emptyTicks = 0
@@ -155,25 +160,25 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		// Check if we must send a message to this user to update them on the current game state.
 		var opCode api.OpCode
 		var msg proto.Message
-		if s.playing {
-			// There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
-			opCode = api.OpCode_OPCODE_UPDATE
-			msg = &api.Update{
-				Board:    s.board,
-				Mark:     s.mark,
-				Deadline: t.Add(time.Duration(s.deadlineRemainingTicks/tickRate) * time.Second).Unix(),
-			}
-		} else if s.board != nil && s.marks != nil && s.marks[presence.GetUserId()] > api.Mark_MARK_UNSPECIFIED {
-			// There's no game in progress but we still have a completed game that the user was part of.
-			// They likely disconnected before the game ended, and have since forfeited because they took too long to return.
-			opCode = api.OpCode_OPCODE_DONE
-			msg = &api.Done{
-				Board:           s.board,
-				Winner:          s.winner,
-				WinnerPositions: s.winnerPositions,
-				NextGameStart:   t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
-			}
-		}
+		//if s.playing {
+		//	// There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
+		//	opCode = api.OpCode_OPCODE_UPDATE
+		//	msg = &api.Update{
+		//		Board:    s.board,
+		//		Mark:     s.mark,
+		//		Deadline: t.Add(time.Duration(s.deadlineRemainingTicks/tickRate) * time.Second).Unix(),
+		//	}
+		//} else if s.board != nil && s.marks != nil && s.marks[presence.GetUserId()] > api.Mark_MARK_UNSPECIFIED {
+		//	// There's no game in progress but we still have a completed game that the user was part of.
+		//	// They likely disconnected before the game ended, and have since forfeited because they took too long to return.
+		//	opCode = api.OpCode_OPCODE_DONE
+		//	msg = &api.Done{
+		//		Board:           s.board,
+		//		Winner:          s.winner,
+		//		WinnerPositions: s.winnerPositions,
+		//		NextGameStart:   t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
+		//	}
+		//}
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
 		if msg != nil {
@@ -203,6 +208,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 
 func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences []runtime.Presence) interface{} {
 	s := state.(*MatchState)
+	logger.Info("match leave, state=%v, presences=%v", s, presences)
 
 	for _, presence := range presences {
 		s.presences[presence.GetUserId()] = nil
@@ -213,6 +219,7 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*MatchState)
+	logger.Info("match loop, state=%v, messages=%v", s, messages)
 
 	if len(s.presences)+s.joinsInProgress == 0 {
 		s.emptyTicks++
@@ -222,154 +229,156 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			return nil
 		}
 	}
-
-	t := time.Now().UTC()
-
-	// If there's no game in progress check if we can (and should) start one!
-	if !s.playing {
-		// Between games any disconnected users are purged, there's no in-progress game for them to return to anyway.
-		for userID, presence := range s.presences {
-			if presence == nil {
-				delete(s.presences, userID)
-			}
-		}
-
-		// Check if we need to update the label so the match now advertises itself as open to join.
-		if len(s.presences) < 2 && s.label.Open != 1 {
-			s.label.Open = 1
-			if labelJSON, err := json.Marshal(s.label); err != nil {
-				logger.Error("error encoding label: %v", err)
-			} else {
-				if err := dispatcher.MatchLabelUpdate(string(labelJSON)); err != nil {
-					logger.Error("error updating label: %v", err)
-				}
-			}
-		}
-
-		// Check if we have enough players to start a game.
-		if len(s.presences) < 2 {
-			return s
-		}
-
-		// Check if enough time has passed since the last game.
-		if s.nextGameRemainingTicks > 0 {
-			s.nextGameRemainingTicks--
-			return s
-		}
-
-		// We can start a game! Set up the game state and assign the marks to each player.
-		s.playing = true
-		s.board = make([]api.Mark, 9, 9)
-		s.marks = make(map[string]api.Mark, 2)
-		marks := []api.Mark{api.Mark_MARK_X, api.Mark_MARK_O}
-		for userID := range s.presences {
-			s.marks[userID] = marks[0]
-			marks = marks[1:]
-		}
-		s.mark = api.Mark_MARK_X
-		s.winner = api.Mark_MARK_UNSPECIFIED
-		s.winnerPositions = nil
-		s.deadlineRemainingTicks = calculateDeadlineTicks(s.label)
-		s.nextGameRemainingTicks = 0
-
-		// Notify the players a new game has started.
-		buf, err := m.marshaler.Marshal(&api.Start{
-			Board:    s.board,
-			Marks:    s.marks,
-			Mark:     s.mark,
-			Deadline: t.Add(time.Duration(s.deadlineRemainingTicks/tickRate) * time.Second).Unix(),
-		})
-		if err != nil {
-			logger.Error("error encoding message: %v", err)
-		} else {
-			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_START), buf, nil, nil, true)
-		}
-		return s
-	}
-
+	//
+	//t := time.Now().UTC()
+	//
+	//// If there's no game in progress check if we can (and should) start one!
+	//if !s.playing {
+	//	// Between games any disconnected users are purged, there's no in-progress game for them to return to anyway.
+	//	for userID, presence := range s.presences {
+	//		if presence == nil {
+	//			delete(s.presences, userID)
+	//		}
+	//	}
+	//
+	//	// Check if we need to update the label so the match now advertises itself as open to join.
+	//	if len(s.presences) < 2 && s.label.Open != 1 {
+	//		s.label.Open = 1
+	//		if labelJSON, err := json.Marshal(s.label); err != nil {
+	//			logger.Error("error encoding label: %v", err)
+	//		} else {
+	//			if err := dispatcher.MatchLabelUpdate(string(labelJSON)); err != nil {
+	//				logger.Error("error updating label: %v", err)
+	//			}
+	//		}
+	//	}
+	//
+	//	// Check if we have enough players to start a game.
+	//	if len(s.presences) < 2 {
+	//		return s
+	//	}
+	//
+	//	// Check if enough time has passed since the last game.
+	//	if s.nextGameRemainingTicks > 0 {
+	//		s.nextGameRemainingTicks--
+	//		return s
+	//	}
+	//
+	//	// We can start a game! Set up the game state and assign the marks to each player.
+	//	s.playing = true
+	//	s.board = make([]api.Mark, 9, 9)
+	//	s.marks = make(map[string]api.Mark, 2)
+	//	marks := []api.Mark{api.Mark_MARK_X, api.Mark_MARK_O}
+	//	for userID := range s.presences {
+	//		s.marks[userID] = marks[0]
+	//		marks = marks[1:]
+	//	}
+	//	s.mark = api.Mark_MARK_X
+	//	s.winner = api.Mark_MARK_UNSPECIFIED
+	//	s.winnerPositions = nil
+	//	s.deadlineRemainingTicks = calculateDeadlineTicks(s.label)
+	//	s.nextGameRemainingTicks = 0
+	//
+	//	// Notify the players a new game has started.
+	//	buf, err := m.marshaler.Marshal(&api.Start{
+	//		Board:    s.board,
+	//		Marks:    s.marks,
+	//		Mark:     s.mark,
+	//		Deadline: t.Add(time.Duration(s.deadlineRemainingTicks/tickRate) * time.Second).Unix(),
+	//	})
+	//	if err != nil {
+	//		logger.Error("error encoding message: %v", err)
+	//	} else {
+	//		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_START), buf, nil, nil, true)
+	//	}
+	//	return s
+	//}
+	//
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
 	for _, message := range messages {
 		switch api.OpCode(message.GetOpCode()) {
-		case api.OpCode_OPCODE_MOVE:
-			mark := s.marks[message.GetUserId()]
-			if s.mark != mark {
-				// It is not this player's turn.
-				_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
-				continue
-			}
+		case api.OpCode_OPCODE_DEAL:
+			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DEAL_UPDATE), nil, []runtime.Presence{message}, nil, true)
+		case api.OpCode_OPCODE_CHOICE:
+			//mark := s.marks[message.GetUserId()]
+			//if s.mark != mark {
+			//	// It is not this player's turn.
+			//	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
+			//	continue
+			//}
 
-			msg := &api.Move{}
+			msg := &api.Choice{}
 			err := m.unmarshaler.Unmarshal(message.GetData(), msg)
 			if err != nil {
 				// Client sent bad data.
 				_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
 				continue
 			}
-			if msg.Position < 0 || msg.Position > 8 || s.board[msg.Position] != api.Mark_MARK_UNSPECIFIED {
-				// Client sent a position outside the board, or one that has already been played.
-				_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
-				continue
-			}
-
-			// Update the game state.
-			s.board[msg.Position] = mark
-			switch mark {
-			case api.Mark_MARK_X:
-				s.mark = api.Mark_MARK_O
-			case api.Mark_MARK_O:
-				s.mark = api.Mark_MARK_X
-			}
-			s.deadlineRemainingTicks = calculateDeadlineTicks(s.label)
-
-			// Check if game is over through a winning move.
-		winCheck:
-			for _, winningPosition := range winningPositions {
-				for _, position := range winningPosition {
-					if s.board[position] != mark {
-						continue winCheck
-					}
-				}
-
-				// Update state to reflect the winner, and schedule the next game.
-				s.winner = mark
-				s.winnerPositions = winningPosition
-				s.playing = false
-				s.deadlineRemainingTicks = 0
-				s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
-			}
-			// Check if game is over because no more moves are possible.
-			tie := true
-			for _, mark := range s.board {
-				if mark == api.Mark_MARK_UNSPECIFIED {
-					tie = false
-					break
-				}
-			}
-			if tie {
-				// Update state to reflect the tie, and schedule the next game.
-				s.playing = false
-				s.deadlineRemainingTicks = 0
-				s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
-			}
-
+			//		if msg.Position < 0 || msg.Position > 8 || s.board[msg.Position] != api.Mark_MARK_UNSPECIFIED {
+			//			// Client sent a position outside the board, or one that has already been played.
+			//			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
+			//			continue
+			//		}
+			//
+			//		// Update the game state.
+			//		s.board[msg.Position] = mark
+			//		switch mark {
+			//		case api.Mark_MARK_X:
+			//			s.mark = api.Mark_MARK_O
+			//		case api.Mark_MARK_O:
+			//			s.mark = api.Mark_MARK_X
+			//		}
+			//		s.deadlineRemainingTicks = calculateDeadlineTicks(s.label)
+			//
+			//		// Check if game is over through a winning move.
+			//	winCheck:
+			//		for _, winningPosition := range winningPositions {
+			//			for _, position := range winningPosition {
+			//				if s.board[position] != mark {
+			//					continue winCheck
+			//				}
+			//			}
+			//
+			//			// Update state to reflect the winner, and schedule the next game.
+			//			s.winner = mark
+			//			s.winnerPositions = winningPosition
+			//			s.playing = false
+			//			s.deadlineRemainingTicks = 0
+			//			s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
+			//		}
+			//		// Check if game is over because no more moves are possible.
+			//		tie := true
+			//		for _, mark := range s.board {
+			//			if mark == api.Mark_MARK_UNSPECIFIED {
+			//				tie = false
+			//				break
+			//			}
+			//		}
+			//		if tie {
+			//			// Update state to reflect the tie, and schedule the next game.
+			//			s.playing = false
+			//			s.deadlineRemainingTicks = 0
+			//			s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
+			//		}
+			//
 			var opCode api.OpCode
 			var outgoingMsg proto.Message
-			if s.playing {
-				opCode = api.OpCode_OPCODE_UPDATE
-				outgoingMsg = &api.Update{
-					Board:    s.board,
-					Mark:     s.mark,
-					Deadline: t.Add(time.Duration(s.deadlineRemainingTicks/tickRate) * time.Second).Unix(),
-				}
-			} else {
-				opCode = api.OpCode_OPCODE_DONE
-				outgoingMsg = &api.Done{
-					Board:           s.board,
-					Winner:          s.winner,
-					WinnerPositions: s.winnerPositions,
-					NextGameStart:   t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
-				}
-			}
+			//if s.playing {
+			//	opCode = api.OpCode_OPCODE_UPDATE
+			//	outgoingMsg = &api.Update{
+			//		Board:    s.board,
+			//		Mark:     s.mark,
+			//		Deadline: t.Add(time.Duration(s.deadlineRemainingTicks/tickRate) * time.Second).Unix(),
+			//	}
+			//} else {
+			//	opCode = api.OpCode_OPCODE_DONE
+			//	outgoingMsg = &api.Done{
+			//		Board:           s.board,
+			//		Winner:          s.winner,
+			//		WinnerPositions: s.winnerPositions,
+			//		NextGameStart:   t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
+			//	}
+			//}
 
 			buf, err := m.marshaler.Marshal(outgoingMsg)
 			if err != nil {
@@ -382,46 +391,47 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
 		}
 	}
-
-	// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
-	if s.playing {
-		s.deadlineRemainingTicks--
-		if s.deadlineRemainingTicks <= 0 {
-			// The player has run out of time to submit their move.
-			s.playing = false
-			switch s.mark {
-			case api.Mark_MARK_X:
-				s.winner = api.Mark_MARK_O
-			case api.Mark_MARK_O:
-				s.winner = api.Mark_MARK_X
-			}
-			s.deadlineRemainingTicks = 0
-			s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
-
-			buf, err := m.marshaler.Marshal(&api.Done{
-				Board:         s.board,
-				Winner:        s.winner,
-				NextGameStart: t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
-			})
-			if err != nil {
-				logger.Error("error encoding message: %v", err)
-			} else {
-				_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DONE), buf, nil, nil, true)
-			}
-		}
-	}
+	//
+	//// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
+	//if s.playing {
+	//	s.deadlineRemainingTicks--
+	//	if s.deadlineRemainingTicks <= 0 {
+	//		// The player has run out of time to submit their move.
+	//		s.playing = false
+	//		switch s.mark {
+	//		case api.Mark_MARK_X:
+	//			s.winner = api.Mark_MARK_O
+	//		case api.Mark_MARK_O:
+	//			s.winner = api.Mark_MARK_X
+	//		}
+	//		s.deadlineRemainingTicks = 0
+	//		s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
+	//
+	//		buf, err := m.marshaler.Marshal(&api.Done{
+	//			Board:         s.board,
+	//			Winner:        s.winner,
+	//			NextGameStart: t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
+	//		})
+	//		if err != nil {
+	//			logger.Error("error encoding message: %v", err)
+	//		} else {
+	//			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DONE), buf, nil, nil, true)
+	//		}
+	//	}
+	//}
 
 	return s
 }
 
 func (m *MatchHandler) MatchTerminate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, graceSeconds int) interface{} {
+	logger.Info("match terminate, state=%v")
 	return state
 }
 
 func calculateDeadlineTicks(l *MatchLabel) int64 {
-	if l.Fast == 1 {
-		return turnTimeFastSec * tickRate
-	} else {
-		return turnTimeNormalSec * tickRate
-	}
+	//if l.Fast == 1 {
+	//	return turnTimeFastSec * tickRate
+	//} else {
+	return turnTimeNormalSec * tickRate
+	//}
 }

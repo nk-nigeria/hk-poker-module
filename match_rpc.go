@@ -26,6 +26,7 @@ import (
 
 func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
 	return func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
+		logger.Info("rpc find match: %v", payload)
 		_, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
 		if !ok {
 			return "", errNoUserIdFound
@@ -69,6 +70,39 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 			logger.Error("error marshaling response payload: %v", err.Error())
 			return "", errMarshal
 		}
+
+		return string(response), nil
+	}
+}
+
+func rpcCreateMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
+	return func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
+		logger.Info("rpc create match: %v", payload)
+
+		_, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
+		if !ok {
+			return "", errNoUserIdFound
+		}
+
+		request := &api.RpcCreateMatchRequest{}
+		if err := unmarshaler.Unmarshal([]byte(payload), request); err != nil {
+			return "", errUnmarshal
+		}
+
+		// No available matches found, create a new one.
+		matchID, err := nk.MatchCreate(ctx, moduleName, map[string]interface{}{"bet": request.Bet})
+		if err != nil {
+			logger.Error("error creating match: %v", err)
+			return "", errInternalError
+		}
+
+		response, err := marshaler.Marshal(&api.RpcCreateMatchResponse{MatchId: matchID})
+		if err != nil {
+			logger.Error("error marshaling response payload: %v", err.Error())
+			return "", errMarshal
+		}
+
+		logger.Info("create match response=", response)
 
 		return string(response), nil
 	}

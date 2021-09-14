@@ -17,8 +17,9 @@ var (
 )
 
 const (
-	rpcIdRewards   = "rewards"
-	rpcIdFindMatch = "find_match"
+	rpcIdRewards     = "rewards"
+	rpcIdFindMatch   = "find_match"
+	rpcIdCreateMatch = "create_match"
 )
 
 //noinspection GoUnusedExportedFunction
@@ -37,6 +38,10 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	//}
 
 	if err := initializer.RegisterRpc(rpcIdFindMatch, rpcFindMatch(marshaler, unmarshaler)); err != nil {
+		return err
+	}
+
+	if err := initializer.RegisterRpc(rpcIdCreateMatch, rpcCreateMatch(marshaler, unmarshaler)); err != nil {
 		return err
 	}
 

@@ -14,4 +14,5 @@
 
 package api
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative blackjackapi.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative blackjack_game_api.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative blackjack_match_api.proto
