@@ -42,7 +42,7 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 		if request.Fast {
 			fast = 1
 		}
-		query := fmt.Sprintf("+label.open:1 +label.fast:%d", fast)
+		query := fmt.Sprintf("+label.open:1 +label.code:%s +label.fast:%d", moduleName, fast)
 
 		matchIDs := make([]string, 0, 10)
 		matches, err := nk.MatchList(ctx, 10, true, "", nil, &maxSize, query)
@@ -57,7 +57,7 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 			}
 		} else {
 			// No available matches found, create a new one.
-			matchID, err := nk.MatchCreate(ctx, moduleName, map[string]interface{}{"fast": request.Fast})
+			matchID, err := nk.MatchCreate(ctx, moduleName, map[string]interface{}{"fast": request.Fast, "code": moduleName})
 			if err != nil {
 				logger.Error("error creating match: %v", err)
 				return "", errInternalError

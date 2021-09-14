@@ -1,1 +1,1 @@
-# mod-bing
+# module-blackjack

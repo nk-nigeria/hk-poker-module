@@ -1,5 +1,5 @@
-PROJECT_NAME=github.com/ciaolink-game-platform/cgp-bing-module
-APP_NAME=bing.so
+PROJECT_NAME=github.com/ciaolink-game-platform/cgp-blackjack-module
+APP_NAME=blackjack.so
 APP_PATH=$(PWD)
 
 build:
@@ -8,8 +8,3 @@ build:
 	
 sync:
 	rsync -aurv --delete ./bin/${APP_NAME} cgpdev:/root/cgp-server/data/modules/
-
-#buildplugin:
-#	go build --trimpath --buildmode=plugin -o ${APP_NAME} .
-#go mod vendor
-#DOCKER_BUILDKIT=0 docker build --build-arg appName=${APP_NAME} --target bin --output bin/ .

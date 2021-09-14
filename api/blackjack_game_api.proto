@@ -75,16 +75,18 @@ enum OpCode {
     OPCODE_START = 1;
     // Deal code.
     OPCODE_DEAL = 2;
+    // Deal update code.
+    OPCODE_DEAL_UPDATE = 3;
     // Update to the state of an ongoing round.
-    OPCODE_UPDATE = 3;
+    OPCODE_UPDATE = 4;
     // A game round has just completed.
-    OPCODE_DONE = 4;
+    OPCODE_DONE = 5;
     // A choice the player wishes to make and sends to the server.
-    OPCODE_CHOICE = 5;
+    OPCODE_CHOICE = 6;
     // Notify a user choice to other user.
-    OPCODE_CHOICE_UPDATE = 6;
+    OPCODE_CHOICE_UPDATE = 7;
     // Move was rejected.
-    OPCODE_REJECTED = 7;
+    OPCODE_REJECTED = 8;
 }
 
 // Message data sent by server to clients representing a new game round starting.
@@ -99,14 +101,25 @@ message Deal {
     repeated Card cards = 1;
 }
 
+message PresenceInfo {
+    string user_id = 1;
+    ListCard cards = 2;
+}
+
+message ListPresenceInfos {
+    repeated string PresenceInfo = 1;
+}
+
 // A game state update sent by the server to clients.
 message Update {
     // Whose turn it is to play.
-    string turn = 1;
-    // The card was hold by user
-    map<string, ListCard> user_cards = 2;
+    bool playing = 1;
+    // Whose turn it is to play.
+    string turn = 2;
+    // Whose turn it is to play.
+    ListPresenceInfos presence_infos = 3;
     // The deadline time by which the player must submit their choice, or forfeit.
-    int64 deadline = 3;
+    int64 deadline = 4;
 }
 
 // Complete game round with winner announcement.
