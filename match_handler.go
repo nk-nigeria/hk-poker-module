@@ -65,32 +65,6 @@ type MatchHandler struct {
 	unmarshaler *protojson.UnmarshalOptions
 }
 
-type MatchState struct {
-	random     *rand.Rand
-	label      *MatchLabel
-	emptyTicks int
-
-	// Currently connected users, or reserved spaces.
-	presences map[string]runtime.Presence
-	// Number of users currently in the process of connecting to the match.
-	joinsInProgress int
-
-	// True if there's a game currently in progress.
-	playing bool
-	// Mark assignments to player user IDs.
-	cards map[string]api.ListCard
-	// Whose turn it currently is.
-	turn string
-	// Ticks until they must submit their move.
-	deadlineRemainingTicks int64
-	// The winner of the current game.
-	result map[string]int
-	//// The winner positions.
-	//winnerPositions []int32
-	// Ticks until the next game starts, if applicable.
-	nextGameRemainingTicks int64
-}
-
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
 	logger.Info("match init: %v", params)
 	bet, ok := params["bet"].(int32)
@@ -158,29 +132,14 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		s.joinsInProgress--
 
 		// Check if we must send a message to this user to update them on the current game state.
-		var opCode api.OpCode
+		var opCode api.OpCodeUpdate
 		var msg proto.Message
-		//if s.playing {
-		//	// There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
-		//	opCode = api.OpCode_OPCODE_UPDATE
-		//	msg = &api.Update{
-		//		Board:    s.board,
-		//		Mark:     s.mark,
-		//		Deadline: t.Add(time.Duration(s.deadlineRemainingTicks/tickRate) * time.Second).Unix(),
-		//	}
-		//} else if s.board != nil && s.marks != nil && s.marks[presence.GetUserId()] > api.Mark_MARK_UNSPECIFIED {
-		//	// There's no game in progress but we still have a completed game that the user was part of.
-		//	// They likely disconnected before the game ended, and have since forfeited because they took too long to return.
-		//	opCode = api.OpCode_OPCODE_DONE
-		//	msg = &api.Done{
-		//		Board:           s.board,
-		//		Winner:          s.winner,
-		//		WinnerPositions: s.winnerPositions,
-		//		NextGameStart:   t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
-		//	}
-		//}
 
-		opCode = api.OpCode_OPCODE_UPDATE
+		opCode = api.OpCodeUpdate_OPCODE_UPDATE_PRESENCE
+		//msg = &api.UpdatePresence{
+		//	NewPresence: "",
+		//	Presences: s.presences,
+		//}
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
 		if msg != nil {
@@ -298,10 +257,10 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	//
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
 	for _, message := range messages {
-		switch api.OpCode(message.GetOpCode()) {
-		case api.OpCode_OPCODE_DEAL:
-			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DEAL_UPDATE), nil, []runtime.Presence{message}, nil, true)
-		case api.OpCode_OPCODE_CHOICE:
+		switch api.OpCodeRequest(message.GetOpCode()) {
+		case api.OpCodeRequest_OPCODE_REQUEST_NEW_GAME:
+			_ = dispatcher.BroadcastMessage(int64(api.OpCodeUpdate_OPCODE_UPDATE_DEAL), nil, []runtime.Presence{message}, nil, true)
+		case api.OpCodeRequest_OPCODE_REQUEST_ORGANIZE:
 			//mark := s.marks[message.GetUserId()]
 			//if s.mark != mark {
 			//	// It is not this player's turn.
@@ -309,11 +268,11 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			//	continue
 			//}
 
-			msg := &api.Choice{}
+			msg := &api.Organize{}
 			err := m.unmarshaler.Unmarshal(message.GetData(), msg)
 			if err != nil {
 				// Client sent bad data.
-				_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
+				_ = dispatcher.BroadcastMessage(int64(api.OpCodeUpdate_OPCODE_UPDATE_REJECTED), nil, []runtime.Presence{message}, nil, true)
 				continue
 			}
 			//		if msg.Position < 0 || msg.Position > 8 || s.board[msg.Position] != api.Mark_MARK_UNSPECIFIED {
@@ -363,7 +322,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			//			s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
 			//		}
 			//
-			var opCode api.OpCode
+			var opCode api.OpCodeUpdate
 			var outgoingMsg proto.Message
 			//if s.playing {
 			//	opCode = api.OpCode_OPCODE_UPDATE
@@ -390,7 +349,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			}
 		default:
 			// No other opcodes are expected from the client, so automatically treat it as an error.
-			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
+			_ = dispatcher.BroadcastMessage(int64(api.OpCodeUpdate_OPCODE_UPDATE_REJECTED), nil, []runtime.Presence{message}, nil, true)
 		}
 	}
 	//

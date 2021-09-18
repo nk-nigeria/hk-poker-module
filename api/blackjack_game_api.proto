@@ -68,76 +68,68 @@ enum ChoiceCode {
 }
 
 // The complete set of opcodes used for communication between clients and server.
-enum OpCode {
+enum OpCodeRequest {
     // No opcode specified. Unused.
     OPCODE_UNSPECIFIED = 0;
     // New game round starting.
-    OPCODE_START = 1;
-    // Deal code.
-    OPCODE_DEAL = 2;
-    // Deal update code.
-    OPCODE_DEAL_UPDATE = 3;
-    // Update to the state of an ongoing round.
-    OPCODE_UPDATE = 4;
-    // A game round has just completed.
-    OPCODE_DONE = 5;
-    // A choice the player wishes to make and sends to the server.
-    OPCODE_CHOICE = 6;
-    // Notify a user choice to other user.
-    OPCODE_CHOICE_UPDATE = 7;
-    // Move was rejected.
-    OPCODE_REJECTED = 8;
+    OPCODE_REQUEST_NEW_GAME = 1; //message NewGame
+    // Organize cards request
+    OPCODE_REQUEST_ORGANIZE = 2; //message Organize
+}
+
+// The complete set of opcodes used for communication between clients and server.
+enum OpCodeUpdate {
+    OPCODE_UPDATE_UNSPECIFIED = 0;
+    OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
+    OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
+    OPCODE_UPDATE_RESULT = 3; //message UpdateResult
+    // Request was rejected.
+    OPCODE_UPDATE_REJECTED = 8;
 }
 
 // Message data sent by server to clients representing a new game round starting.
-message Start {
-    // The dealer.
-    string dealer = 1;
+message NewGame {
 }
 
-// Message data sent by server to clients representing a new game round starting.
-message Deal {
+// Message data sent by server to clients representing the cards was dealt.
+message Organize {
     // The current state of the cards.
     repeated Card cards = 1;
 }
 
-message PresenceInfo {
-    string user_id = 1;
-    ListCard cards = 2;
-}
-
-message ListPresenceInfos {
-    repeated string PresenceInfo = 1;
-}
-
 // A game state update sent by the server to clients.
-message Update {
+message UpdatePresence {
     // Whose turn it is to play.
-    bool playing = 1;
-    // Whose turn it is to play.
-    string turn = 2;
-    // Whose turn it is to play.
-    ListPresenceInfos presence_infos = 3;
-    // The deadline time by which the player must submit their choice, or forfeit.
-    int64 deadline = 4;
+    string new_presence = 1;
+    repeated string presences = 2;
+}
+
+message PresenceCards {
+    string presence = 1;
+    repeated Card cards = 2;
 }
 
 // Complete game round with winner announcement.
-message Done {
+message UpdateDeal {
+    PresenceCards presence_card = 1;
+}
+
+message PairResult {
+    string presence1 = 1;
+    string presence2 = 2;
+
+    int32  first = 3;
+    int32  second = 4;
+    int32  third = 5;
+
+    int32  special1 = 6;
+    int32  special2 = 7;
+}
+
+// Complete game round with winner announcement.
+message UpdateResult {
     // The final state of the board.
-    map<string, ListCard> user_cards = 1;
-    // The winner of the game, if any. Unspecified if it's a draw.
-    repeated string winner = 2;
-    // Next round start time.
-    int64 next_game_start = 4;
-}
+    map<string, PresenceCards> presence_organizes = 1;
 
-// A player intends to make a move.
-message Choice {
-    ChoiceCode option = 1;
-}
-
-// A player intends to make a move.
-message ChoiceResult {
-    Card card = 1;
+    repeated PairResult results = 2;
 }
