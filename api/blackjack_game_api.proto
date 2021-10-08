@@ -82,26 +82,27 @@ enum OpCodeUpdate {
     OPCODE_UPDATE_UNSPECIFIED = 0;
     OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
     OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
-    OPCODE_UPDATE_RESULT = 3; //message UpdateResult
+    OPCODE_UPDATE_ORGANIZE_ACK = 3; //message UpdateDeal
+    OPCODE_UPDATE_RESULT = 4; //message UpdateResult
     // Request was rejected.
-    OPCODE_UPDATE_REJECTED = 8;
+    OPCODE_UPDATE_REJECTED = 5;
 }
 
-// Message data sent by server to clients representing a new game round starting.
+// Message data sent by client to server representing the cards was organize.
 message NewGame {
 }
 
-// Message data sent by server to clients representing the cards was dealt.
+// Message data sent by client to server representing the cards was organize.
 message Organize {
     // The current state of the cards.
-    repeated Card cards = 1;
+    ListCard cards = 1;
 }
 
-// A game state update sent by the server to clients.
+// Message data sent by server to clients representing the joining or leaving of presence
 message UpdatePresence {
-    // Whose turn it is to play.
-    string new_presence = 1;
-    repeated string presences = 2;
+    repeated string presences = 1;
+    string join_presence = 2;
+    string leave_presence = 3;
 }
 
 message PresenceCards {
