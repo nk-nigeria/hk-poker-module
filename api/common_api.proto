@@ -12,8 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+syntax = "proto3";
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative blackjack_game_api.proto
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative blackjack_match_api.proto
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative common_api.proto
+// The realtime protocol for the template match engine.
+package api;
+
+option go_package = "github.com/ciaolink-game-platform/cgp-common-module/api";
+
+message Game {
+    string code = 1;
+    bool active = 2;
+}
+
+message GameListRequest {
+}
+
+message GameListResponse {
+    repeated Game games = 1;
+}

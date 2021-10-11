@@ -2,7 +2,7 @@ FROM heroiclabs/nakama-pluginbuilder:3.4.0 AS builder
 
 ENV GO111MODULE on
 ENV CGO_ENABLED 1
-ENV GOPRIVATE "github.com/ciaolink-game-platform/cgp-bing-module"
+#ENV GOPRIVATE "github.com/ciaolink-game-platform/cgp-bing-module"
 
 WORKDIR /backend
 COPY . .

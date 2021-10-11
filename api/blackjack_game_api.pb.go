@@ -498,7 +498,7 @@ func (x *ListCard) GetCards() []*Card {
 	return nil
 }
 
-// Message data sent by server to clients representing a new game round starting.
+// Message data sent by client to server representing the cards was organize.
 type NewGame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -537,7 +537,7 @@ func (*NewGame) Descriptor() ([]byte, []int) {
 	return file_blackjack_game_api_proto_rawDescGZIP(), []int{2}
 }
 
-// Message data sent by server to clients representing the cards was dealt.
+// Message data sent by client to server representing the cards was organize.
 type Organize struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -586,13 +586,12 @@ func (x *Organize) GetCards() *ListCard {
 	return nil
 }
 
-// A game state update sent by the server to clients.
+// Message data sent by server to clients representing the joining or leaving of presence
 type UpdatePresence struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Whose turn it is to play.
 	Presences     []string `protobuf:"bytes,1,rep,name=presences,proto3" json:"presences,omitempty"`
 	JoinPresence  string   `protobuf:"bytes,2,opt,name=join_presence,json=joinPresence,proto3" json:"join_presence,omitempty"`
 	LeavePresence string   `protobuf:"bytes,3,opt,name=leave_presence,json=leavePresence,proto3" json:"leave_presence,omitempty"`
