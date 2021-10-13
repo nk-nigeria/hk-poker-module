@@ -27,6 +27,7 @@ func NewDeck() *Deck {
 		api.CardRank_RANK_10,
 		api.CardRank_RANK_J,
 		api.CardRank_RANK_Q,
+		api.CardRank_RANK_K,
 	}
 
 	suits := []api.CardSuit{
