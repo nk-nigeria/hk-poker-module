@@ -12,29 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package api
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/api"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/ciaolink-game-platform/cgp-blackjack-module/api/presenter"
+	"github.com/ciaolink-game-platform/cgp-blackjack-module/entity"
+	pb "github.com/ciaolink-game-platform/cgp-blackjack-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
-func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
+func RpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
 	return func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
 		logger.Info("rpc find match: %v", payload)
 		_, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
 		if !ok {
-			return "", errNoUserIdFound
+			return "", presenter.ErrNoUserIdFound
 		}
 
-		request := &api.RpcFindMatchRequest{}
+		request := &pb.RpcFindMatchRequest{}
 		if err := unmarshaler.Unmarshal([]byte(payload), request); err != nil {
-			return "", errUnmarshal
+			return "", presenter.ErrUnmarshal
 		}
 
 		maxSize := 1
@@ -42,13 +44,13 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 		//if request.Fast {
 		//	fast = 1
 		//}
-		query := fmt.Sprintf("+label.open:1 +label.code:%s +label.fast:%d", moduleName, fast)
+		query := fmt.Sprintf("+label.open:1 +label.code:%s +label.fast:%d", entity.ModuleName, fast)
 
 		matchIDs := make([]string, 0, 10)
 		matches, err := nk.MatchList(ctx, 10, true, "", nil, &maxSize, query)
 		if err != nil {
 			logger.Error("error listing matches: %v", err)
-			return "", errInternalError
+			return "", presenter.ErrInternalError
 		}
 		if len(matches) > 0 {
 			// There are one or more ongoing matches the user could join.
@@ -57,49 +59,49 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 			}
 		} else {
 			// No available matches found, create a new one.
-			matchID, err := nk.MatchCreate(ctx, moduleName, map[string]interface{}{"bet": request.Bet, "code": moduleName})
+			matchID, err := nk.MatchCreate(ctx, entity.ModuleName, map[string]interface{}{"bet": request.Bet, "code": entity.ModuleName})
 			if err != nil {
 				logger.Error("error creating match: %v", err)
-				return "", errInternalError
+				return "", presenter.ErrInternalError
 			}
 			matchIDs = append(matchIDs, matchID)
 		}
 
-		response, err := marshaler.Marshal(&api.RpcFindMatchResponse{MatchIds: matchIDs})
+		response, err := marshaler.Marshal(&pb.RpcFindMatchResponse{MatchIds: matchIDs})
 		if err != nil {
 			logger.Error("error marshaling response payload: %v", err.Error())
-			return "", errMarshal
+			return "", presenter.ErrMarshal
 		}
 
 		return string(response), nil
 	}
 }
 
-func rpcCreateMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
+func RpcCreateMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
 	return func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
 		logger.Info("rpc create match: %v", payload)
 
 		_, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
 		if !ok {
-			return "", errNoUserIdFound
+			return "", presenter.ErrNoUserIdFound
 		}
 
-		request := &api.RpcCreateMatchRequest{}
+		request := &pb.RpcCreateMatchRequest{}
 		if err := unmarshaler.Unmarshal([]byte(payload), request); err != nil {
-			return "", errUnmarshal
+			return "", presenter.ErrUnmarshal
 		}
 
 		// No available matches found, create a new one.
-		matchID, err := nk.MatchCreate(ctx, moduleName, map[string]interface{}{"bet": request.Bet})
+		matchID, err := nk.MatchCreate(ctx, entity.ModuleName, map[string]interface{}{"bet": request.Bet})
 		if err != nil {
 			logger.Error("error creating match: %v", err)
-			return "", errInternalError
+			return "", presenter.ErrInternalError
 		}
 
-		response, err := marshaler.Marshal(&api.RpcCreateMatchResponse{MatchId: matchID})
+		response, err := marshaler.Marshal(&pb.RpcCreateMatchResponse{MatchId: matchID})
 		if err != nil {
 			logger.Error("error marshaling response payload: %v", err.Error())
-			return "", errMarshal
+			return "", presenter.ErrMarshal
 		}
 
 		logger.Info("create match response=", response)

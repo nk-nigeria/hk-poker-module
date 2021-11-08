@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package proto
 
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative blackjack_game_api.proto
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative blackjack_match_api.proto

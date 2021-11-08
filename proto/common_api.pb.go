@@ -20,7 +20,7 @@
 
 // The realtime protocol for the template match engine.
 
-package api
+package proto
 
 import (
 	proto "github.com/golang/protobuf/proto"

@@ -1,33 +1,39 @@
-package main
+package entity
 
 import (
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/api"
+	pb "github.com/ciaolink-game-platform/cgp-blackjack-module/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"math/rand"
 )
 
+type MatchLabel struct {
+	Open int32  `json:"open"`
+	Bet  int32  `json:"bet"`
+	Code string `json:"code"`
+}
+
 type MatchState struct {
-	random     *rand.Rand
-	label      *MatchLabel
-	emptyTicks int
+	Random     *rand.Rand
+	Label      *MatchLabel
+	EmptyTicks int
 
 	// Currently connected users, or reserved spaces.
-	presences *linkedhashmap.Map
+	Presences *linkedhashmap.Map
 	// Number of users currently in the process of connecting to the match.
-	joinsInProgress int
+	JoinsInProgress int
 
 	// True if there's a game currently in progress.
-	playing bool
+	Playing bool
 	// Mark assignments to player user IDs.
-	cards map[string]*api.ListCard
+	Cards map[string]*pb.ListCard
 	// Mark assignments to player user IDs.
-	organizeCards map[string]*api.ListCard
+	OrganizeCards map[string]*pb.ListCard
 	// Whose turn it currently is.
-	turn string
+	Turn string
 	// Ticks until they must submit their move.
-	deadlineRemainingTicks int64
+	DeadlineRemainingTicks int64
 	//// The winner positions.
 	//winnerPositions []int32
 	// Ticks until the next game starts, if applicable.
-	nextGameRemainingTicks int64
+	NextGameRemainingTicks int64
 }

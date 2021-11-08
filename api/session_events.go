@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package api
 
 import (
 	"context"
@@ -28,7 +28,7 @@ const (
 	streamModeNotification = 0
 )
 
-func registerSessionEvents(db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
+func RegisterSessionEvents(db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	if err := initializer.RegisterEventSessionStart(eventSessionStartFunc(nk)); err != nil {
 		return err
 	}
@@ -50,16 +50,15 @@ func eventSessionEndFunc(db *sql.DB) func(context.Context, runtime.Logger, *api.
 
 		// Restrict the time allowed with the DB operation so we can fail fast in a stampeding herd scenario.
 		ctx2, _ := context.WithTimeout(ctx, 1*time.Second)
-		query := `
-UPDATE
-    users AS u
-SET
-    metadata
-        = u.metadata
-        || jsonb_build_object('last_online_time_unix', extract('epoch' FROM now())::BIGINT)
-WHERE
-    id = $1;
-`
+		query := `UPDATE
+					users AS u
+				SET
+					metadata
+						= u.metadata
+						|| jsonb_build_object('last_online_time_unix', extract('epoch' FROM now())::BIGINT)
+				WHERE
+					id = $1;`
+
 		_, err := db.ExecContext(ctx2, query, userID)
 		if err != nil && err != context.DeadlineExceeded {
 			logger.WithField("err", err).Error("db.ExecContext last online update error.")

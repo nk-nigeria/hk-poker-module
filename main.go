@@ -3,17 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
+	"github.com/ciaolink-game-platform/cgp-blackjack-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 	"time"
-)
 
-var (
-	errInternalError  = runtime.NewError("internal server error", 13) // INTERNAL
-	errMarshal        = runtime.NewError("cannot marshal type", 13)   // INTERNAL
-	errNoInputAllowed = runtime.NewError("no input allowed", 3)       // INVALID_ARGUMENT
-	errNoUserIdFound  = runtime.NewError("no user ID in context", 3)  // INVALID_ARGUMENT
-	errUnmarshal      = runtime.NewError("cannot unmarshal type", 13) // INTERNAL
+	"github.com/ciaolink-game-platform/cgp-blackjack-module/api"
 )
 
 const (
@@ -33,25 +28,25 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		DiscardUnknown: false,
 	}
 
-	if err := initializer.RegisterRpc(rpcIdGameList, rpcGameList(marshaler, unmarshaler)); err != nil {
+	if err := initializer.RegisterRpc(rpcIdGameList, api.RpcGameList(marshaler, unmarshaler)); err != nil {
 		return err
 	}
 
-	if err := initializer.RegisterRpc(rpcIdFindMatch, rpcFindMatch(marshaler, unmarshaler)); err != nil {
+	if err := initializer.RegisterRpc(rpcIdFindMatch, api.RpcFindMatch(marshaler, unmarshaler)); err != nil {
 		return err
 	}
 
-	if err := initializer.RegisterRpc(rpcIdCreateMatch, rpcCreateMatch(marshaler, unmarshaler)); err != nil {
+	if err := initializer.RegisterRpc(rpcIdCreateMatch, api.RpcCreateMatch(marshaler, unmarshaler)); err != nil {
 		return err
 	}
 
-	if err := initializer.RegisterMatch(moduleName, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
-		return NewMatchHandler(marshaler, unmarshaler), nil
+	if err := initializer.RegisterMatch(entity.ModuleName, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
+		return api.NewMatchHandler(marshaler, unmarshaler), nil
 	}); err != nil {
 		return err
 	}
 
-	if err := registerSessionEvents(db, nk, initializer); err != nil {
+	if err := api.RegisterSessionEvents(db, nk, initializer); err != nil {
 		return err
 	}
 

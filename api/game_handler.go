@@ -1,17 +1,18 @@
-package main
+package api
 
 import (
 	"context"
 	"database/sql"
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/api"
+	"github.com/ciaolink-game-platform/cgp-blackjack-module/api/presenter"
+	pb "github.com/ciaolink-game-platform/cgp-blackjack-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-func rpcGameList(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
+func RpcGameList(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) func(context.Context, runtime.Logger, *sql.DB, runtime.NakamaModule, string) (string, error) {
 	return func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
-		response, err := marshaler.Marshal(&api.GameListResponse{
-			Games: []*api.Game{
+		response, err := marshaler.Marshal(&pb.GameListResponse{
+			Games: []*pb.Game{
 				{
 					Code:   "GAME1",
 					Active: true,
@@ -28,7 +29,7 @@ func rpcGameList(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Unm
 		})
 		if err != nil {
 			logger.Error("error marshaling response payload: %v", err.Error())
-			return "", errMarshal
+			return "", presenter.ErrMarshal
 		}
 
 		return string(response), nil

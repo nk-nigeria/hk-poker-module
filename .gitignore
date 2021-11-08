@@ -1,7 +1,9 @@
-*.zip
 
 # Created by https://www.toptal.com/developers/gitignore/api/go,sublimetext,windows,linux,macos,intellij+all
 # Edit at https://www.toptal.com/developers/gitignore?templates=go,sublimetext,windows,linux,macos,intellij+all
+
+bin/
+*.zip
 
 ### Go ###
 # Binaries for programs and plugins
