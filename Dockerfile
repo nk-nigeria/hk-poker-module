@@ -7,9 +7,9 @@ ENV CGO_ENABLED 1
 WORKDIR /backend
 COPY . .
 
-RUN go build --trimpath --mod=readonly --buildmode=plugin -o ./blackjack.so
+RUN go build --trimpath --mod=readonly --buildmode=plugin -o ./chinese-poker.so
 
 FROM heroiclabs/nakama:3.4.0
 
-COPY --from=builder /backend/blackjack.so /nakama/data/modules
+COPY --from=builder /backend/chinese-poker.so /nakama/data/modules
 COPY --from=builder /backend/local.yml /nakama/data/
