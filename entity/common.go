@@ -1,5 +1,5 @@
 package entity
 
 const (
-	ModuleName = "blackjack"
+	ModuleName = "chinese-poker"
 )
