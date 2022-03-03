@@ -1,5 +1,5 @@
-PROJECT_NAME=github.com/ciaolink-game-platform/cgp-blackjack-module
-APP_NAME=blackjack.so
+PROJECT_NAME=github.com/ciaolink-game-platform/cgp-chinese-poker-module
+APP_NAME=chinese-poker.so
 APP_PATH=$(PWD)
 
 build:

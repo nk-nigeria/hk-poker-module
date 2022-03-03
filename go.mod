@@ -1,4 +1,4 @@
-module github.com/ciaolink-game-platform/cgp-blackjack-module
+module github.com/ciaolink-game-platform/cgp-chinese-poker-module
 
 go 1.15
 

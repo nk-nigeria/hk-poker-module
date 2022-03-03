@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/entity"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/api"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api"
 )
 
 const (
