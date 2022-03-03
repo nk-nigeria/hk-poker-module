@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"database/sql"
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/api/presenter"
-	pb "github.com/ciaolink-game-platform/cgp-blackjack-module/proto"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 )

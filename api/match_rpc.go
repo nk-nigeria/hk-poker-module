@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/api/presenter"
-	"github.com/ciaolink-game-platform/cgp-blackjack-module/entity"
-	pb "github.com/ciaolink-game-platform/cgp-blackjack-module/proto"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 

@@ -1,7 +1,7 @@
 package entity
 
 import (
-	pb "github.com/ciaolink-game-platform/cgp-blackjack-module/proto"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"math/rand"
 )
