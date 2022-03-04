@@ -7,9 +7,11 @@ import (
 )
 
 type MatchLabel struct {
-	Open int32  `json:"open"`
-	Bet  int32  `json:"bet"`
-	Code string `json:"code"`
+	Open     int32  `json:"open"`
+	Bet      int32  `json:"bet"`
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 type MatchState struct {

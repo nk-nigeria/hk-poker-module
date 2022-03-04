@@ -75,10 +75,24 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		return nil, 0, ""
 	}
 
+	name, ok := params["name"].(string)
+	if !ok {
+		logger.Error("invalid match init parameter \"name\"")
+		return nil, 0, ""
+	}
+
+	password, ok := params["password"].(string)
+	if !ok {
+		logger.Error("invalid match init parameter \"password\"")
+		return nil, 0, ""
+	}
+
 	label := &entity.MatchLabel{
-		Open: 1,
-		Bet:  bet,
-		Code: "blackjack",
+		Open:     1,
+		Bet:      bet,
+		Code:     entity.ModuleName,
+		Name:     name,
+		Password: password,
 	}
 
 	labelJSON, err := json.Marshal(label)
