@@ -18,11 +18,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/emirpasic/gods/maps/linkedhashmap"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"math/rand"
-	"time"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -30,10 +28,6 @@ import (
 )
 
 const (
-	tickRate = 5
-
-	maxEmptySec = 60 * 5
-
 	delayBetweenGamesSec = 5
 	turnTimeFastSec      = 10
 	turnTimeNormalSec    = 20
@@ -105,13 +99,10 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	m.processor = NewProcessor()
 
-	return &entity.MatchState{
-		Random:  rand.New(rand.NewSource(time.Now().UnixNano())),
-		Label:   label,
-		Playing: false,
-		//presences: make(map[string]runtime.Presence, maxPlayer),
-		Presences: linkedhashmap.New(),
-	}, tickRate, string(labelJSON)
+	matchState := entity.NewMathState(label)
+
+	matchState.SetGameState(entity.GameStateLobby, logger)
+	return &matchState, entity.TickRate, string(labelJSON)
 }
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
@@ -144,10 +135,11 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	s := state.(*entity.MatchState)
 	logger.Info("match join, state=%v, presences=%v", s, presences)
 
+	s = s.ProcessEvent(entity.MatchJoin, logger, presences)
 	for _, presence := range presences {
-		s.EmptyTicks = 0
-		s.Presences.Put(presence.GetUserId(), presence)
-		s.JoinsInProgress--
+		// s.EmptyTicks = 0
+		// s.Presences.Put(presence.GetUserId(), presence)
+		// s.JoinsInProgress--
 
 		// Check if we must send a message to this user to update them on the current game state.
 		var msg proto.Message
@@ -171,9 +163,10 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		}
 	}
 
-	// Check if match was open to new players, but should now be closed.
-	if s.Presences.Size() >= 2 && s.Label.Open != 0 {
+	// Check if matchwas open to new players, but should now be closed.
+	if s.Presences.Size() >= 2 && s.Label.LastOpenValueNoti == 1 {
 		s.Label.Open = 0
+		s.Label.LastOpenValueNoti = 0
 		if labelJSON, err := json.Marshal(s.Label); err != nil {
 			logger.Error("error encoding label: %v", err)
 		} else {
@@ -190,14 +183,14 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 	s := state.(*entity.MatchState)
 	logger.Info("match leave, state=%v, presences=%v", s, presences)
 
+	s = s.ProcessEvent(entity.MatchLeave, logger, presences)
+
 	// Check if we must send a message to this user to update them on the current game state.
 	var msg proto.Message
 	for _, presence := range presences {
 		//s.presences[presence.GetUserId()] = nil
 		_, found := s.Presences.Get(presence.GetUserId())
 		if found {
-			s.Presences.Remove(presence.GetUserId())
-
 			var currentPresences []string
 			for _, p := range s.Presences.Keys() {
 				currentPresences = append(currentPresences, p.(string))
@@ -224,21 +217,41 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*entity.MatchState)
-	logger.Info("match loop, state=%v, messages=%v", s, messages)
+	// logger.Info("match loop, state=%v, messages=%v, game state: %s", s, messages, s.GetGameState().String())
 
-	if s.Presences.Size()+s.JoinsInProgress == 0 {
-		s.EmptyTicks++
-		if s.EmptyTicks >= maxEmptySec*tickRate {
-			// Match has been empty for too long, close it.
-			logger.Info("closing idle match")
-			return nil
-		}
+	s = s.ProcessEvent(entity.MathLoop, logger, nil)
+	if s.GetGameState() == entity.GameStateLobby && s.EmptyTicks > entity.MaxEmptySec {
+		logger.Info("closing idle match id")
+		return nil
 	}
+	// if s.Presences.Size()+s.JoinsInProgress == 0 {
+	// 	s.EmptyTicks++
+	// 	if s.EmptyTicks >= entity.MaxEmptySec*entity.TickRate {
+	// 		// Match has been empty for too long, close it.
+	// 		logger.Info("closing idle match")
+	// 		return nil
+	// 	}
+	// }
 
-	if m.checkAutoNewGame(logger, dispatcher, s) {
+	// if m.checkAutoNewGame(logger, dispatcher, s) {
+	// 	return s
+	// }
+
+	if s.GetGameState() == entity.GameStateFinish {
+		m.processor.FinishGame(dispatcher, s)
 		return s
 	}
 
+	// only accept command from client when
+	// game in state run
+	if s.GetGameState() != entity.GameStateRun {
+		return s
+	}
+
+	if !s.Playing {
+		m.processor.NewGame(s)
+		s.Playing = true
+	}
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
 	for _, message := range messages {
 		switch pb.OpCodeRequest(message.GetOpCode()) {
@@ -254,14 +267,16 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			}
 
 			m.processOrganize(dispatcher, s, message.GetUserId(), msg)
+		case pb.OpCodeRequest_OPCODE_REQUEST_LEAVE_GAME:
+			m.checkLeaveGame(logger, dispatcher, s)
 		default:
 			// No other opcodes are expected from the client, so automatically treat it as an error.
 			_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_REJECTED), nil, []runtime.Presence{message}, nil, true)
 		}
 	}
 
-	// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
-	m.checkFinishGame(logger, dispatcher, s)
+	// // Keep track of the time remaining for the player to submit their move. Idle players forfeit.
+	// m.checkFinishGame(logger, dispatcher, s)
 
 	return s
 }
@@ -281,8 +296,9 @@ func (m *MatchHandler) checkAutoNewGame(logger runtime.Logger, dispatcher runtim
 		//	}
 		//}
 		// Check if we need to update the label so the match now advertises itself as open to join.
-		if s.Presences.Size() < 2 && s.Label.Open != 1 {
+		if s.Presences.Size() < 2 && s.Label.LastOpenValueNoti == 0 {
 			s.Label.Open = 1
+			s.Label.LastOpenValueNoti = 1
 			if labelJSON, err := json.Marshal(s.Label); err != nil {
 				logger.Error("error encoding label: %v", err)
 			} else {
@@ -349,4 +365,7 @@ func (m *MatchHandler) processOrganize(dispatcher runtime.MatchDispatcher, s *en
 // Check should finish game due to enough organize or timeout
 func (m *MatchHandler) checkFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	m.processor.FinishGame(dispatcher, s)
+}
+
+func (m *MatchHandler) checkLeaveGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 }
