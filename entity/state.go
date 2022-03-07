@@ -311,7 +311,7 @@ func (s *MatchState) handlerGameTerminate(gameEvent GameEvent, logger runtime.Lo
 	return s
 }
 
-func (s MatchState) addPresence(presences []runtime.Presence) {
+func (s *MatchState) addPresence(presences []runtime.Presence) {
 	for _, presence := range presences {
 		s.EmptyTicks = 0
 		s.Presences.Put(presence.GetUserId(), presence)
@@ -319,7 +319,7 @@ func (s MatchState) addPresence(presences []runtime.Presence) {
 	}
 }
 
-func (s MatchState) removePresence(presences []runtime.Presence) {
+func (s *MatchState) removePresence(presences []runtime.Presence) {
 	for _, presence := range presences {
 		s.Presences.Remove(presence.GetUserId())
 	}
