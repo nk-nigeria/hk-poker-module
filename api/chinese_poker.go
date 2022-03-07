@@ -21,11 +21,12 @@ func (c *ChinesePokerGame) NewGame(s *entity.MatchState) error {
 	c.deck.Shuffle()
 
 	s.Cards = make(map[string]*pb.ListCard)
+	// loop on userid in match
 	for _, k := range s.Presences.Keys() {
-		presence := k.(string)
+		userId := k.(string)
 		cards, err := c.deck.Deal(MaxPresenceCard)
 		if err == nil {
-			s.Cards[presence] = cards
+			s.Cards[userId] = cards
 		} else {
 			return err
 		}

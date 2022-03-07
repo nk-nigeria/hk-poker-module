@@ -249,6 +249,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 				CountDown: s.CountDown.Sec,
 			}
 			data, err := m.marshaler.Marshal(&pbGameState)
+			logger.Info("Send notification game start countdown %d", s.CountDown.Sec)
 			if err == nil {
 				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), data, nil, nil, true)
 				s.CountDown.IsUpdate = false

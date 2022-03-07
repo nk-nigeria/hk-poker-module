@@ -11,12 +11,10 @@ import (
 )
 
 const (
-	TickRate    = 5
-	OneSecTick  = 1 / (TickRate * 0.1)
-	MaxEmptySec = 60 * OneSecTick // 60s
-
+	TickRate         = 5
 	MinPlayer        = 2
-	CountDownGameSec = 5 * OneSecTick // 5s
+	MaxEmptySec      = 60 * TickRate // 60s
+	CountDownGameSec = 5 * TickRate  // 5s
 )
 
 type MatchLabel struct {
@@ -69,7 +67,7 @@ func NewCountDown() CountDown {
 	cd := CountDown{
 		Tick: CountDownGameSec,
 	}
-	cd.Sec = cd.Tick / OneSecTick
+	cd.Sec = cd.Tick / TickRate
 	cd.IsUpdate = true
 	return cd
 }
@@ -79,7 +77,7 @@ func (cd *CountDown) doCountDown() {
 		return
 	}
 	cd.Tick--
-	v := math.Ceil(float64(cd.Tick / OneSecTick))
+	v := math.Ceil(float64(cd.Tick / TickRate))
 	if cd.Sec != int64(v) {
 		cd.Sec = int64(v)
 		cd.IsUpdate = true
@@ -88,7 +86,7 @@ func (cd *CountDown) doCountDown() {
 
 func (cd *CountDown) reset() {
 	cd.Tick = CountDownGameSec
-	cd.Sec = cd.Tick / OneSecTick
+	cd.Sec = cd.Tick / TickRate
 	cd.IsUpdate = true
 }
 
@@ -239,7 +237,7 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 
 	if gameEvent == MathLoop {
 		s.CountDown.doCountDown()
-		if s.CountDown.Sec <= 0 {
+		if s.CountDown.Tick < 0 {
 			s.SetGameState(pb.GameState_GameStateRun, logger)
 			s.Label.Open = 0
 		}
