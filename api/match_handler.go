@@ -266,7 +266,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	}
 
 	if !s.Playing {
-		m.processor.NewGame(s)
+		m.processNewGame(logger, dispatcher, s)
 		s.Playing = true
 	}
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
