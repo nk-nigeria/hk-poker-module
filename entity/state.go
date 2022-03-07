@@ -25,6 +25,7 @@ type MatchLabel struct {
 	Code              string `json:"code"`
 	Name              string `json:"name"`
 	Password          string `json:"password"`
+	MaxSize           int32  `json:"max_size"`
 }
 
 type MatchState struct {
