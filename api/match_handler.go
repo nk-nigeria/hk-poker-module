@@ -101,7 +101,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	matchState := entity.NewMathState(label)
 
-	matchState.SetGameState(entity.GameStateLobby, logger)
+	matchState.SetGameState(pb.GameState_GameStateLobby, logger)
 	return &matchState, entity.TickRate, string(labelJSON)
 }
 
@@ -220,7 +220,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	// logger.Info("match loop, state=%v, messages=%v, game state: %s", s, messages, s.GetGameState().String())
 
 	s = s.ProcessEvent(entity.MathLoop, logger, nil)
-	if s.GetGameState() == entity.GameStateLobby && s.EmptyTicks > entity.MaxEmptySec {
+	if s.GetGameState() == pb.GameState_GameStateLobby && s.EmptyTicks > entity.MaxEmptySec {
 		logger.Info("closing idle match id")
 		return nil
 	}
@@ -237,14 +237,30 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	// 	return s
 	// }
 
-	if s.GetGameState() == entity.GameStateFinish {
+	if s.GetGameState() == pb.GameState_GameStateFinish {
 		m.processor.FinishGame(dispatcher, s)
 		return s
 	}
 
+	if s.GetGameState() == pb.GameState_GameStateCountdown {
+		if s.CountDown.IsUpdate {
+			pbGameState := pb.UpdateGameState{
+				State:     s.GetGameState(),
+				CountDown: s.CountDown.Sec,
+			}
+			data, err := m.marshaler.Marshal(&pbGameState)
+			if err == nil {
+				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), data, nil, nil, true)
+				s.CountDown.IsUpdate = false
+			} else {
+				logger.Debug("marshaler game state error %s", err.Error())
+			}
+		}
+	}
+
 	// only accept command from client when
 	// game in state run
-	if s.GetGameState() != entity.GameStateRun {
+	if s.GetGameState() != pb.GameState_GameStateRun {
 		return s
 	}
 

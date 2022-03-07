@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"math"
 	"math/rand"
 	"time"
 
@@ -10,12 +11,12 @@ import (
 )
 
 const (
-	TickRate = 5
-
-	MaxEmptySec = 60 * (1 / (TickRate * 0.1)) // 60s
+	TickRate    = 5
+	OneSecTick  = 1 / (TickRate * 0.1)
+	MaxEmptySec = 60 * OneSecTick // 60s
 
 	MinPlayer        = 2
-	CountDownGameSec = 5 * (1 / (TickRate * 0.1)) // 5s
+	CountDownGameSec = 5 * OneSecTick // 5s
 )
 
 type MatchLabel struct {
@@ -53,8 +54,42 @@ type MatchState struct {
 	// Ticks until the next game starts, if applicable.
 	NextGameRemainingTicks int64
 
-	gameState          GamePresentState
-	countDownEnterGame int64
+	gameState pb.GameState
+	// countDownEnterGame int64
+	CountDown CountDown
+}
+
+type CountDown struct {
+	Tick     int64
+	Sec      int64
+	IsUpdate bool
+}
+
+func NewCountDown() CountDown {
+	cd := CountDown{
+		Tick: CountDownGameSec,
+	}
+	cd.Sec = cd.Tick / OneSecTick
+	cd.IsUpdate = true
+	return cd
+}
+
+func (cd *CountDown) doCountDown() {
+	if cd.Tick < 0 {
+		return
+	}
+	cd.Tick--
+	v := math.Ceil(float64(cd.Tick / OneSecTick))
+	if cd.Sec != int64(v) {
+		cd.Sec = int64(v)
+		cd.IsUpdate = true
+	}
+}
+
+func (cd *CountDown) reset() {
+	cd.Tick = CountDownGameSec
+	cd.Sec = cd.Tick / OneSecTick
+	cd.IsUpdate = true
 }
 
 func NewMathState(label *MatchLabel) MatchState {
@@ -63,41 +98,29 @@ func NewMathState(label *MatchLabel) MatchState {
 		Label:   label,
 		Playing: false,
 		//presences: make(map[string]runtime.Presence, maxPlayer),
-		Presences:          linkedhashmap.New(),
-		gameState:          GameStateLobby,
-		countDownEnterGame: 0,
+		Presences: linkedhashmap.New(),
+		gameState: pb.GameState_GameStateLobby,
+		CountDown: NewCountDown(),
 	}
 	m.Label.LastOpenValueNoti = m.Label.Open
 	return m
 }
 
-type GamePresentState int
-
-const (
-	GameStateLobby GamePresentState = iota
-	GameStatePrepare
-	GameStateCountdown
-	GameStateRun
-	GameStateReward
-	GameStateFinish
-	GameStateEnd
-)
-
-func (gp GamePresentState) String() string {
+func PbGameStateString(gp pb.GameState) string {
 	switch gp {
-	case GameStateLobby:
+	case pb.GameState_GameStateLobby:
 		return "GameStateLobby"
-	case GameStatePrepare:
+	case pb.GameState_GameStatePrepare:
 		return "GameStatePrepare"
-	case GameStateCountdown:
+	case pb.GameState_GameStateCountdown:
 		return "GameStateCountdown"
-	case GameStateRun:
+	case pb.GameState_GameStateRun:
 		return "GameStateRun"
-	case GameStateReward:
+	case pb.GameState_GameStateReward:
 		return "GameStateReward"
-	case GameStateFinish:
+	case pb.GameState_GameStateFinish:
 		return "GameStateFinish"
-	case GameStateEnd:
+	case pb.GameState_GameStateEnd:
 		return "GameStateEnd"
 	}
 	return "unknow"
@@ -132,16 +155,16 @@ func (ge GameEvent) String() string {
 	return "unknow"
 }
 
-func (s *MatchState) GetGameState() GamePresentState {
+func (s *MatchState) GetGameState() pb.GameState {
 	return s.gameState
 }
 
-func (s *MatchState) SetGameState(gameState GamePresentState, logger runtime.Logger) GamePresentState {
+func (s *MatchState) SetGameState(gameState pb.GameState, logger runtime.Logger) pb.GameState {
 	if s.gameState != gameState {
 		logger.Info("Game state change %s -- > %s", s.gameState.String(), gameState.String())
 		s.gameState = gameState
 		// reset duration empty room
-		if s.gameState == GameStateLobby {
+		if s.gameState == pb.GameState_GameStateLobby {
 			s.EmptyTicks = 0
 		}
 	}
@@ -152,17 +175,17 @@ func (s *MatchState) ProcessEvent(gameEvent GameEvent, logger runtime.Logger, pr
 		logger.Info("ProccessEvent %s, current gameState %s", gameEvent.String(), s.GetGameState().String())
 	}
 	switch s.gameState {
-	case GameStateLobby:
+	case pb.GameState_GameStateLobby:
 		s.handlerGameStateLobby(gameEvent, logger, presences)
-	case GameStatePrepare:
+	case pb.GameState_GameStatePrepare:
 		s.handlerGamePrepare(gameEvent, logger, presences)
-	case GameStateCountdown:
+	case pb.GameState_GameStateCountdown:
 		s.handlerGameCountDown(gameEvent, logger, presences)
-	case GameStateRun:
+	case pb.GameState_GameStateRun:
 		s.handlerGameRun(gameEvent, logger, presences)
-	case GameStateReward:
+	case pb.GameState_GameStateReward:
 		s.handlerGameReward(gameEvent, logger, presences)
-	case GameStateFinish:
+	case pb.GameState_GameStateFinish:
 		s.handlerGameFinish(gameEvent, logger, presences)
 	}
 	return s
@@ -172,7 +195,7 @@ func (s *MatchState) handlerGameStateLobby(gameEvent GameEvent, logger runtime.L
 	s.Label.Open = 1
 	if gameEvent == MatchJoin {
 		s.addPresence(presences)
-		s.SetGameState(GameStatePrepare, logger)
+		s.SetGameState(pb.GameState_GameStatePrepare, logger)
 		return s
 	}
 
@@ -189,15 +212,15 @@ func (s *MatchState) handlerGamePrepare(gameEvent GameEvent, logger runtime.Logg
 	if gameEvent == MatchLeave {
 		s.removePresence(presences)
 		if s.Presences.Size() == 0 {
-			s.SetGameState(GameStateLobby, logger)
+			s.SetGameState(pb.GameState_GameStateLobby, logger)
 		}
 		return s
 	}
 	if gameEvent == MatchJoin {
 		s.addPresence(presences)
 		if s.Presences.Size() >= MinPlayer {
-			s.SetGameState(GameStateCountdown, logger)
-			s.countDownEnterGame = CountDownGameSec
+			s.SetGameState(pb.GameState_GameStateCountdown, logger)
+			s.CountDown.reset()
 		}
 		return s
 	}
@@ -207,9 +230,6 @@ func (s *MatchState) handlerGamePrepare(gameEvent GameEvent, logger runtime.Logg
 func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
 	if gameEvent == MatchLeave {
 		s.removePresence(presences)
-		if s.Presences.Size() == 0 {
-			s.SetGameState(GameStateLobby, logger)
-		}
 		return s
 	}
 	if gameEvent == MatchJoin {
@@ -218,9 +238,9 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 	}
 
 	if gameEvent == MathLoop {
-		s.countDownEnterGame--
-		if s.countDownEnterGame <= 0 {
-			s.SetGameState(GameStateRun, logger)
+		s.CountDown.doCountDown()
+		if s.CountDown.Sec <= 0 {
+			s.SetGameState(pb.GameState_GameStateRun, logger)
 			s.Label.Open = 0
 		}
 	}
@@ -236,15 +256,19 @@ func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, 
 		s.removePresence(presences)
 		// todo punishment as looser
 		if s.Presences.Size() == 1 {
-			s.SetGameState(GameStateReward, logger)
+			s.SetGameState(pb.GameState_GameStateReward, logger)
 		}
 		return s
 	}
 	if gameEvent == MathDone {
-		s.SetGameState(GameStateReward, logger)
+		s.SetGameState(pb.GameState_GameStateReward, logger)
 		return s
 	}
 	if gameEvent == MathLoop {
+		if s.Presences.Size() == 0 {
+			s.SetGameState(pb.GameState_GameStateReward, logger)
+			return s
+		}
 	}
 	// todo add param user commnad
 	return s
@@ -259,7 +283,7 @@ func (s *MatchState) handlerGameReward(gameEvent GameEvent, logger runtime.Logge
 	}
 	// todo calc reward here
 
-	s.SetGameState(GameStateFinish, logger)
+	s.SetGameState(pb.GameState_GameStateFinish, logger)
 	return s
 }
 
@@ -271,14 +295,14 @@ func (s *MatchState) handlerGameFinish(gameEvent GameEvent, logger runtime.Logge
 		s.removePresence(presences)
 	}
 	if s.Presences.Size() >= MinPlayer {
-		s.SetGameState(GameStateCountdown, logger)
+		s.SetGameState(pb.GameState_GameStateCountdown, logger)
 		return s
 	}
 	if s.Presences.Size() > 0 {
-		s.SetGameState(GameStatePrepare, logger)
+		s.SetGameState(pb.GameState_GameStatePrepare, logger)
 		return s
 	}
-	s.SetGameState(GameStateLobby, logger)
+	s.SetGameState(pb.GameState_GameStateLobby, logger)
 	return s
 }
 

@@ -88,6 +88,18 @@ enum OpCodeUpdate {
     OPCODE_UPDATE_RESULT = 4; //message UpdateResult
     // Request was rejected.
     OPCODE_UPDATE_REJECTED = 5;
+    // Update game state
+    OPCODE_UPDATE_GAME_STATE = 6;
+}
+
+enum GameState {
+    GameStateLobby = 0;
+	GameStatePrepare = 1;
+	GameStateCountdown = 2;
+	GameStateRun = 3;
+	GameStateReward = 4;
+	GameStateFinish = 5;
+	GameStateEnd = 6;
 }
 
 // Message data sent by client to server representing the cards was organize.
@@ -135,4 +147,9 @@ message UpdateResult {
     map<string, PresenceCards> presence_organizes = 1;
 
     repeated PairResult results = 2;
+}
+
+message UpdateGameState {
+    GameState state = 1;
+    int64 count_down = 2;
 }
