@@ -17,6 +17,12 @@ func NewProcessor() *ChinesePokerGame {
 }
 
 func (c *ChinesePokerGame) NewGame(s *entity.MatchState) error {
+	s.OrganizeCards = make(map[string]*pb.ListCard)
+
+	return nil
+}
+
+func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
 
@@ -32,8 +38,6 @@ func (c *ChinesePokerGame) NewGame(s *entity.MatchState) error {
 		}
 	}
 
-	s.OrganizeCards = make(map[string]*pb.ListCard)
-
 	return nil
 }
 
@@ -42,6 +46,8 @@ func (c *ChinesePokerGame) Organize(dispatcher runtime.MatchDispatcher, s *entit
 	return nil
 }
 
-func (c *ChinesePokerGame) FinishGame(dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-
+func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+	// Check every user
+	// Check every hand
+	// Calculate hand to point
 }

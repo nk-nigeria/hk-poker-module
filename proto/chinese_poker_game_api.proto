@@ -94,12 +94,12 @@ enum OpCodeUpdate {
 
 enum GameState {
     GameStateLobby = 0;
-	GameStatePrepare = 1;
-	GameStateCountdown = 2;
-	GameStateRun = 3;
-	GameStateReward = 4;
-	GameStateFinish = 5;
-	GameStateEnd = 6;
+    GameStatePrepare = 1;
+    GameStateCountdown = 2;
+    GameStateRun = 3;
+    GameStateReward = 4;
+    GameStateFinish = 5;
+    GameStateEnd = 6;
 }
 
 // Message data sent by client to server representing the cards was organize.

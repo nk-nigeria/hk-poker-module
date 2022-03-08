@@ -238,7 +238,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	// }
 
 	if s.GetGameState() == pb.GameState_GameStateFinish {
-		m.processor.FinishGame(dispatcher, s)
+		m.processor.Finish(dispatcher, s)
 		return s
 	}
 
@@ -348,6 +348,7 @@ func (m *MatchHandler) checkAutoNewGame(logger runtime.Logger, dispatcher runtim
 // Call when client request or timeout
 func (m *MatchHandler) processNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	err := m.processor.NewGame(s)
+	m.processor.Deal(s)
 	if err == nil {
 		for k, v := range s.Cards {
 			buf, err := m.marshaler.Marshal(&pb.UpdateDeal{
@@ -381,7 +382,7 @@ func (m *MatchHandler) processOrganize(dispatcher runtime.MatchDispatcher, s *en
 
 // Check should finish game due to enough organize or timeout
 func (m *MatchHandler) checkFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-	m.processor.FinishGame(dispatcher, s)
+	m.processor.Finish(dispatcher, s)
 }
 
 func (m *MatchHandler) checkLeaveGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
