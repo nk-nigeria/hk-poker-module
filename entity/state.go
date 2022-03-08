@@ -238,8 +238,12 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 	if gameEvent == MathLoop {
 		s.CountDown.doCountDown()
 		if s.CountDown.Tick < 0 {
-			s.SetGameState(pb.GameState_GameStateRun, logger)
-			s.Label.Open = 0
+			if s.Presences.Size() >= MinPlayer {
+				s.SetGameState(pb.GameState_GameStateRun, logger)
+				s.Label.Open = 0
+			} else {
+				s.SetGameState(pb.GameState_GameStateFinish, logger)
+			}
 		}
 	}
 	return s
