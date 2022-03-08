@@ -263,7 +263,7 @@ func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, 
 		return s
 	}
 	if gameEvent == MathLoop {
-		if s.Presences.Size() == 0 {
+		if s.Presences.Size() <= 1 {
 			s.SetGameState(pb.GameState_GameStateReward, logger)
 			return s
 		}
