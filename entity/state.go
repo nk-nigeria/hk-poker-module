@@ -286,6 +286,7 @@ func (s *MatchState) handlerGameReward(gameEvent GameEvent, logger runtime.Logge
 }
 
 func (s *MatchState) handlerGameFinish(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
+	s.Playing = false
 	if gameEvent == MatchJoin {
 		s.addPresence(presences)
 	}
