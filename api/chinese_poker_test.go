@@ -1,9 +1,10 @@
 package api
 
 import (
+	"testing"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
-	"testing"
 )
 
 func TestGame(t *testing.T) {
@@ -38,9 +39,9 @@ func TestGame(t *testing.T) {
 	card2 := state.Cards["user2"]
 	card3 := state.Cards["user3"]
 
-	cardOrganize1 := entity.Shuffle(*card1)
-	cardOrganize2 := entity.Shuffle(*card2)
-	cardOrganize3 := entity.Shuffle(*card3)
+	cardOrganize1 := entity.Shuffle(card1)
+	cardOrganize2 := entity.Shuffle(card2)
+	cardOrganize3 := entity.Shuffle(card3)
 
 	processor.Organize(nil, state, "user1", cardOrganize1)
 	processor.Organize(nil, state, "user2", cardOrganize2)

@@ -84,7 +84,7 @@ func (d *Deck) Deal(n int) (*pb.ListCard, error) {
 }
 
 // Shuffle any hand
-func Shuffle(cards pb.ListCard) *pb.ListCard {
+func Shuffle(cards *pb.ListCard) *pb.ListCard {
 	for i := 1; i < len(cards.Cards); i++ {
 		// Create a random int up to the number of Cards
 		r := rand.Intn(i + 1)
@@ -96,5 +96,5 @@ func Shuffle(cards pb.ListCard) *pb.ListCard {
 		}
 	}
 
-	return &cards
+	return cards
 }

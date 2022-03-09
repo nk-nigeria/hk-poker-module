@@ -153,3 +153,15 @@ message UpdateGameState {
     GameState state = 1;
     int64 count_down = 2;
 }
+
+enum HandRanking {
+    StraightFlush = 0;
+    FourOfAKind = 1;
+    FullHouse = 2;
+    Flush = 3;
+    Straight = 4;
+    ThreeOfAKind = 5;
+    TwoPairs = 6;
+    Pair = 7;
+    HighCard = 8;
+}
