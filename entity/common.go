@@ -14,6 +14,7 @@ var mapCardSuitPoint map[pb.CardSuit]int
 
 func init() {
 	// init hand ranking point
+	mapHandRankingPoint = make(map[pb.HandRanking]int, 0)
 	mapHandRankingPoint[pb.HandRanking_HighCard] = 1
 	mapHandRankingPoint[pb.HandRanking_Pair] = 2
 	mapHandRankingPoint[pb.HandRanking_TwoPairs] = 3
@@ -24,6 +25,7 @@ func init() {
 	mapHandRankingPoint[pb.HandRanking_FourOfAKind] = 8
 	mapHandRankingPoint[pb.HandRanking_StraightFlush] = 9
 
+	mapCardRankPoint = make(map[pb.CardRank]int, 0)
 	mapCardRankPoint[pb.CardRank_RANK_2] = 1
 	mapCardRankPoint[pb.CardRank_RANK_3] = 2
 	mapCardRankPoint[pb.CardRank_RANK_4] = 3
@@ -38,6 +40,7 @@ func init() {
 	mapCardRankPoint[pb.CardRank_RANK_K] = 12
 	mapCardRankPoint[pb.CardRank_RANK_A] = 13
 
+	mapCardSuitPoint = make(map[pb.CardSuit]int, 0)
 	mapCardSuitPoint[pb.CardSuit_SUIT_UNSPECIFIED] = 0
 	mapCardSuitPoint[pb.CardSuit_SUIT_SPADES] = 1
 	mapCardSuitPoint[pb.CardSuit_SUIT_CLUBS] = 2
