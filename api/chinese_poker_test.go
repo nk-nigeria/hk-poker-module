@@ -52,4 +52,8 @@ func TestGame(t *testing.T) {
 	for u, cards := range state.OrganizeCards {
 		t.Logf("card organize %v, %v", u, cards)
 	}
+
+	for u, cards := range state.Cards {
+		t.Logf("card2 %v, %v", u, cards)
+	}
 }
