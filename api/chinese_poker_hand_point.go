@@ -49,7 +49,8 @@ func GetHandPoint(listCard []*pb.Card) (*HandPoint, []*pb.Card) {
 		}
 	}
 
-	// TODO: sort high card
+	// Sort for high card
+	SortCard(listCard)
 	return &HandPoint{
 		rankingType: pb.HandRanking_HighCard,
 	}, listCard
