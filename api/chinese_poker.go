@@ -79,7 +79,7 @@ func (c *ChinesePokerGame) IsHighcard(listCard []*pb.Card) ([]*pb.Card, bool) {
 	if _, valid := c.CheckPair(listCard); valid {
 		return nil, false
 	}
-	return listCard, true
+	return c.SortCard(listCard), true
 }
 
 // Thùng phá sảnh (en: Straight Flush)
