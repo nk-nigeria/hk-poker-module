@@ -103,29 +103,33 @@ func (h *Hand) calculatePoint() int {
 func (h *Hand) calculatePointFrontHand() {
 	var sortedCard []*pb.Card
 	h.frontHandPoint, sortedCard = GetHandPoint(h.frontHand[:])
-	h.frontHand[0] = sortedCard[0]
-	h.frontHand[1] = sortedCard[1]
-	h.frontHand[2] = sortedCard[2]
+	// h.frontHand[0] = sortedCard[0]
+	// h.frontHand[1] = sortedCard[1]
+	// h.frontHand[2] = sortedCard[2]
+	copy(h.frontHand[:], sortedCard[:3])
 }
 
 func (h *Hand) calculatePointMiddleHand() {
 	var sortedCard []*pb.Card
 	h.middleHandPoint, sortedCard = GetHandPoint(h.middleHand[:])
-	h.middleHand[0] = sortedCard[0]
-	h.middleHand[1] = sortedCard[1]
-	h.middleHand[2] = sortedCard[2]
-	h.middleHand[3] = sortedCard[3]
-	h.middleHand[4] = sortedCard[4]
+	// h.middleHand[0] = sortedCard[0]
+	// h.middleHand[1] = sortedCard[1]
+	// h.middleHand[2] = sortedCard[2]
+	// h.middleHand[3] = sortedCard[3]
+	// h.middleHand[4] = sortedCard[4]
+	copy(h.middleHand[:], sortedCard[:5])
 }
 
 func (h *Hand) calculatePointBackHand() {
 	var sortedCard []*pb.Card
 	h.backHandPoint, sortedCard = GetHandPoint(h.backHand[:])
-	h.backHand[0] = sortedCard[0]
-	h.backHand[1] = sortedCard[1]
-	h.backHand[2] = sortedCard[2]
-	h.backHand[3] = sortedCard[3]
-	h.backHand[4] = sortedCard[4]
+	// h.backHand[0] = sortedCard[0]
+	// h.backHand[1] = sortedCard[1]
+	// h.backHand[2] = sortedCard[2]
+	// h.backHand[3] = sortedCard[3]
+	// h.backHand[4] = sortedCard[4]
+	copy(h.backHand[:], sortedCard[:5])
+
 }
 
 func CompareHand(h1, h2 *Hand) *pb.CompareResult {
