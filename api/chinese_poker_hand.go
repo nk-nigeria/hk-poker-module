@@ -10,7 +10,7 @@ import (
 // Hand
 // Contain all presence card
 type Hand struct {
-	cards   pb.ListCard
+	cards   *pb.ListCard
 	ranking pb.HandRanking
 
 	frontHand  [3]*pb.Card
@@ -25,9 +25,25 @@ type Hand struct {
 	royalties bool
 }
 
-func NewHand(cards pb.ListCard) (*Hand, error) {
+func NewHand(cards *pb.ListCard) (*Hand, error) {
+	if cards == nil {
+		h := &Hand{}
+		return h, nil
+	}
+	listCard := make([]*pb.Card, 0, len(cards.Cards))
+	// deep copy card
+	for _, c := range cards.GetCards() {
+		x := pb.Card{
+			Rank:   c.GetRank(),
+			Suit:   c.GetSuit(),
+			Status: c.GetStatus(),
+		}
+		listCard = append(listCard, &x)
+	}
 	hand := &Hand{
-		cards: cards,
+		cards: &pb.ListCard{
+			Cards: cards.Cards,
+		},
 	}
 
 	if hand.parse() != nil {
@@ -37,7 +53,7 @@ func NewHand(cards pb.ListCard) (*Hand, error) {
 	return hand, nil
 }
 
-func (h *Hand) GetCards() pb.ListCard {
+func (h *Hand) GetCards() *pb.ListCard {
 	return h.cards
 }
 
@@ -48,21 +64,25 @@ func (h *Hand) parse() error {
 		return errors.New("hand.parse.error.invalid-len")
 	}
 
-	h.frontHand[0] = cards[0]
-	h.frontHand[1] = cards[1]
-	h.frontHand[2] = cards[2]
+	// h.frontHand[0] = cards[0]
+	// h.frontHand[1] = cards[1]
+	// h.frontHand[2] = cards[2]
+	copy(h.frontHand[:], cards[:3])
 
-	h.middleHand[0] = cards[3]
-	h.middleHand[1] = cards[4]
-	h.middleHand[2] = cards[5]
-	h.middleHand[3] = cards[6]
-	h.middleHand[4] = cards[7]
+	// h.middleHand[0] = cards[3]
+	// h.middleHand[1] = cards[4]
+	// h.middleHand[2] = cards[5]
+	// h.middleHand[3] = cards[6]
+	// h.middleHand[4] = cards[7]
 
-	h.backHand[0] = cards[8]
-	h.backHand[1] = cards[9]
-	h.backHand[2] = cards[10]
-	h.backHand[3] = cards[11]
-	h.backHand[4] = cards[12]
+	copy(h.frontHand[:], cards[3:8])
+
+	// h.backHand[0] = cards[8]
+	// h.backHand[1] = cards[9]
+	// h.backHand[2] = cards[10]
+	// h.backHand[3] = cards[11]
+	// h.backHand[4] = cards[12]
+	copy(h.frontHand[:], cards[8:])
 
 	return nil
 }
