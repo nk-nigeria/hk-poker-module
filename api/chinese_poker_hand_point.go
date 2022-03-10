@@ -43,7 +43,7 @@ func (ls ListCard) GetMaxPointCard() int {
 // -1 lower
 // 0 equal
 // 1 higher
-func (ls ListCard) CompareStraightCards(other ListCard) int {
+func (ls ListCard) CompareHighCard(other ListCard) int {
 	if len(ls) != len(other) {
 		return 0
 	}

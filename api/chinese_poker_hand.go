@@ -177,24 +177,24 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1.GetMaxPointCard()
-		point2 = x2.GetMaxPointCard()
+		point1 = entity.GetCardRankPoint(x1[0].GetRank())
+		point2 = entity.GetCardRankPoint(x2[0].GetRank())
 	case pb.HandRanking_FourOfAKind:
 		x1 := h1.Child.MapCardType[pb.HandRanking_FourOfAKind]
 		x2 := h2.Child.MapCardType[pb.HandRanking_FourOfAKind]
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1.GetMaxPointCard()
-		point2 = x2.GetMaxPointCard()
+		point1 = entity.GetCardRankPoint(x1[0].GetRank())
+		point2 = entity.GetCardRankPoint(x2[0].GetRank())
 	case pb.HandRanking_FullHouse:
 		x1 := h1.Child.MapCardType[pb.HandRanking_ThreeOfAKind]
 		x2 := h2.Child.MapCardType[pb.HandRanking_ThreeOfAKind]
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1.GetMaxPointCard()
-		point2 = x2.GetMaxPointCard()
+		point1 = entity.GetCardRankPoint(x1[0].GetRank())
+		point2 = entity.GetCardRankPoint(x2[0].GetRank())
 	case pb.HandRanking_Flush:
 		x1 := h1.Child.ListCard
 		x2 := h2.Child.ListCard
@@ -217,8 +217,8 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1.GetMaxPointCard()
-		point2 = x2.GetMaxPointCard()
+		point1 = entity.GetCardRankPoint(x1[0].GetRank())
+		point2 = entity.GetCardRankPoint(x2[0].GetRank())
 	case pb.HandRanking_TwoPairs:
 		x1 := h1.Child.MapCardType[pb.HandRanking_TwoPairs]
 		x2 := h2.Child.MapCardType[pb.HandRanking_TwoPairs]
@@ -234,8 +234,8 @@ func compareChildHand(h1, h2 *ChildHand) int {
 			point2 = entity.GetCardRankPoint(x2[0].GetRank())
 		}
 		if point1 == point2 {
-			point1 = entity.GetCardRankPoint(x1[4].GetRank())
-			point2 = entity.GetCardRankPoint(x2[4].GetRank())
+			compare := h1.Child.ListCard.CompareHighCard(h2.Child.ListCard)
+			point1 += compare
 		}
 	case pb.HandRanking_Pair:
 		x1 := h1.Child.MapCardType[pb.HandRanking_Pair]
@@ -246,7 +246,7 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		point1 = entity.GetCardRankPoint(x1[0].GetRank())
 		point2 = entity.GetCardRankPoint(x2[0].GetRank())
 		if point1 == point2 {
-			compare := x1[2:].CompareHighCard(x2[2:])
+			compare := h1.Child.ListCard.CompareHighCard(h2.Child.ListCard)
 			point1 += compare
 		}
 	case pb.HandRanking_HighCard:
