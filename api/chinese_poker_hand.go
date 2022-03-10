@@ -75,14 +75,14 @@ func (h *Hand) parse() error {
 	// h.middleHand[3] = cards[6]
 	// h.middleHand[4] = cards[7]
 
-	copy(h.frontHand[:], cards[3:8])
+	copy(h.middleHand[:], cards[3:8])
 
 	// h.backHand[0] = cards[8]
 	// h.backHand[1] = cards[9]
 	// h.backHand[2] = cards[10]
 	// h.backHand[3] = cards[11]
 	// h.backHand[4] = cards[12]
-	copy(h.frontHand[:], cards[8:])
+	copy(h.backHand[:], cards[8:])
 
 	return nil
 }
