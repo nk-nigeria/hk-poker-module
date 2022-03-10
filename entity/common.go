@@ -34,7 +34,7 @@ func init() {
 	mapCardRankPoint[pb.CardRank_RANK_7] = 6
 	mapCardRankPoint[pb.CardRank_RANK_8] = 7
 	mapCardRankPoint[pb.CardRank_RANK_9] = 8
-	mapCardRankPoint[pb.CardRank_RANK_10] = 8
+	mapCardRankPoint[pb.CardRank_RANK_10] = 9
 	mapCardRankPoint[pb.CardRank_RANK_J] = 10
 	mapCardRankPoint[pb.CardRank_RANK_Q] = 11
 	mapCardRankPoint[pb.CardRank_RANK_K] = 12

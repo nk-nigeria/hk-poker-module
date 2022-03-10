@@ -160,3 +160,217 @@ func TestHand(t *testing.T) {
 
 	t.Logf("compare result: %v", comp)
 }
+
+func TestCheck(t *testing.T) {
+	t.Logf("check begin")
+
+	unsortCard := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_8,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_J,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+
+	sortedCard := SortCard(unsortCard)
+	t.Logf("sorted %v", sortedCard)
+
+	cards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_J,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_Q,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_K,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_A,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+
+	if _, ok := CheckFlush(cards); !ok {
+		t.Errorf("wrong check flush")
+	} else {
+		t.Logf("check flush ok")
+	}
+
+	if _, ok := CheckStraight(cards); !ok {
+		t.Errorf("wrong check straight")
+	} else {
+		t.Logf("check straight ok")
+	}
+
+	if _, ok := CheckStraightFlush(cards); !ok {
+		t.Errorf("wrong check straight flush")
+	} else {
+		t.Logf("check straight flush ok")
+	}
+
+	fourOfAKindCards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_HEARTS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_DIAMONDS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_A,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+
+	if _, ok := CheckFourOfAKind(fourOfAKindCards); !ok {
+		t.Errorf("wrong check four of a kind")
+	} else {
+		t.Logf("check four of a kind ok")
+	}
+
+	fullHouseCards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_HEARTS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_DIAMONDS,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+
+	if _, ok := CheckFullHouse(fullHouseCards); !ok {
+		t.Errorf("wrong check full house card")
+	} else {
+		t.Logf("check full house ok")
+	}
+}
+
+func TestThreeOfAKind(t *testing.T) {
+	threeOfAKindCards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_HEARTS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_DIAMONDS,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+
+	if _, ok := CheckThreeOfAKind(threeOfAKindCards); !ok {
+		t.Errorf("wrong check three of a kind card")
+	} else {
+		t.Logf("check three of a kind ok")
+	}
+}
+
+func TestTwoPair(t *testing.T) {
+	cards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_HEARTS,
+		},
+		{
+			Rank: pb.CardRank_RANK_J,
+			Suit: pb.CardSuit_SUIT_DIAMONDS,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+
+	if _, ok := CheckTwoPairs(cards); !ok {
+		t.Errorf("wrong check two pairs")
+	} else {
+		t.Logf("check two pairs ok")
+	}
+}
+
+func TestPair(t *testing.T) {
+	cards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_HEARTS,
+		},
+		{
+			Rank: pb.CardRank_RANK_J,
+			Suit: pb.CardSuit_SUIT_DIAMONDS,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+
+	if _, ok := CheckPair(cards); !ok {
+		t.Errorf("wrong check pairs")
+	} else {
+		t.Logf("check pairs ok")
+	}
+}

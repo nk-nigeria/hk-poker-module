@@ -68,10 +68,13 @@ func (h *Hand) parse() error {
 func (h *Hand) calculatePoint() int {
 	// Check royalties
 
-	//
 	h.calculatePointFrontHand()
 	h.calculatePointMiddleHand()
 	h.calculatePointBackHand()
+
+	// Check 3 flush
+	// Check 3 straight
+
 	return 0
 }
 

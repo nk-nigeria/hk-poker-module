@@ -3,12 +3,21 @@ package api
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"sort"
 )
 
 type HandPoint struct {
 	rankingType pb.HandRanking
 	point       int
+}
+
+func (h *HandPoint) IsStraight() bool {
+	return h.rankingType == pb.HandRanking_Straight
+}
+
+func (h *HandPoint) IsFlush() bool {
+	return h.rankingType == pb.HandRanking_Flush
 }
 
 type CheckFunc func([]*pb.Card) ([]*pb.Card, bool)
@@ -84,30 +93,20 @@ func CheckFourOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 	if l != 3 && l != 5 {
 		return nil, false
 	}
-	mapCardRank := make(map[int][]*pb.Card)
-	for i := range listCard {
-		card := listCard[i]
-		rankPoint := entity.GetCardRankPoint(card.Rank)
-		var list []*pb.Card
-		if _, exist := mapCardRank[rankPoint]; exist {
-			list = append(list, card)
-		} else {
-			list = make([]*pb.Card, 0)
-			list = append(list, card)
-		}
-		mapCardRank[rankPoint] = list
-	}
-	if len(mapCardRank) != 2 {
+	mapCardRank := ToMapRank(listCard)
+	if mapCardRank.Size() != 2 {
 		return nil, false
 	}
 
 	newListCard := make([]*pb.Card, 0, len(listCard))
 	isFourOfAKind := false
-	for _, list := range mapCardRank {
-		if len(list) == 4 {
+	var list *pb.ListCard
+	for _, value := range mapCardRank.Values() {
+		list = value.(*pb.ListCard)
+		if len(list.Cards) == 4 {
 			isFourOfAKind = true
 		}
-		newListCard = append(newListCard, list...)
+		newListCard = append(newListCard, list.Cards...)
 	}
 	if isFourOfAKind {
 		newListCard = SortCard(newListCard)
@@ -125,20 +124,8 @@ func CheckFullHouse(listCard []*pb.Card) ([]*pb.Card, bool) {
 	if l != 3 && l != 5 {
 		return nil, false
 	}
-	mapCardRank := make(map[int][]*pb.Card)
-	for i := range listCard {
-		card := listCard[i]
-		rankPoint := entity.GetCardRankPoint(card.Rank)
-		var list []*pb.Card
-		if _, exist := mapCardRank[rankPoint]; exist {
-			list = append(list, card)
-		} else {
-			list = make([]*pb.Card, 0)
-			list = append(list, card)
-		}
-		mapCardRank[rankPoint] = list
-	}
-	if len(mapCardRank) != 2 {
+	mapCardRank := ToMapRank(listCard)
+	if mapCardRank.Size() != 2 {
 		return nil, false
 	}
 
@@ -146,18 +133,20 @@ func CheckFullHouse(listCard []*pb.Card) ([]*pb.Card, bool) {
 	hasTriangle := false
 	hasDouble := false
 
-	for _, list := range mapCardRank {
-		if len(list) == 3 {
+	var list *pb.ListCard
+	for _, value := range mapCardRank.Values() {
+		list = value.(*pb.ListCard)
+		if len(list.Cards) == 3 {
 			hasTriangle = true
-			newListCard = append(list, newListCard...)
+			newListCard = append(list.Cards, newListCard...)
 			continue
 		}
-		if len(list) == 2 {
+		if len(list.Cards) == 2 {
 			hasDouble = true
-			newListCard = append(list, newListCard...)
+			newListCard = append(list.Cards, newListCard...)
 			continue
 		}
-		newListCard = append(newListCard, list...)
+		newListCard = append(newListCard, list.Cards...)
 	}
 	if hasTriangle && hasDouble {
 		newListCard = SortCard(newListCard)
@@ -190,16 +179,12 @@ func CheckFlush(listCard []*pb.Card) ([]*pb.Card, bool) {
 // Sảnh (en: Straight)
 // Năm lá bài trong một chuỗi số (nhưng không đồng chất)
 func CheckStraight(listCard []*pb.Card) ([]*pb.Card, bool) {
-	l := len(listCard)
-	if l != 3 && l != 5 {
-		return nil, false
-	}
 	listCard = SortCard(listCard)
 	prevRankPoint := entity.GetCardRankPoint(listCard[0].GetRank())
 	for i := 1; i < len(listCard); i++ {
 		card := listCard[i]
 		rankPoint := entity.GetCardRankPoint(card.GetRank())
-		prevRankPoint++
+		prevRankPoint--
 		if rankPoint != prevRankPoint {
 			return nil, false
 		}
@@ -215,31 +200,23 @@ func CheckThreeOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 	if l != 3 && l != 5 {
 		return nil, false
 	}
-	mapCardRank := make(map[int][]*pb.Card)
-	for i := range listCard {
-		card := listCard[i]
-		rankPoint := entity.GetCardRankPoint(card.Rank)
-		var list []*pb.Card
-		if _, exist := mapCardRank[rankPoint]; !exist {
-			list = make([]*pb.Card, 0)
-		}
-		list = append(list, card)
-		mapCardRank[rankPoint] = list
-	}
-	if len(mapCardRank) < 2 {
+	mapCardRank := ToMapRank(listCard)
+	if mapCardRank.Size() < 2 {
 		return nil, false
 	}
 
 	newListCard := make([]*pb.Card, 0, len(listCard))
 	hasTriangle := false
 
-	for _, list := range mapCardRank {
-		if len(list) == 3 {
+	var list *pb.ListCard
+	for _, value := range mapCardRank.Values() {
+		list = value.(*pb.ListCard)
+		if len(list.Cards) == 3 {
 			hasTriangle = true
-			newListCard = append(list, newListCard...)
+			newListCard = append(list.Cards, newListCard...)
 			continue
 		}
-		newListCard = append(newListCard, list...)
+		newListCard = append(newListCard, list.Cards...)
 	}
 	if hasTriangle {
 		newListCard = SortCard(newListCard)
@@ -256,31 +233,23 @@ func CheckTwoPairs(listCard []*pb.Card) ([]*pb.Card, bool) {
 	if l != 3 && l != 5 {
 		return nil, false
 	}
-	mapCardRank := make(map[int][]*pb.Card)
-	for i := range listCard {
-		card := listCard[i]
-		rankPoint := entity.GetCardRankPoint(card.Rank)
-		var list []*pb.Card
-		if _, exist := mapCardRank[rankPoint]; !exist {
-			list = make([]*pb.Card, 0)
-		}
-		list = append(list, card)
-		mapCardRank[rankPoint] = list
-	}
-	if len(mapCardRank) < 3 {
+	mapCardRank := ToMapRank(listCard)
+	if mapCardRank.Size() < 3 {
 		return nil, false
 	}
 
 	newListCard := make([]*pb.Card, 0, len(listCard))
 	numPair := 0
 
-	for _, list := range mapCardRank {
-		if len(list) == 2 {
+	var list *pb.ListCard
+	for _, value := range mapCardRank.Values() {
+		list = value.(*pb.ListCard)
+		if len(list.Cards) == 2 {
 			numPair++
-			newListCard = append(list, newListCard...)
+			newListCard = append(list.Cards, newListCard...)
 			continue
 		}
-		newListCard = append(newListCard, list...)
+		newListCard = append(newListCard, list.Cards...)
 	}
 	if numPair == 2 {
 		newListCard = SortCard(newListCard)
@@ -297,37 +266,65 @@ func CheckPair(listCard []*pb.Card) ([]*pb.Card, bool) {
 	if l != 3 && l != 5 {
 		return nil, false
 	}
-	mapCardRank := make(map[int][]*pb.Card)
-	for i := range listCard {
-		card := listCard[i]
-		rankPoint := entity.GetCardRankPoint(card.Rank)
-		var list []*pb.Card
-		if _, exist := mapCardRank[rankPoint]; !exist {
-			list = make([]*pb.Card, 0)
-		}
-		list = append(list, card)
-		mapCardRank[rankPoint] = list
-	}
-	if len(mapCardRank) < 3 {
+	mapCardRank := ToMapRank(listCard)
+	if mapCardRank.Size() < 3 {
 		return nil, false
 	}
 
 	newListCard := make([]*pb.Card, 0, len(listCard))
 	numPair := 0
 
-	for _, list := range mapCardRank {
-		if len(list) == 2 {
+	var list *pb.ListCard
+	for _, value := range mapCardRank.Values() {
+		list = value.(*pb.ListCard)
+		if len(list.Cards) == 2 {
 			numPair++
-			newListCard = append(list, newListCard...)
+			newListCard = append(list.Cards, newListCard...)
 			continue
 		}
-		newListCard = append(newListCard, list...)
+		newListCard = append(newListCard, list.Cards...)
 	}
 	if numPair > 0 {
 		newListCard = SortCard(newListCard)
 		return newListCard, true
 	}
 	return nil, false
+}
+
+func ToMapRank(listCard []*pb.Card) *linkedhashmap.Map {
+	mapCardRank := linkedhashmap.New()
+	var list *pb.ListCard
+	for i := range listCard {
+		card := listCard[i]
+		rankPoint := entity.GetCardRankPoint(card.Rank)
+		if val, exist := mapCardRank.Get(rankPoint); !exist {
+			list = &pb.ListCard{}
+			mapCardRank.Put(rankPoint, list)
+		} else {
+			list = val.(*pb.ListCard)
+		}
+		list.Cards = append(list.Cards, card)
+	}
+
+	return mapCardRank
+}
+
+func ToMapSuit(listCard []*pb.Card) *linkedhashmap.Map {
+	m := linkedhashmap.New()
+	var list *pb.ListCard
+	for _, card := range listCard {
+		suitPoint := entity.GetCardSuitPoint(card.Suit)
+		if val, exist := m.Get(suitPoint); !exist {
+			list = &pb.ListCard{}
+			m.Put(suitPoint, list)
+		} else {
+			list = val.(*pb.ListCard)
+		}
+
+		list.Cards = append(list.Cards, card)
+	}
+
+	return m
 }
 
 // SortCard
