@@ -321,18 +321,20 @@ func CheckTwoPairs(listCard ListCard) (*HandCards, bool) {
 
 	var list *pb.ListCard
 	handCard := HandCards{}
+	listTwoPair := ListCard{}
 	for _, value := range mapCardRank.Values() {
 		list = value.(*pb.ListCard)
 		if len(list.Cards) == 2 {
 			numPair++
-			newListCard = append(list.Cards, newListCard...)
+			newListCard = append(newListCard, list.GetCards()...)
+			listTwoPair = append(listTwoPair, list.GetCards()...)
 			continue
 		}
 		newListCard = append(newListCard, list.Cards...)
 	}
 	if numPair == 2 {
 		newListCard = SortCard(newListCard)
-		handCard.MapCardType[pb.HandRanking_TwoPairs] = newListCard
+		handCard.MapCardType[pb.HandRanking_TwoPairs] = SortCard(listTwoPair)
 		handCard.ListCard = newListCard
 		return &handCard, true
 	}

@@ -143,12 +143,10 @@ func (h *Hand) calculatePointBackHand() {
 }
 
 func CompareHand(h1, h2 *Hand) *pb.CompareResult {
-
 	result := &pb.CompareResult{}
 	result.FrontFactor = int64(compareChildHand(h1.frontHand, h2.frontHand))
 	result.MiddleFactor = int64(compareChildHand(h1.middleHand, h2.middleHand))
 	result.BackFactor = int64(compareChildHand(h1.backHand, h2.backHand))
-
 	return result
 }
 
@@ -227,15 +225,17 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1[:2].GetMaxPointCard()
-		point2 = x2[:2].GetMaxPointCard()
+
+		//
+		point1 = entity.GetCardRankPoint(x1[2].GetRank())
+		point2 = entity.GetCardRankPoint(x2[2].GetRank())
 		if point1 == point2 {
-			point1 = x1[2:4].GetMaxPointCard()
-			point2 = x2[2:4].GetMaxPointCard()
+			point1 = entity.GetCardRankPoint(x1[0].GetRank())
+			point2 = entity.GetCardRankPoint(x2[0].GetRank())
 		}
 		if point1 == point2 {
-			point1 = x1[4:].GetMaxPointCard()
-			point2 = x2[4:].GetMaxPointCard()
+			point1 = entity.GetCardRankPoint(x1[4].GetRank())
+			point2 = entity.GetCardRankPoint(x2[4].GetRank())
 		}
 	case pb.HandRanking_Pair:
 		x1 := h1.Child.MapCardType[pb.HandRanking_Pair]
@@ -243,10 +243,10 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1[:2].GetMaxPointCard()
-		point2 = x2[:2].GetMaxPointCard()
+		point1 = entity.GetCardRankPoint(x1[0].GetRank())
+		point2 = entity.GetCardRankPoint(x2[0].GetRank())
 		if point1 == point2 {
-			compare := x1[2:].CompareStraightCards(x2[2:])
+			compare := x1[2:].CompareHighCard(x2[2:])
 			point1 += compare
 		}
 	case pb.HandRanking_HighCard:
@@ -255,7 +255,7 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		compare := x1.CompareStraightCards(x2)
+		compare := x1.CompareHighCard(x2)
 		point1 += compare
 	}
 
