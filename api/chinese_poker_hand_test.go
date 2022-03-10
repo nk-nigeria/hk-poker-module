@@ -1,13 +1,14 @@
 package api
 
 import (
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"testing"
+
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
 func mockHand1() (*Hand, error) {
-	return NewHand(pb.ListCard{
-		Cards: []*pb.Card{
+	return NewHand(&pb.ListCard{
+		Cards: ListCard{
 			{
 				Rank: pb.CardRank_RANK_3,
 				Suit: pb.CardSuit_SUIT_CLUBS,
@@ -67,8 +68,8 @@ func mockHand1() (*Hand, error) {
 }
 
 func mockHand2() (*Hand, error) {
-	return NewHand(pb.ListCard{
-		Cards: []*pb.Card{
+	return NewHand(&pb.ListCard{
+		Cards: ListCard{
 			// Front
 			{
 				Rank: pb.CardRank_RANK_3,
@@ -142,9 +143,9 @@ func TestHand(t *testing.T) {
 
 	// test calculate
 	h1.calculatePoint()
-	t.Logf("caculate front %v", h1.frontHandPoint)
-	t.Logf("caculate middle %v", h1.middleHandPoint)
-	t.Logf("caculate back %v", h1.backHandPoint)
+	t.Logf("caculate front %v", h1.frontHand.Point)
+	t.Logf("caculate middle %v", h1.middleHand.Point)
+	t.Logf("caculate back %v", h1.backHand.Point)
 
 	// test compare
 	h2, err := mockHand2()
@@ -164,7 +165,7 @@ func TestHand(t *testing.T) {
 func TestCheck(t *testing.T) {
 	t.Logf("check begin")
 
-	unsortCard := []*pb.Card{
+	unsortCard := ListCard{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -182,7 +183,7 @@ func TestCheck(t *testing.T) {
 	sortedCard := SortCard(unsortCard)
 	t.Logf("sorted %v", sortedCard)
 
-	cards := []*pb.Card{
+	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -223,7 +224,7 @@ func TestCheck(t *testing.T) {
 		t.Logf("check straight flush ok")
 	}
 
-	fourOfAKindCards := []*pb.Card{
+	fourOfAKindCards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -252,7 +253,7 @@ func TestCheck(t *testing.T) {
 		t.Logf("check four of a kind ok")
 	}
 
-	fullHouseCards := []*pb.Card{
+	fullHouseCards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -283,7 +284,7 @@ func TestCheck(t *testing.T) {
 }
 
 func TestThreeOfAKind(t *testing.T) {
-	threeOfAKindCards := []*pb.Card{
+	threeOfAKindCards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -314,7 +315,7 @@ func TestThreeOfAKind(t *testing.T) {
 }
 
 func TestTwoPair(t *testing.T) {
-	cards := []*pb.Card{
+	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -345,7 +346,7 @@ func TestTwoPair(t *testing.T) {
 }
 
 func TestPair(t *testing.T) {
-	cards := []*pb.Card{
+	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,

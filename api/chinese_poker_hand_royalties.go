@@ -1,14 +1,15 @@
 package api
 
 import (
+	"log"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"log"
 )
 
 // CheckSameSuit
 // Đồng nước 13 lá
-func CheckSameSuit(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckSameSuit(listCard ListCard) (ListCard, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	log.Printf("key %v", len(mapCardSuit.Keys()))
 	for _, k := range mapCardSuit.Keys() {
@@ -23,7 +24,7 @@ func CheckSameSuit(listCard []*pb.Card) ([]*pb.Card, bool) {
 
 // CheckSameColor
 // Đồng nước 13 lá
-func CheckSameColor(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckSameColor(listCard ListCard) (ListCard, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	redCount := 0
 	blackCount := 0
@@ -55,14 +56,14 @@ func CheckSameColor(listCard []*pb.Card) ([]*pb.Card, bool) {
 
 // CheckDragon
 // Sảnh rồng
-func CheckDragon(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckDragon(listCard ListCard) (ListCard, bool) {
 	_, ok := CheckStraight(listCard)
 	return nil, ok
 }
 
 // CheckSixPairs
 // 6 đôi
-func CheckSixPairs(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckSixPairs(listCard ListCard) (ListCard, bool) {
 	mapRank := ToMapRank(listCard)
 	if len(mapRank.Keys()) < 7 {
 		return nil, false
@@ -86,14 +87,14 @@ func CheckSixPairs(listCard []*pb.Card) ([]*pb.Card, bool) {
 
 // CheckThreeStraight
 // 3 sảnh
-func CheckThreeStraight(hand *Hand) ([]*pb.Card, bool) {
-	threeStraight := hand.frontHandPoint.IsStraight() && hand.middleHandPoint.IsStraight() && hand.backHandPoint.IsStraight()
+func CheckThreeStraight(hand *Hand) (ListCard, bool) {
+	threeStraight := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
 	return nil, threeStraight
 }
 
 // CheckThreeFlush
 // 3 cái thùng
-func CheckThreeFlush(hand *Hand) ([]*pb.Card, bool) {
-	threeFlush := hand.frontHandPoint.IsStraight() && hand.middleHandPoint.IsStraight() && hand.backHandPoint.IsStraight()
+func CheckThreeFlush(hand *Hand) (ListCard, bool) {
+	threeFlush := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
 	return nil, threeFlush
 }

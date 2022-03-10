@@ -1,12 +1,13 @@
 package api
 
 import (
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"testing"
+
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
 func TestCheckSameSuit(t *testing.T) {
-	cards := []*pb.Card{
+	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -69,7 +70,7 @@ func TestCheckSameSuit(t *testing.T) {
 }
 
 func TestCheckSameColor(t *testing.T) {
-	cards := []*pb.Card{
+	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -132,7 +133,7 @@ func TestCheckSameColor(t *testing.T) {
 }
 
 func TestCheckDragon(t *testing.T) {
-	cards := []*pb.Card{
+	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -195,7 +196,7 @@ func TestCheckDragon(t *testing.T) {
 }
 
 func TestCheckSixPairs(t *testing.T) {
-	cards := []*pb.Card{
+	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,

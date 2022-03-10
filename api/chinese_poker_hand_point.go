@@ -1,15 +1,68 @@
 package api
 
 import (
+	"sort"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
-	"sort"
 )
 
 type HandPoint struct {
 	rankingType pb.HandRanking
 	point       int
+}
+
+type ListCard []*pb.Card
+
+func (ls ListCard) GetMaxPointCard() int {
+	isStraight := true
+	isContainCardRanK := false
+	prevRankPoint := entity.GetCardRankPoint(ls[0].GetRank())
+	for i := 1; i < len(ls); i++ {
+		card := ls[i]
+		if isStraight {
+			rankPoint := entity.GetCardRankPoint(card.GetRank())
+			prevRankPoint--
+			if rankPoint != prevRankPoint {
+				isStraight = false
+			}
+		}
+		isContainCardRanK = card.GetRank() == pb.CardRank_RANK_K
+	}
+	maxCard := ls[len(ls)-1]
+	// Chú ý rằng trong Mậu Binh có thể xếp sảnh (hoặc thùng phá sảnh) con A ghép với 2,3,4,5
+	// (tuy nhiên đây là bài sảnh hay thùng phá sảnh nhỏ nhất),
+	// còn con A ghép với 10,J,Q,K là lá bài lớn nhất.
+	if isStraight && !isContainCardRanK {
+		return 1
+	}
+	return entity.GetCardRankPoint(maxCard.GetRank())
+}
+
+// -1 lower
+// 0 equal
+// 1 higher
+func (ls ListCard) CompareStraightCards(other ListCard) int {
+	if len(ls) != len(other) {
+		return 0
+	}
+	for i := len(ls); i >= 0; i-- {
+		point1 := entity.GetCardRankPoint(ls[i].GetRank())
+		point2 := entity.GetCardRankPoint(other[i].GetRank())
+		if point1 > point2 {
+			return 1
+		}
+		if point2 < point1 {
+			return -1
+		}
+	}
+	return 0
+}
+
+type HandCards struct {
+	ListCard    ListCard
+	MapCardType map[pb.HandRanking]ListCard
 }
 
 func (h *HandPoint) IsStraight() bool {
@@ -20,7 +73,7 @@ func (h *HandPoint) IsFlush() bool {
 	return h.rankingType == pb.HandRanking_Flush
 }
 
-type CheckFunc func([]*pb.Card) ([]*pb.Card, bool)
+type CheckFunc func(ListCard) (*HandCards, bool)
 
 var HandChecker = map[pb.HandRanking]CheckFunc{
 	pb.HandRanking_StraightFlush: CheckStraightFlush,
@@ -38,57 +91,64 @@ var HandCheckerFront = map[pb.HandRanking]CheckFunc{
 	pb.HandRanking_Pair:         CheckPair,
 }
 
-func GetHandPoint(listCard []*pb.Card) (*HandPoint, []*pb.Card) {
+func GetHandPoint(listCard ListCard) (*HandPoint, *HandCards) {
 	if len(listCard) == 3 {
 		// For check front
 		for rank, check := range HandCheckerFront {
-			if sortedListCard, valid := check(listCard); valid {
+			if handCard, valid := check(listCard); valid {
 				return &HandPoint{
 					rankingType: rank,
-				}, sortedListCard
+				}, handCard
 			}
 		}
 	} else {
 		for rank, check := range HandChecker {
-			if sortedListCard, valid := check(listCard); valid {
+			if handCard, valid := check(listCard); valid {
 				return &HandPoint{
 					rankingType: rank,
-				}, sortedListCard
+				}, handCard
 			}
 		}
 	}
 
 	// Sort for high card
-	SortCard(listCard)
+	listCard = SortCard(listCard)
+	handCard := HandCards{
+		ListCard: listCard,
+	}
 	return &HandPoint{
 		rankingType: pb.HandRanking_HighCard,
-	}, listCard
+	}, &handCard
 }
 
 // CheckStraightFlush
 // Thùng phá sảnh (en: Straight Flush)
 // Năm lá bài cùng màu, đồng chất, cùng một chuỗi số
 // Là Flush, có cùng chuỗi
-func CheckStraightFlush(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckStraightFlush(listCard ListCard) (*HandCards, bool) {
 	l := len(listCard)
 	if l != 3 && l != 5 {
 		return nil, false
 	}
-	listCard, valid := CheckFlush(listCard)
+	handCard, valid := CheckFlush(listCard)
 	if !valid {
 		return nil, false
 	}
-	listCard, valid = CheckStraight(listCard)
+	handCard2, valid := CheckStraight(listCard)
 	if !valid {
 		return nil, false
 	}
-	return listCard, true
+	for k, v := range handCard2.MapCardType {
+		handCard.MapCardType[k] = v
+	}
+	handCard.ListCard = handCard2.ListCard
+	return handCard, true
 }
 
 // CheckFourOfAKind
 // Tứ quý (en: Four of a Kind)
 // Bốn lá đồng số
-func CheckFourOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckFourOfAKind(listCard ListCard) (*HandCards, bool) {
 	l := len(listCard)
 	if l != 3 && l != 5 {
 		return nil, false
@@ -98,7 +158,8 @@ func CheckFourOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 		return nil, false
 	}
 
-	newListCard := make([]*pb.Card, 0, len(listCard))
+	newListCard := make(ListCard, 0, len(listCard))
+	handCard := HandCards{}
 	isFourOfAKind := false
 	var list *pb.ListCard
 	for _, value := range mapCardRank.Values() {
@@ -106,11 +167,13 @@ func CheckFourOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 		if len(list.Cards) == 4 {
 			isFourOfAKind = true
 		}
+		handCard.MapCardType[pb.HandRanking_FourOfAKind] = list.GetCards()
 		newListCard = append(newListCard, list.Cards...)
 	}
 	if isFourOfAKind {
 		newListCard = SortCard(newListCard)
-		return newListCard, true
+		handCard.ListCard = newListCard
+		return &handCard, true
 	}
 	return nil, false
 }
@@ -119,7 +182,7 @@ func CheckFourOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 // Cù lũ (en: Full House)
 // Một bộ ba và một bộ đôi
 // Bốn lá đồng số
-func CheckFullHouse(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckFullHouse(listCard ListCard) (*HandCards, bool) {
 	l := len(listCard)
 	if l != 3 && l != 5 {
 		return nil, false
@@ -129,28 +192,33 @@ func CheckFullHouse(listCard []*pb.Card) ([]*pb.Card, bool) {
 		return nil, false
 	}
 
-	newListCard := make([]*pb.Card, 0, len(listCard))
+	newListCard := make(ListCard, 0, len(listCard))
 	hasTriangle := false
 	hasDouble := false
 
 	var list *pb.ListCard
+	handCard := HandCards{}
 	for _, value := range mapCardRank.Values() {
 		list = value.(*pb.ListCard)
 		if len(list.Cards) == 3 {
 			hasTriangle = true
 			newListCard = append(list.Cards, newListCard...)
+			handCard.MapCardType[pb.HandRanking_ThreeOfAKind] = list.GetCards()
 			continue
 		}
 		if len(list.Cards) == 2 {
 			hasDouble = true
 			newListCard = append(list.Cards, newListCard...)
+			handCard.MapCardType[pb.HandRanking_Pair] = list.GetCards()
+
 			continue
 		}
 		newListCard = append(newListCard, list.Cards...)
 	}
 	if hasTriangle && hasDouble {
 		newListCard = SortCard(newListCard)
-		return newListCard, true
+		handCard.ListCard = newListCard
+		return &handCard, true
 	}
 	return nil, false
 }
@@ -158,12 +226,13 @@ func CheckFullHouse(listCard []*pb.Card) ([]*pb.Card, bool) {
 // CheckFlush
 // Thùng (en: Flush)
 // Năm lá bài cùng màu, đồng chất (nhưng không cùng một chuỗi số)
-func CheckFlush(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckFlush(listCard ListCard) (*HandCards, bool) {
 	l := len(listCard)
 	if l != 3 && l != 5 {
 		return nil, false
 	}
 	listCard = SortCard(listCard)
+
 	prevSuitPoint := entity.GetCardSuitPoint(listCard[0].GetSuit())
 	for i := 1; i < len(listCard); i++ {
 		card := listCard[i]
@@ -172,13 +241,16 @@ func CheckFlush(listCard []*pb.Card) ([]*pb.Card, bool) {
 			return nil, false
 		}
 	}
-	return listCard, true
+	handCard := HandCards{
+		ListCard: listCard,
+	}
+	return &handCard, true
 }
 
 // CheckStraight
 // Sảnh (en: Straight)
 // Năm lá bài trong một chuỗi số (nhưng không đồng chất)
-func CheckStraight(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckStraight(listCard ListCard) (*HandCards, bool) {
 	listCard = SortCard(listCard)
 	prevRankPoint := entity.GetCardRankPoint(listCard[0].GetRank())
 	for i := 1; i < len(listCard); i++ {
@@ -189,13 +261,16 @@ func CheckStraight(listCard []*pb.Card) ([]*pb.Card, bool) {
 			return nil, false
 		}
 	}
-	return listCard, true
+	handCards := HandCards{
+		ListCard: listCard,
+	}
+	return &handCards, true
 }
 
 // CheckThreeOfAKind
 // Xám chi/Xám cô (en: Three of a Kind)
 // Ba lá bài đồng số
-func CheckThreeOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckThreeOfAKind(listCard ListCard) (*HandCards, bool) {
 	l := len(listCard)
 	if l != 3 && l != 5 {
 		return nil, false
@@ -205,8 +280,9 @@ func CheckThreeOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 		return nil, false
 	}
 
-	newListCard := make([]*pb.Card, 0, len(listCard))
+	newListCard := make(ListCard, 0, len(listCard))
 	hasTriangle := false
+	handCard := HandCards{}
 
 	var list *pb.ListCard
 	for _, value := range mapCardRank.Values() {
@@ -214,13 +290,15 @@ func CheckThreeOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 		if len(list.Cards) == 3 {
 			hasTriangle = true
 			newListCard = append(list.Cards, newListCard...)
+			handCard.MapCardType[pb.HandRanking_ThreeOfAKind] = listCard
 			continue
 		}
 		newListCard = append(newListCard, list.Cards...)
 	}
 	if hasTriangle {
 		newListCard = SortCard(newListCard)
-		return newListCard, true
+		handCard.ListCard = newListCard
+		return &handCard, true
 	}
 	return nil, false
 }
@@ -228,7 +306,7 @@ func CheckThreeOfAKind(listCard []*pb.Card) ([]*pb.Card, bool) {
 // CheckTwoPairs
 // Thú (en: Two Pairs)
 // Hai đôi
-func CheckTwoPairs(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckTwoPairs(listCard ListCard) (*HandCards, bool) {
 	l := len(listCard)
 	if l != 3 && l != 5 {
 		return nil, false
@@ -238,10 +316,11 @@ func CheckTwoPairs(listCard []*pb.Card) ([]*pb.Card, bool) {
 		return nil, false
 	}
 
-	newListCard := make([]*pb.Card, 0, len(listCard))
+	newListCard := make(ListCard, 0, len(listCard))
 	numPair := 0
 
 	var list *pb.ListCard
+	handCard := HandCards{}
 	for _, value := range mapCardRank.Values() {
 		list = value.(*pb.ListCard)
 		if len(list.Cards) == 2 {
@@ -253,7 +332,9 @@ func CheckTwoPairs(listCard []*pb.Card) ([]*pb.Card, bool) {
 	}
 	if numPair == 2 {
 		newListCard = SortCard(newListCard)
-		return newListCard, true
+		handCard.MapCardType[pb.HandRanking_TwoPairs] = newListCard
+		handCard.ListCard = newListCard
+		return &handCard, true
 	}
 	return nil, false
 }
@@ -261,7 +342,7 @@ func CheckTwoPairs(listCard []*pb.Card) ([]*pb.Card, bool) {
 // CheckPair
 // Đôi (en: Pair)
 // Hai lá bài đồng số
-func CheckPair(listCard []*pb.Card) ([]*pb.Card, bool) {
+func CheckPair(listCard ListCard) (*HandCards, bool) {
 	l := len(listCard)
 	if l != 3 && l != 5 {
 		return nil, false
@@ -271,27 +352,30 @@ func CheckPair(listCard []*pb.Card) ([]*pb.Card, bool) {
 		return nil, false
 	}
 
-	newListCard := make([]*pb.Card, 0, len(listCard))
+	newListCard := make(ListCard, 0, len(listCard))
 	numPair := 0
 
 	var list *pb.ListCard
+	cards := &HandCards{}
 	for _, value := range mapCardRank.Values() {
 		list = value.(*pb.ListCard)
 		if len(list.Cards) == 2 {
 			numPair++
 			newListCard = append(list.Cards, newListCard...)
+			cards.MapCardType[pb.HandRanking_Pair] = list.GetCards()
 			continue
 		}
 		newListCard = append(newListCard, list.Cards...)
 	}
 	if numPair > 0 {
 		newListCard = SortCard(newListCard)
-		return newListCard, true
+		cards.ListCard = newListCard
+		return cards, true
 	}
 	return nil, false
 }
 
-func ToMapRank(listCard []*pb.Card) *linkedhashmap.Map {
+func ToMapRank(listCard ListCard) *linkedhashmap.Map {
 	mapCardRank := linkedhashmap.New()
 	var list *pb.ListCard
 	for i := range listCard {
@@ -309,7 +393,7 @@ func ToMapRank(listCard []*pb.Card) *linkedhashmap.Map {
 	return mapCardRank
 }
 
-func ToMapSuit(listCard []*pb.Card) *linkedhashmap.Map {
+func ToMapSuit(listCard ListCard) *linkedhashmap.Map {
 	m := linkedhashmap.New()
 	var list *pb.ListCard
 	for _, card := range listCard {
@@ -329,7 +413,7 @@ func ToMapSuit(listCard []*pb.Card) *linkedhashmap.Map {
 
 // SortCard
 // sort card increase by rank, equal rank will check suit
-func SortCard(listCard []*pb.Card) []*pb.Card {
+func SortCard(listCard ListCard) ListCard {
 	sort.Slice(listCard, func(a, b int) bool {
 		cardA := listCard[a]
 		cardB := listCard[b]

@@ -12,6 +12,13 @@ var mapHandRankingPoint map[pb.HandRanking]int
 var mapCardRankPoint map[pb.CardRank]int
 var mapCardSuitPoint map[pb.CardSuit]int
 
+func Min(x int, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
 func init() {
 	// init hand ranking point
 	mapHandRankingPoint = make(map[pb.HandRanking]int)
@@ -26,19 +33,19 @@ func init() {
 	mapHandRankingPoint[pb.HandRanking_StraightFlush] = 9
 
 	mapCardRankPoint = make(map[pb.CardRank]int)
-	mapCardRankPoint[pb.CardRank_RANK_2] = 1
-	mapCardRankPoint[pb.CardRank_RANK_3] = 2
-	mapCardRankPoint[pb.CardRank_RANK_4] = 3
-	mapCardRankPoint[pb.CardRank_RANK_5] = 4
-	mapCardRankPoint[pb.CardRank_RANK_6] = 5
-	mapCardRankPoint[pb.CardRank_RANK_7] = 6
-	mapCardRankPoint[pb.CardRank_RANK_8] = 7
-	mapCardRankPoint[pb.CardRank_RANK_9] = 8
-	mapCardRankPoint[pb.CardRank_RANK_10] = 9
-	mapCardRankPoint[pb.CardRank_RANK_J] = 10
-	mapCardRankPoint[pb.CardRank_RANK_Q] = 11
-	mapCardRankPoint[pb.CardRank_RANK_K] = 12
-	mapCardRankPoint[pb.CardRank_RANK_A] = 13
+	mapCardRankPoint[pb.CardRank_RANK_2] = 2
+	mapCardRankPoint[pb.CardRank_RANK_3] = 3
+	mapCardRankPoint[pb.CardRank_RANK_4] = 4
+	mapCardRankPoint[pb.CardRank_RANK_5] = 5
+	mapCardRankPoint[pb.CardRank_RANK_6] = 6
+	mapCardRankPoint[pb.CardRank_RANK_7] = 7
+	mapCardRankPoint[pb.CardRank_RANK_8] = 8
+	mapCardRankPoint[pb.CardRank_RANK_9] = 9
+	mapCardRankPoint[pb.CardRank_RANK_10] = 10
+	mapCardRankPoint[pb.CardRank_RANK_J] = 11
+	mapCardRankPoint[pb.CardRank_RANK_Q] = 12
+	mapCardRankPoint[pb.CardRank_RANK_K] = 13
+	mapCardRankPoint[pb.CardRank_RANK_A] = 14
 
 	mapCardSuitPoint = make(map[pb.CardSuit]int)
 	mapCardSuitPoint[pb.CardSuit_SUIT_UNSPECIFIED] = 0
