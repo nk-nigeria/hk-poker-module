@@ -2,19 +2,10 @@ package api
 
 import (
 	"errors"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
-
-type CompareResult struct {
-	FrontFactor  int
-	MiddleFactor int
-	BackFactor   int
-
-	FrontBonus  int
-	MiddleBonus int
-	BackBonus   int
-}
 
 // Hand
 // Contain all presence card
@@ -117,10 +108,10 @@ func (h *Hand) calculatePointBackHand() {
 	h.backHand[4] = sortedCard[4]
 }
 
-func CompareHand(h1, h2 *Hand) *CompareResult {
+func CompareHand(h1, h2 *Hand) *pb.CompareResult {
 	h1.calculatePoint()
 	h2.calculatePoint()
-	result := &CompareResult{}
+	result := &pb.CompareResult{}
 	if entity.GetHandRankingPoint(h1.frontHandPoint.rankingType) > entity.GetHandRankingPoint(h2.frontHandPoint.rankingType) {
 		result.FrontFactor++
 	} else if entity.GetHandRankingPoint(h1.frontHandPoint.rankingType) < entity.GetHandRankingPoint(h2.frontHandPoint.rankingType) {

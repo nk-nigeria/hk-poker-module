@@ -152,6 +152,12 @@ message UpdateResult {
 message UpdateGameState {
     GameState state = 1;
     int64 count_down = 2;
+    ArrangeCard arrange_card = 3;
+}
+
+message ArrangeCard {
+    string Presence = 1;
+    CardEvent card_event = 2;
 }
 
 enum HandRanking {
@@ -164,4 +170,21 @@ enum HandRanking {
     TwoPairs = 6;
     Pair = 7;
     HighCard = 8;
+}
+
+enum CardEvent {
+    Combine = 0;
+    Show = 1;
+    Declare = 2;
+}
+
+
+message CompareResult {
+    int64 FrontFactor = 1;
+    int64 MiddleFactor = 2;
+    int64 BackFactor = 3;
+
+    int64 FrontBonus = 4;
+    int64 MiddleBonus = 5;
+    int64 BackBonus = 6;
 }
