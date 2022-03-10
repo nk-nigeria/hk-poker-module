@@ -2,8 +2,19 @@ package api
 
 import (
 	"errors"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
+
+type CompareResult struct {
+	FrontFactor  int
+	MiddleFactor int
+	BackFactor   int
+
+	FrontBonus  int
+	MiddleBonus int
+	BackBonus   int
+}
 
 // Hand
 // Contain all presence card
@@ -79,18 +90,50 @@ func (h *Hand) calculatePoint() int {
 }
 
 func (h *Hand) calculatePointFrontHand() {
-	h.frontHandPoint, _ = GetHandPoint(h.frontHand[:])
+	var sortedCard []*pb.Card
+	h.frontHandPoint, sortedCard = GetHandPoint(h.frontHand[:])
+	h.frontHand[0] = sortedCard[0]
+	h.frontHand[1] = sortedCard[1]
+	h.frontHand[2] = sortedCard[2]
 }
 
 func (h *Hand) calculatePointMiddleHand() {
-	h.middleHandPoint, _ = GetHandPoint(h.middleHand[:])
+	var sortedCard []*pb.Card
+	h.middleHandPoint, sortedCard = GetHandPoint(h.middleHand[:])
+	h.middleHand[0] = sortedCard[0]
+	h.middleHand[1] = sortedCard[1]
+	h.middleHand[2] = sortedCard[2]
+	h.middleHand[3] = sortedCard[3]
+	h.middleHand[4] = sortedCard[4]
 }
 
 func (h *Hand) calculatePointBackHand() {
-	h.backHandPoint, _ = GetHandPoint(h.backHand[:])
+	var sortedCard []*pb.Card
+	h.backHandPoint, sortedCard = GetHandPoint(h.backHand[:])
+	h.backHand[0] = sortedCard[0]
+	h.backHand[1] = sortedCard[1]
+	h.backHand[2] = sortedCard[2]
+	h.backHand[3] = sortedCard[3]
+	h.backHand[4] = sortedCard[4]
 }
 
-func CompareHand(h1, h2 *Hand) int {
+func CompareHand(h1, h2 *Hand) *CompareResult {
+	h1.calculatePoint()
+	h2.calculatePoint()
+	result := &CompareResult{}
+	if entity.GetHandRankingPoint(h1.frontHandPoint.rankingType) > entity.GetHandRankingPoint(h2.frontHandPoint.rankingType) {
+		result.FrontFactor++
+	} else if entity.GetHandRankingPoint(h1.frontHandPoint.rankingType) < entity.GetHandRankingPoint(h2.frontHandPoint.rankingType) {
+		result.FrontFactor--
+	} else {
+		for _, card1 := range h1.frontHand {
+			for _, card2 := range h2.frontHand {
+				if entity.GetCardRankPoint(card1.Rank) > entity.GetCardRankPoint(card2.Rank) {
 
-	return 0
+				}
+			}
+		}
+	}
+
+	return result
 }
