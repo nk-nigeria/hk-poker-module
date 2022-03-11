@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"testing"
 
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -8,7 +9,7 @@ import (
 
 func mockHand1() (*Hand, error) {
 	return NewHand(&pb.ListCard{
-		Cards: ListCard{
+		Cards: []*pb.Card{
 			{
 				Rank: pb.CardRank_RANK_3,
 				Suit: pb.CardSuit_SUIT_CLUBS,
@@ -69,7 +70,7 @@ func mockHand1() (*Hand, error) {
 
 func mockHand2() (*Hand, error) {
 	return NewHand(&pb.ListCard{
-		Cards: ListCard{
+		Cards: []*pb.Card{
 			// Front
 			{
 				Rank: pb.CardRank_RANK_3,
@@ -137,7 +138,7 @@ func TestHand(t *testing.T) {
 		t.Errorf("invalid hand %v", err)
 	}
 
-	for _, card := range h1.GetCards().Cards {
+	for _, card := range h1.GetCards() {
 		t.Logf("hand %v", card)
 	}
 
@@ -153,9 +154,15 @@ func TestHand(t *testing.T) {
 		t.Errorf("invalid hand %v", err)
 	}
 
-	for _, card := range h2.GetCards().Cards {
+	for _, card := range h2.GetCards() {
 		t.Logf("hand2 %v", card)
 	}
+
+	// test calculate
+	h2.calculatePoint()
+	t.Logf("caculate front %v", h2.frontHand.Point)
+	t.Logf("caculate middle %v", h2.middleHand.Point)
+	t.Logf("caculate back %v", h2.backHand.Point)
 
 	comp := CompareHand(h1, h2)
 
@@ -165,7 +172,7 @@ func TestHand(t *testing.T) {
 func TestCheck(t *testing.T) {
 	t.Logf("check begin")
 
-	unsortCard := ListCard{
+	unsortCard := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -180,10 +187,10 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	sortedCard := SortCard(unsortCard)
+	sortedCard := SortCard(entity.NewListCard(unsortCard))
 	t.Logf("sorted %v", sortedCard)
 
-	cards := ListCard{
+	cards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -206,25 +213,25 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFlush(cards); !ok {
+	if _, ok := CheckFlush(entity.NewListCard(cards)); !ok {
 		t.Errorf("wrong check flush")
 	} else {
 		t.Logf("check flush ok")
 	}
 
-	if _, ok := CheckStraight(cards); !ok {
+	if _, ok := CheckStraight(entity.NewListCard(cards)); !ok {
 		t.Errorf("wrong check straight")
 	} else {
 		t.Logf("check straight ok")
 	}
 
-	if _, ok := CheckStraightFlush(cards); !ok {
+	if _, ok := CheckStraightFlush(entity.NewListCard(cards)); !ok {
 		t.Errorf("wrong check straight flush")
 	} else {
 		t.Logf("check straight flush ok")
 	}
 
-	fourOfAKindCards := ListCard{
+	fourOfAKindCards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -247,13 +254,13 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFourOfAKind(fourOfAKindCards); !ok {
+	if _, ok := CheckFourOfAKind(entity.NewListCard(fourOfAKindCards)); !ok {
 		t.Errorf("wrong check four of a kind")
 	} else {
 		t.Logf("check four of a kind ok")
 	}
 
-	fullHouseCards := ListCard{
+	fullHouseCards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -276,7 +283,7 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFullHouse(fullHouseCards); !ok {
+	if _, ok := CheckFullHouse(entity.NewListCard(fullHouseCards)); !ok {
 		t.Errorf("wrong check full house card")
 	} else {
 		t.Logf("check full house ok")
@@ -284,7 +291,7 @@ func TestCheck(t *testing.T) {
 }
 
 func TestThreeOfAKind(t *testing.T) {
-	threeOfAKindCards := ListCard{
+	threeOfAKindCards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -307,7 +314,7 @@ func TestThreeOfAKind(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckThreeOfAKind(threeOfAKindCards); !ok {
+	if _, ok := CheckThreeOfAKind(entity.NewListCard(threeOfAKindCards)); !ok {
 		t.Errorf("wrong check three of a kind card")
 	} else {
 		t.Logf("check three of a kind ok")
@@ -315,7 +322,7 @@ func TestThreeOfAKind(t *testing.T) {
 }
 
 func TestTwoPair(t *testing.T) {
-	cards := ListCard{
+	cards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -338,7 +345,7 @@ func TestTwoPair(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckTwoPairs(cards); !ok {
+	if _, ok := CheckTwoPairs(entity.NewListCard(cards)); !ok {
 		t.Errorf("wrong check two pairs")
 	} else {
 		t.Logf("check two pairs ok")
@@ -346,7 +353,7 @@ func TestTwoPair(t *testing.T) {
 }
 
 func TestPair(t *testing.T) {
-	cards := ListCard{
+	cards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_10,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -369,7 +376,7 @@ func TestPair(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckPair(cards); !ok {
+	if _, ok := CheckPair(entity.NewListCard(cards)); !ok {
 		t.Errorf("wrong check pairs")
 	} else {
 		t.Logf("check pairs ok")

@@ -5,8 +5,7 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
-type Card int16
-type ListCard []*Card
+type Card uint8
 
 const (
 	Rank2  = 0x02
@@ -29,7 +28,7 @@ const (
 	SuitHearts   = 0x40
 )
 
-var mapRanks = map[pb.CardRank]int16{
+var mapRanks = map[pb.CardRank]uint8{
 	pb.CardRank_RANK_2:  Rank2,
 	pb.CardRank_RANK_3:  Rank3,
 	pb.CardRank_RANK_4:  Rank4,
@@ -45,14 +44,14 @@ var mapRanks = map[pb.CardRank]int16{
 	pb.CardRank_RANK_A:  RankA,
 }
 
-var mapSuits = map[pb.CardSuit]int16{
+var mapSuits = map[pb.CardSuit]uint8{
 	pb.CardSuit_SUIT_CLUBS:    SuitClubs,
 	pb.CardSuit_SUIT_SPADES:   SuitSpides,
 	pb.CardSuit_SUIT_DIAMONDS: SuitDiamonds,
 	pb.CardSuit_SUIT_HEARTS:   SuitHearts,
 }
 
-var mapStringRanks = map[int16]string{
+var mapStringRanks = map[uint8]string{
 	Rank2:  "Rank2",
 	Rank3:  "Rank3",
 	Rank4:  "Rank4",
@@ -68,7 +67,7 @@ var mapStringRanks = map[int16]string{
 	RankA:  "RankA",
 }
 
-var mapStringSuits = map[int16]string{
+var mapStringSuits = map[uint8]string{
 	SuitClubs:    "Clubs",
 	SuitSpides:   "Spides",
 	SuitDiamonds: "Diamonds",
@@ -76,12 +75,20 @@ var mapStringSuits = map[int16]string{
 }
 
 func NewCard(rank pb.CardRank, suit pb.CardSuit) Card {
-	card := int16(0)
+	card := uint8(0)
 	card |= mapRanks[rank]
 	card |= mapSuits[suit]
 	return Card(card)
 }
 
 func (c Card) String() string {
-	return fmt.Sprintf("Rank %s, Suit %s", mapStringRanks[int16(c&0x0F)], mapStringSuits[int16(c&0xF0)])
+	return fmt.Sprintf("Rank: %s, Suit: %s", mapStringRanks[c.GetRank()], mapStringSuits[c.GetSuit()])
+}
+
+func (c Card) GetRank() uint8 {
+	return uint8(c & 0x0F)
+}
+
+func (c Card) GetSuit() uint8 {
+	return uint8(c & 0xF0)
 }

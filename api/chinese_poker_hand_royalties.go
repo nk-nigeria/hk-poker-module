@@ -9,7 +9,7 @@ import (
 
 // CheckCleanDragon
 // Sảnh rồng đồng màu
-func CheckCleanDragon(listCard ListCard) (ListCard, bool) {
+func CheckCleanDragon(listCard entity.ListCard) (entity.ListCard, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	log.Printf("key %v", len(mapCardSuit.Keys()))
 	for _, k := range mapCardSuit.Keys() {
@@ -24,7 +24,7 @@ func CheckCleanDragon(listCard ListCard) (ListCard, bool) {
 
 // CheckFullColor
 // Đồng màu 12 lá
-func CheckFullColor(listCard ListCard) (ListCard, bool) {
+func CheckFullColor(listCard entity.ListCard) (entity.ListCard, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	redCount := 0
 	blackCount := 0
@@ -56,24 +56,24 @@ func CheckFullColor(listCard ListCard) (ListCard, bool) {
 
 // CheckDragon
 // Sảnh rồng
-func CheckDragon(listCard ListCard) (ListCard, bool) {
+func CheckDragon(listCard entity.ListCard) (entity.ListCard, bool) {
 	_, ok := CheckStraight(listCard)
 	return nil, ok
 }
 
 // CheckSixPairs
 // 6 đôi
-func CheckSixPairs(listCard ListCard) (ListCard, bool) {
+func CheckSixPairs(listCard entity.ListCard) (entity.ListCard, bool) {
 	mapRank := ToMapRank(listCard)
 	if len(mapRank.Keys()) < 7 {
 		return nil, false
 	}
 
-	var list *pb.ListCard
+	var list entity.ListCard
 	var numPairs = 0
 	for _, val := range mapRank.Values() {
-		list = val.(*pb.ListCard)
-		if len(list.Cards) > 1 {
+		list = val.(entity.ListCard)
+		if len(list) > 1 {
 			numPairs++
 		}
 	}
@@ -87,14 +87,14 @@ func CheckSixPairs(listCard ListCard) (ListCard, bool) {
 
 // CheckThreeStraight
 // 3 sảnh
-func CheckThreeStraight(hand *Hand) (ListCard, bool) {
+func CheckThreeStraight(hand *Hand) (entity.ListCard, bool) {
 	threeStraight := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
 	return nil, threeStraight
 }
 
 // CheckThreeFlush
 // 3 cái thùng
-func CheckThreeFlush(hand *Hand) (ListCard, bool) {
+func CheckThreeFlush(hand *Hand) (entity.ListCard, bool) {
 	threeFlush := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
 	return nil, threeFlush
 }

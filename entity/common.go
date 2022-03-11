@@ -32,27 +32,27 @@ func init() {
 	mapHandRankingPoint[pb.HandRanking_FourOfAKind] = 8
 	mapHandRankingPoint[pb.HandRanking_StraightFlush] = 9
 
-	mapCardRankPoint = make(map[pb.CardRank]int)
-	mapCardRankPoint[pb.CardRank_RANK_2] = 2
-	mapCardRankPoint[pb.CardRank_RANK_3] = 3
-	mapCardRankPoint[pb.CardRank_RANK_4] = 4
-	mapCardRankPoint[pb.CardRank_RANK_5] = 5
-	mapCardRankPoint[pb.CardRank_RANK_6] = 6
-	mapCardRankPoint[pb.CardRank_RANK_7] = 7
-	mapCardRankPoint[pb.CardRank_RANK_8] = 8
-	mapCardRankPoint[pb.CardRank_RANK_9] = 9
-	mapCardRankPoint[pb.CardRank_RANK_10] = 10
-	mapCardRankPoint[pb.CardRank_RANK_J] = 11
-	mapCardRankPoint[pb.CardRank_RANK_Q] = 12
-	mapCardRankPoint[pb.CardRank_RANK_K] = 13
-	mapCardRankPoint[pb.CardRank_RANK_A] = 14
+	//mapCardRankPoint = make(map[int8]int)
+	//mapCardRankPoint[Rank2] = 2
+	//mapCardRankPoint[Rank3] = 3
+	//mapCardRankPoint[pb.CardRank_RANK_4] = 4
+	//mapCardRankPoint[pb.CardRank_RANK_5] = 5
+	//mapCardRankPoint[pb.CardRank_RANK_6] = 6
+	//mapCardRankPoint[pb.CardRank_RANK_7] = 7
+	//mapCardRankPoint[pb.CardRank_RANK_8] = 8
+	//mapCardRankPoint[pb.CardRank_RANK_9] = 9
+	//mapCardRankPoint[pb.CardRank_RANK_10] = 10
+	//mapCardRankPoint[pb.CardRank_RANK_J] = 11
+	//mapCardRankPoint[pb.CardRank_RANK_Q] = 12
+	//mapCardRankPoint[pb.CardRank_RANK_K] = 13
+	//mapCardRankPoint[pb.CardRank_RANK_A] = 14
 
-	mapCardSuitPoint = make(map[pb.CardSuit]int)
-	mapCardSuitPoint[pb.CardSuit_SUIT_UNSPECIFIED] = 0
-	mapCardSuitPoint[pb.CardSuit_SUIT_SPADES] = 1
-	mapCardSuitPoint[pb.CardSuit_SUIT_CLUBS] = 2
-	mapCardSuitPoint[pb.CardSuit_SUIT_DIAMONDS] = 3
-	mapCardSuitPoint[pb.CardSuit_SUIT_HEARTS] = 4
+	//mapCardSuitPoint = make(map[pb.CardSuit]int)
+	//mapCardSuitPoint[pb.CardSuit_SUIT_UNSPECIFIED] = 0
+	//mapCardSuitPoint[pb.CardSuit_SUIT_SPADES] = 1
+	//mapCardSuitPoint[pb.CardSuit_SUIT_CLUBS] = 2
+	//mapCardSuitPoint[pb.CardSuit_SUIT_DIAMONDS] = 3
+	//mapCardSuitPoint[pb.CardSuit_SUIT_HEARTS] = 4
 
 }
 

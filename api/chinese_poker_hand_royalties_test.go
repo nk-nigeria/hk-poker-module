@@ -1,13 +1,14 @@
 package api
 
 import (
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"testing"
 
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
 func TestCheckCleanDragon(t *testing.T) {
-	cards := ListCard{
+	cards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -62,7 +63,7 @@ func TestCheckCleanDragon(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckCleanDragon(cards); ok {
+	if _, ok := CheckCleanDragon(entity.NewListCard(cards)); ok {
 		t.Logf("check clean dragon ok")
 	} else {
 		t.Logf("check clean dragon failed")
@@ -70,7 +71,7 @@ func TestCheckCleanDragon(t *testing.T) {
 }
 
 func TestCheckFullColor(t *testing.T) {
-	cards := ListCard{
+	cards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -125,7 +126,7 @@ func TestCheckFullColor(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFullColor(cards); ok {
+	if _, ok := CheckFullColor(entity.NewListCard(cards)); ok {
 		t.Logf("check full color ok")
 	} else {
 		t.Logf("check full color failed")
@@ -133,7 +134,7 @@ func TestCheckFullColor(t *testing.T) {
 }
 
 func TestCheckDragon(t *testing.T) {
-	cards := ListCard{
+	cards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -188,7 +189,7 @@ func TestCheckDragon(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckDragon(cards); ok {
+	if _, ok := CheckDragon(entity.NewListCard(cards)); ok {
 		t.Logf("check dragon ok")
 	} else {
 		t.Logf("check dragon failed")
@@ -196,7 +197,7 @@ func TestCheckDragon(t *testing.T) {
 }
 
 func TestCheckSixPairs(t *testing.T) {
-	cards := ListCard{
+	cards := []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_2,
 			Suit: pb.CardSuit_SUIT_CLUBS,
@@ -251,7 +252,7 @@ func TestCheckSixPairs(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckSixPairs(cards); ok {
+	if _, ok := CheckSixPairs(entity.NewListCard(cards)); ok {
 		t.Logf("check six pairs ok")
 	} else {
 		t.Logf("check six pairs failed")
