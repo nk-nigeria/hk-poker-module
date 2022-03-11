@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -91,4 +92,26 @@ func (c Card) GetRank() uint8 {
 
 func (c Card) GetSuit() uint8 {
 	return uint8(c & 0xF0)
+}
+
+func IsSameCards(cardsA []*pb.Card, cardsB []*pb.Card) bool {
+	mapCardsA := make(map[int]bool)
+	for _, c := range cardsA {
+		key := int(c.GetRank())<<8 + int(c.GetSuit())
+		mapCardsA[key] = false
+	}
+	for _, c := range cardsB {
+		key := int(c.GetRank())<<8 + int(c.GetSuit())
+		_, exist := mapCardsA[key]
+		if !exist {
+			return false
+		}
+		mapCardsA[key] = true
+	}
+	for _, v := range mapCardsA {
+		if !v {
+			return false
+		}
+	}
+	return true
 }

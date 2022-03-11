@@ -26,6 +26,7 @@ func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
 
+	s.JoinInGame = make(map[string]bool)
 	s.Cards = make(map[string]*pb.ListCard)
 	// loop on userid in match
 	for _, k := range s.Presences.Keys() {
@@ -33,6 +34,7 @@ func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
 		cards, err := c.deck.Deal(MaxPresenceCard)
 		if err == nil {
 			s.Cards[userId] = cards
+			s.JoinInGame[userId] = true
 		} else {
 			return err
 		}

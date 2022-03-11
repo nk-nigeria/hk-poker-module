@@ -11,10 +11,12 @@ import (
 )
 
 const (
-	TickRate         = 5
-	MinPlayer        = 2
-	MaxEmptySec      = 60 * TickRate // 60s
-	CountDownGameSec = 5 * TickRate  // 5s
+	TickRate                 = 5
+	MinPlayer                = 2
+	MaxEmptySec              = 60 * TickRate // 60s
+	DelayBeforeRunGameSec    = 5 * TickRate  // 5s
+	DelayBeforeRewardGameSec = 30 * TickRate // 30s
+	DelayBeforeFinishGameSec = 30 * TickRate // 30s
 )
 
 type MatchLabel struct {
@@ -36,6 +38,8 @@ type MatchState struct {
 	Presences *linkedhashmap.Map
 	// Number of users currently in the process of connecting to the match.
 	JoinsInProgress int
+	// Number of user currently dealt with game
+	JoinInGame map[string]bool
 
 	// True if there's a game currently in progress.
 	Playing bool
@@ -53,21 +57,27 @@ type MatchState struct {
 	NextGameRemainingTicks int64
 
 	gameState pb.GameState
-	// countDownEnterGame int64
+	// countdonw to change state to run
 	CountDown CountDown
+	// // countdonw to change state to reward
+	// CountDownToRewardGame CountDown
+	// // countdonw to change state to finish
+	// CountDownToFinishGame CountDown
 }
 
 type CountDown struct {
-	Tick     int64
-	Sec      int64
-	IsUpdate bool
+	delayInit int64
+	Tick      int64
+	Sec       int64
+	IsUpdate  bool
 }
 
-func NewCountDown() CountDown {
+func NewCountDown(duration int64) CountDown {
 	cd := CountDown{
-		Tick: CountDownGameSec,
+		delayInit: duration,
+		Tick:      duration,
 	}
-	cd.Sec = cd.Tick / TickRate
+	cd.Sec = 0
 	cd.IsUpdate = true
 	return cd
 }
@@ -77,15 +87,15 @@ func (cd *CountDown) doCountDown() {
 		return
 	}
 	cd.Tick--
-	v := math.Ceil(float64(cd.Tick / TickRate))
+	v := math.Ceil(float64(cd.Tick) / float64(TickRate))
 	if cd.Sec != int64(v) {
 		cd.Sec = int64(v)
 		cd.IsUpdate = true
 	}
 }
 
-func (cd *CountDown) reset() {
-	cd.Tick = CountDownGameSec
+func (cd *CountDown) reset(sec int64) {
+	cd.Tick = sec
 	cd.Sec = cd.Tick / TickRate
 	cd.IsUpdate = true
 }
@@ -98,7 +108,9 @@ func NewMathState(label *MatchLabel) MatchState {
 		//presences: make(map[string]runtime.Presence, maxPlayer),
 		Presences: linkedhashmap.New(),
 		gameState: pb.GameState_GameStateLobby,
-		CountDown: NewCountDown(),
+		CountDown: NewCountDown(DelayBeforeRunGameSec),
+		// CountDownToRewardGame: NewCountDown(DelayBeforeRewardGameSec),
+		// CountDownToFinishGame: NewCountDown(DelayBeforeFinishGameSec),
 	}
 	m.Label.LastOpenValueNoti = m.Label.Open
 	return m
@@ -218,7 +230,7 @@ func (s *MatchState) handlerGamePrepare(gameEvent GameEvent, logger runtime.Logg
 		s.addPresence(presences)
 		if s.Presences.Size() >= MinPlayer {
 			s.SetGameState(pb.GameState_GameStateCountdown, logger)
-			s.CountDown.reset()
+			s.CountDown.reset(DelayBeforeRunGameSec)
 		}
 		return s
 	}
@@ -239,6 +251,8 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 		s.CountDown.doCountDown()
 		if s.CountDown.Tick < 0 {
 			s.SetGameState(pb.GameState_GameStateRun, logger)
+			s.Cards = make(map[string]*pb.ListCard, 0) // clear map of list card
+			s.CountDown.reset(DelayBeforeRewardGameSec)
 			s.Label.Open = 0
 		}
 	}
@@ -248,14 +262,12 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
 	if gameEvent == MatchJoin {
 		// todo handler add presence when game aldready run
+		s.addPresence(presences)
+
 		return s
 	}
 	if gameEvent == MatchLeave {
 		s.removePresence(presences)
-		// todo punishment as looser
-		if s.Presences.Size() == 1 {
-			s.SetGameState(pb.GameState_GameStateReward, logger)
-		}
 		return s
 	}
 	if gameEvent == MathDone {
@@ -263,8 +275,15 @@ func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, 
 		return s
 	}
 	if gameEvent == MathLoop {
-		if s.Presences.Size() == 0 {
+		// todo punishment as looser
+		if len(s.JoinInGame) <= 1 {
 			s.SetGameState(pb.GameState_GameStateReward, logger)
+			return s
+		}
+		s.CountDown.doCountDown()
+		if s.CountDown.Tick < 0 {
+			s.SetGameState(pb.GameState_GameStateReward, logger)
+			s.CountDown.reset(DelayBeforeFinishGameSec)
 			return s
 		}
 	}
@@ -281,7 +300,10 @@ func (s *MatchState) handlerGameReward(gameEvent GameEvent, logger runtime.Logge
 	}
 	// todo calc reward here
 
-	s.SetGameState(pb.GameState_GameStateFinish, logger)
+	s.CountDown.doCountDown()
+	if s.CountDown.Tick < 0 {
+		s.SetGameState(pb.GameState_GameStateFinish, logger)
+	}
 	return s
 }
 
@@ -293,10 +315,12 @@ func (s *MatchState) handlerGameFinish(gameEvent GameEvent, logger runtime.Logge
 		s.removePresence(presences)
 	}
 	if s.Presences.Size() >= MinPlayer {
+		s.CountDown.reset(DelayBeforeRunGameSec)
 		s.SetGameState(pb.GameState_GameStateCountdown, logger)
 		return s
 	}
 	if s.Presences.Size() > 0 {
+		s.CountDown.reset(DelayBeforeRunGameSec)
 		s.SetGameState(pb.GameState_GameStatePrepare, logger)
 		return s
 	}
@@ -314,11 +338,17 @@ func (s *MatchState) addPresence(presences []runtime.Presence) {
 		s.EmptyTicks = 0
 		s.Presences.Put(presence.GetUserId(), presence)
 		s.JoinsInProgress--
+		if _, exist := s.Cards[presence.GetUserId()]; exist {
+			s.JoinInGame[presence.GetUserId()] = true
+		}
 	}
 }
 
 func (s *MatchState) removePresence(presences []runtime.Presence) {
 	for _, presence := range presences {
 		s.Presences.Remove(presence.GetUserId())
+		if _, exist := s.Cards[presence.GetUserId()]; exist {
+			s.JoinInGame[presence.GetUserId()] = false
+		}
 	}
 }
