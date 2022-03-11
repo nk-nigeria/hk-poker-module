@@ -6,7 +6,7 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
-func TestCheckSameSuit(t *testing.T) {
+func TestCheckCleanDragon(t *testing.T) {
 	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_2,
@@ -62,14 +62,14 @@ func TestCheckSameSuit(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckSameSuit(cards); ok {
-		t.Logf("check same suit ok")
+	if _, ok := CheckCleanDragon(cards); ok {
+		t.Logf("check clean dragon ok")
 	} else {
-		t.Logf("check same suit failed")
+		t.Logf("check clean dragon failed")
 	}
 }
 
-func TestCheckSameColor(t *testing.T) {
+func TestCheckFullColor(t *testing.T) {
 	cards := ListCard{
 		{
 			Rank: pb.CardRank_RANK_2,
@@ -125,10 +125,10 @@ func TestCheckSameColor(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckSameColor(cards); ok {
-		t.Logf("check same color ok")
+	if _, ok := CheckFullColor(cards); ok {
+		t.Logf("check full color ok")
 	} else {
-		t.Logf("check same color failed")
+		t.Logf("check full color failed")
 	}
 }
 

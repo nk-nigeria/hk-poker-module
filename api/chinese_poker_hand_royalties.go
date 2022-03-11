@@ -7,9 +7,9 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
-// CheckSameSuit
-// Đồng nước 13 lá
-func CheckSameSuit(listCard ListCard) (ListCard, bool) {
+// CheckCleanDragon
+// Sảnh rồng đồng màu
+func CheckCleanDragon(listCard ListCard) (ListCard, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	log.Printf("key %v", len(mapCardSuit.Keys()))
 	for _, k := range mapCardSuit.Keys() {
@@ -22,9 +22,9 @@ func CheckSameSuit(listCard ListCard) (ListCard, bool) {
 	return nil, true
 }
 
-// CheckSameColor
-// Đồng nước 13 lá
-func CheckSameColor(listCard ListCard) (ListCard, bool) {
+// CheckFullColor
+// Đồng màu 12 lá
+func CheckFullColor(listCard ListCard) (ListCard, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	redCount := 0
 	blackCount := 0
@@ -73,7 +73,7 @@ func CheckSixPairs(listCard ListCard) (ListCard, bool) {
 	var numPairs = 0
 	for _, val := range mapRank.Values() {
 		list = val.(*pb.ListCard)
-		if len(list.Cards) == 2 {
+		if len(list.Cards) > 1 {
 			numPairs++
 		}
 	}
