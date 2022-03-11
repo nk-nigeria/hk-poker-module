@@ -86,19 +86,19 @@ func mockHand2() (*Hand, error) {
 			},
 			// Middle
 			{
-				Rank: pb.CardRank_RANK_2,
+				Rank: pb.CardRank_RANK_3,
 				Suit: pb.CardSuit_SUIT_CLUBS,
 			},
 			{
-				Rank: pb.CardRank_RANK_2,
+				Rank: pb.CardRank_RANK_3,
 				Suit: pb.CardSuit_SUIT_HEARTS,
 			},
 			{
-				Rank: pb.CardRank_RANK_2,
+				Rank: pb.CardRank_RANK_3,
 				Suit: pb.CardSuit_SUIT_SPADES,
 			},
 			{
-				Rank: pb.CardRank_RANK_2,
+				Rank: pb.CardRank_RANK_3,
 				Suit: pb.CardSuit_SUIT_DIAMONDS,
 			},
 			{

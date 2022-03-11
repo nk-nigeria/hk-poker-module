@@ -118,6 +118,7 @@ func CheckFourOfAKind(listCard entity.ListCard) (*HandCards, bool) {
 	handCard := NewHandCards()
 	isFourOfAKind := false
 	var list entity.ListCard
+	var remain entity.ListCard
 	for _, value := range mapCardRank.Values() {
 		list = *(value.(*entity.ListCard))
 		if len(list) == 4 {
@@ -125,11 +126,14 @@ func CheckFourOfAKind(listCard entity.ListCard) (*HandCards, bool) {
 
 			handCard.MapCardType[pb.HandRanking_FourOfAKind] = list
 			newListCard = append(newListCard, list...)
+		} else {
+			remain = append(remain, list...)
 		}
 	}
 	if isFourOfAKind {
-		newListCard = SortCard(newListCard)
-		handCard.ListCard = newListCard
+		remain = SortCard(remain)
+		handCard.ListCard = append(handCard.ListCard, newListCard...)
+		handCard.ListCard = append(handCard.ListCard, remain...)
 		return handCard, true
 	}
 	return nil, false

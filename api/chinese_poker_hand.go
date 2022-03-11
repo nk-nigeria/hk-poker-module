@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"log"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -138,8 +139,11 @@ func (h *Hand) calculatePointBackHand() {
 func CompareHand(h1, h2 *Hand) *pb.CompareResult {
 	result := &pb.CompareResult{}
 	result.FrontFactor = int64(compareChildHand(h1.frontHand, h2.frontHand))
+	log.Printf("result1 %d\n", result.FrontFactor)
 	result.MiddleFactor = int64(compareChildHand(h1.middleHand, h2.middleHand))
+	log.Printf("result2 %d\n", result.MiddleFactor)
 	result.BackFactor = int64(compareChildHand(h1.backHand, h2.backHand))
+	log.Printf("result3 %d\n", result.BackFactor)
 	return result
 }
 
@@ -163,7 +167,7 @@ func compareChildHand(h1, h2 *ChildHand) int {
 	// compare same rank
 	point1 := uint8(0)
 	point2 := uint8(0)
-	score := 0
+	extraScore := int8(0)
 	switch h1.Point.rankingType {
 	case pb.HandRanking_StraightFlush:
 		x1 := h1.Cards.MapCardType[pb.HandRanking_StraightFlush]
@@ -228,8 +232,7 @@ func compareChildHand(h1, h2 *ChildHand) int {
 			point2 = x2[0].GetRank()
 		}
 		if point1 == point2 {
-			compare := h1.Cards.ListCard.CompareHighCard(h2.Cards.ListCard)
-			score += int(compare)
+			extraScore = h1.Cards.ListCard.CompareHighCard(h2.Cards.ListCard)
 		}
 	case pb.HandRanking_Pair:
 		x1 := h1.Cards.MapCardType[pb.HandRanking_Pair]
@@ -240,8 +243,7 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		point1 = x1[0].GetRank()
 		point2 = x2[0].GetRank()
 		if point1 == point2 {
-			compare := h1.Cards.ListCard.CompareHighCard(h2.Cards.ListCard)
-			score += int(compare)
+			extraScore = h1.Cards.ListCard.CompareHighCard(h2.Cards.ListCard)
 		}
 	case pb.HandRanking_HighCard:
 		x1 := h1.Cards.ListCard
@@ -249,8 +251,7 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		compare := x1.CompareHighCard(x2)
-		score += int(compare)
+		extraScore = x1.CompareHighCard(x2)
 	}
 
 	if point1 > point2 {
@@ -261,5 +262,14 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		resultPoint--
 		return resultPoint
 	}
+	if extraScore > 0 {
+		resultPoint++
+		return resultPoint
+	}
+	if extraScore < 0 {
+		resultPoint--
+		return resultPoint
+	}
+
 	return resultPoint
 }
