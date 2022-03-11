@@ -72,7 +72,7 @@ func CheckSixPairs(listCard entity.ListCard) (entity.ListCard, bool) {
 	var list entity.ListCard
 	var numPairs = 0
 	for _, val := range mapRank.Values() {
-		list = val.(entity.ListCard)
+		list = *(val.(*entity.ListCard))
 		if len(list) > 1 {
 			numPairs++
 		}

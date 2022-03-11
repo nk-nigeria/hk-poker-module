@@ -113,21 +113,19 @@ func CheckFourOfAKind(listCard entity.ListCard) (*HandCards, bool) {
 		return nil, false
 	}
 	mapCardRank := ToMapRank(listCard)
-	if mapCardRank.Size() != 2 {
-		return nil, false
-	}
 
-	newListCard := make(entity.ListCard, 0, len(listCard))
+	newListCard := make([]entity.Card, 0, len(listCard))
 	handCard := NewHandCards()
 	isFourOfAKind := false
 	var list entity.ListCard
 	for _, value := range mapCardRank.Values() {
-		list = value.(entity.ListCard)
+		list = *(value.(*entity.ListCard))
 		if len(list) == 4 {
 			isFourOfAKind = true
+
+			handCard.MapCardType[pb.HandRanking_FourOfAKind] = list
+			newListCard = append(newListCard, list...)
 		}
-		handCard.MapCardType[pb.HandRanking_FourOfAKind] = list
-		newListCard = append(newListCard, list...)
 	}
 	if isFourOfAKind {
 		newListCard = SortCard(newListCard)
@@ -158,7 +156,7 @@ func CheckFullHouse(listCard entity.ListCard) (*HandCards, bool) {
 	var list entity.ListCard
 	handCard := NewHandCards()
 	for _, value := range mapCardRank.Values() {
-		list = value.(entity.ListCard)
+		list = *(value.(*entity.ListCard))
 		if len(list) == 3 {
 			hasTriangle = true
 			newListCard = append(list, newListCard...)
@@ -241,11 +239,11 @@ func CheckThreeOfAKind(listCard entity.ListCard) (*HandCards, bool) {
 
 	newListCard := make(entity.ListCard, 0, len(listCard))
 	hasTriangle := false
-	handCard := HandCards{}
+	handCard := NewHandCards()
 
 	var list entity.ListCard
 	for _, value := range mapCardRank.Values() {
-		list = value.(entity.ListCard)
+		list = *(value.(*entity.ListCard))
 		if len(list) == 3 {
 			hasTriangle = true
 			newListCard = append(list, newListCard...)
@@ -257,7 +255,7 @@ func CheckThreeOfAKind(listCard entity.ListCard) (*HandCards, bool) {
 	if hasTriangle {
 		newListCard = SortCard(newListCard)
 		handCard.ListCard = newListCard
-		return &handCard, true
+		return handCard, true
 	}
 	return nil, false
 }
@@ -279,10 +277,10 @@ func CheckTwoPairs(listCard entity.ListCard) (*HandCards, bool) {
 	numPair := 0
 
 	var list entity.ListCard
-	handCard := HandCards{}
+	handCard := NewHandCards()
 	listTwoPair := entity.ListCard{}
 	for _, value := range mapCardRank.Values() {
-		list = value.(entity.ListCard)
+		list = *(value.(*entity.ListCard))
 		if len(list) == 2 {
 			numPair++
 			newListCard = append(newListCard, list...)
@@ -295,7 +293,7 @@ func CheckTwoPairs(listCard entity.ListCard) (*HandCards, bool) {
 		newListCard = SortCard(newListCard)
 		handCard.MapCardType[pb.HandRanking_TwoPairs] = SortCard(listTwoPair)
 		handCard.ListCard = newListCard
-		return &handCard, true
+		return handCard, true
 	}
 	return nil, false
 }
@@ -317,9 +315,9 @@ func CheckPair(listCard entity.ListCard) (*HandCards, bool) {
 	numPair := 0
 
 	var list entity.ListCard
-	cards := &HandCards{}
+	cards := NewHandCards()
 	for _, value := range mapCardRank.Values() {
-		list = value.(entity.ListCard)
+		list = *(value.(*entity.ListCard))
 		if len(list) == 2 {
 			numPair++
 			newListCard = append(list, newListCard...)
@@ -338,17 +336,17 @@ func CheckPair(listCard entity.ListCard) (*HandCards, bool) {
 
 func ToMapRank(listCard entity.ListCard) *linkedhashmap.Map {
 	mapCardRank := linkedhashmap.New()
-	var list entity.ListCard
 	for i := range listCard {
+		var list entity.ListCard
 		card := listCard[i]
 		rankPoint := card.GetRank()
 		if val, exist := mapCardRank.Get(rankPoint); !exist {
 			list = entity.ListCard{}
-			mapCardRank.Put(rankPoint, list)
 		} else {
-			list = val.(entity.ListCard)
+			list = *(val.(*entity.ListCard))
 		}
 		list = append(list, card)
+		mapCardRank.Put(rankPoint, &list)
 	}
 
 	return mapCardRank
@@ -356,17 +354,17 @@ func ToMapRank(listCard entity.ListCard) *linkedhashmap.Map {
 
 func ToMapSuit(listCard entity.ListCard) *linkedhashmap.Map {
 	m := linkedhashmap.New()
-	var list entity.ListCard
 	for _, card := range listCard {
+		var list entity.ListCard
 		suitPoint := card.GetSuit()
 		if val, exist := m.Get(suitPoint); !exist {
 			list = entity.ListCard{}
-			m.Put(suitPoint, list)
 		} else {
-			list = val.(entity.ListCard)
+			list = *(val.(*entity.ListCard))
 		}
 
 		list = append(list, card)
+		m.Put(suitPoint, &list)
 	}
 
 	return m

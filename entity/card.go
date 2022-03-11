@@ -8,24 +8,24 @@ import (
 type Card uint8
 
 const (
-	Rank2  = 0x02
-	Rank3  = 0x03
-	Rank4  = 0x04
-	Rank5  = 0x05
-	Rank6  = 0x06
-	Rank7  = 0x07
-	Rank8  = 0x08
-	Rank9  = 0x09
-	Rank10 = 0x0A
-	RankJ  = 0x0B
-	RankQ  = 0x0C
-	RankK  = 0x0D
-	RankA  = 0x0E
+	Rank2  uint8 = 0x02
+	Rank3  uint8 = 0x03
+	Rank4  uint8 = 0x04
+	Rank5  uint8 = 0x05
+	Rank6  uint8 = 0x06
+	Rank7  uint8 = 0x07
+	Rank8  uint8 = 0x08
+	Rank9  uint8 = 0x09
+	Rank10 uint8 = 0x0A
+	RankJ  uint8 = 0x0B
+	RankQ  uint8 = 0x0C
+	RankK  uint8 = 0x0D
+	RankA  uint8 = 0x0E
 
-	SuitClubs    = 0x10
-	SuitSpides   = 0x20
-	SuitDiamonds = 0x30
-	SuitHearts   = 0x40
+	SuitClubs    uint8 = 0x10
+	SuitSpides   uint8 = 0x20
+	SuitDiamonds uint8 = 0x30
+	SuitHearts   uint8 = 0x40
 )
 
 var mapRanks = map[pb.CardRank]uint8{
