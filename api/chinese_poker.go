@@ -48,15 +48,37 @@ func (c *ChinesePokerGame) Organize(dispatcher runtime.MatchDispatcher, s *entit
 	return nil
 }
 
-func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.MatchState) *pb.UpdateFinish {
 	// Check every user
-	for uid1 := range s.Presences.Keys() {
-		for uid2 := range s.Presences.Keys() {
-			if uid1 != uid2 {
-
-			}
+	updateFinish := pb.UpdateFinish{}
+	for _, uid1 := range s.Presences.Keys() {
+		userID1 := uid1.(string)
+		result := pb.ComparisonResult{
+			UserId: userID1,
 		}
+		cards1 := s.Cards[userID1]
+		hand1, err := NewHand(cards1)
+		if err != nil {
+			continue
+		}
+		for _, uid2 := range s.Presences.Keys() {
+			userID2 := uid2.(string)
+			cards2 := s.Cards[userID2]
+			hand2, err := NewHand(cards2)
+			if err != nil {
+				continue
+			}
+			r := CompareHand(hand1, hand2)
+			result.FrontFactor += r.FrontFactor
+			result.MiddleFactor += r.MiddleFactor
+			result.BackFactor += r.BackFactor
+			result.FrontBonus += r.FrontBonus
+			result.MiddleBonus += r.MiddleBonus
+			result.BackBonus += r.BackBonus
+		}
+		updateFinish.Results = append(updateFinish.Results, &result)
 	}
+	return &updateFinish
 	// Check every hand
 	// Calculate hand to point
 }

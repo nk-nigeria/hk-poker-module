@@ -305,6 +305,13 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 					int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
 					&pbGameState, nil, nil, true)
 			}
+
+			// update finish
+			updateFinish := m.processor.Finish(dispatcher, s)
+			m.broadcastMessage(
+				logger, dispatcher,
+				int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
+				updateFinish, nil, nil, true)
 		}
 	}
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
