@@ -50,6 +50,13 @@ func (c *ChinesePokerGame) Organize(dispatcher runtime.MatchDispatcher, s *entit
 
 func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	// Check every user
+	for uid1 := range s.Presences.Keys() {
+		for uid2 := range s.Presences.Keys() {
+			if uid1 != uid2 {
+
+			}
+		}
+	}
 	// Check every hand
 	// Calculate hand to point
 }

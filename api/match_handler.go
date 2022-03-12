@@ -504,5 +504,8 @@ func (m *MatchHandler) saveCard(logger runtime.Logger, s *entity.MatchState, mes
 			len(cardsByClient.GetCards()), len(cards.GetCards()))
 		return
 	}
+
+	// TODO: recheck
 	s.Cards[message.GetUserId()] = cardsByClient
+	s.OrganizeCards[message.GetUserId()] = cardsByClient
 }

@@ -91,7 +91,7 @@ enum OpCodeUpdate {
     OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
     OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
     OPCODE_UPDATE_ORGANIZE_ACK = 3; //message UpdateDeal
-    OPCODE_UPDATE_RESULT = 4; //message UpdateResult
+    OPCODE_UPDATE_FINISH = 4; //message UpdateFinish
     // Request was rejected.
     OPCODE_UPDATE_REJECTED = 5;
     // Update game state
@@ -186,13 +186,18 @@ enum CardEvent {
     DECLARE = 2;
 }
 
+message UpdateFinish {
+    repeated ComparisonResult results = 1;
+}
 
-message CompareResult {
-    int64 FrontFactor = 1;
-    int64 MiddleFactor = 2;
-    int64 BackFactor = 3;
+message ComparisonResult {
+    string user_id = 1;
 
-    int64 FrontBonus = 4;
-    int64 MiddleBonus = 5;
-    int64 BackBonus = 6;
+    int64 FrontFactor = 2;
+    int64 MiddleFactor = 3;
+    int64 BackFactor = 4;
+
+    int64 FrontBonus = 5;
+    int64 MiddleBonus = 6;
+    int64 BackBonus = 7;
 }
