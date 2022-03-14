@@ -415,7 +415,7 @@ func (m *MatchHandler) broadcastMessage(logger runtime.Logger, dispatcher runtim
 		logger.Error("Error when marshaler data for broadcastMessage")
 		return err
 	}
-	err = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), dataJson, nil, nil, true)
+	err = dispatcher.BroadcastMessage(opCode, dataJson, nil, nil, true)
 	if err != nil {
 		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
 		return err
@@ -424,7 +424,7 @@ func (m *MatchHandler) broadcastMessage(logger runtime.Logger, dispatcher runtim
 }
 
 func (m *MatchHandler) combineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
-	logger.Info("User %d request combineCard", message.GetUserId())
+	logger.Info("User %s request combineCard", message.GetUserId())
 	msg := pb.UpdateGameState{
 		State: s.GetGameState(),
 		ArrangeCard: &pb.ArrangeCard{
@@ -432,11 +432,11 @@ func (m *MatchHandler) combineCard(logger runtime.Logger, dispatcher runtime.Mat
 			CardEvent: pb.CardEvent_COMBINE,
 		},
 	}
-	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), &msg, nil, nil, true)
+	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
 }
 
 func (m *MatchHandler) showCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
-	logger.Info("User %d request showCard", message.GetUserId())
+	logger.Info("User %s request showCard", message.GetUserId())
 
 	msg := pb.UpdateGameState{
 		State: s.GetGameState(),
@@ -445,7 +445,7 @@ func (m *MatchHandler) showCard(logger runtime.Logger, dispatcher runtime.MatchD
 			CardEvent: pb.CardEvent_SHOW,
 		},
 	}
-	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), &msg, nil, nil, true)
+	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
 	m.saveCard(logger, s, message)
 }
 
@@ -469,7 +469,7 @@ func (m *MatchHandler) saveCard(logger runtime.Logger, s *entity.MatchState, mes
 	cardsByClient := organize.Cards
 	// check len card
 	if len(cardsByClient.GetCards()) != len(cards.GetCards()) {
-		logger.Error("Amount cards from client [%d] diffirrent amount card in server [%d]",
+		logger.Error("Amount cards from client [%d] different amount card in server [%d]",
 			len(cardsByClient.GetCards()), len(cards.GetCards()))
 		return
 	}
@@ -546,7 +546,9 @@ func (m *MatchHandler) checkAndSendUpdateGameState(logger runtime.Logger, s *ent
 			CountDown: s.CountDown.Sec,
 		}
 		// data, err := m.marshaler.Marshal(&pbGameState)
-		logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), pb.GameState_GameStateFinish.String(), s.CountDown.Sec)
+		if s.CountDown.Sec == 0 {
+			logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), s.GetNextGameState().String(), s.CountDown.Sec)
+		}
 		err := m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), &pbGameState, nil, nil, true)
 		if err == nil {
 			s.CountDown.IsUpdate = false

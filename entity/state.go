@@ -169,6 +169,10 @@ func (s *MatchState) GetGameState() pb.GameState {
 	return s.gameState
 }
 
+func (s *MatchState) GetNextGameState() pb.GameState {
+	return (s.gameState + 1) % 7
+}
+
 func (s *MatchState) SetGameState(gameState pb.GameState, logger runtime.Logger) pb.GameState {
 	if s.gameState != gameState {
 		logger.Info("Game state change %s -- > %s", s.gameState.String(), gameState.String())
@@ -251,7 +255,7 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 	if gameEvent == MathLoop {
 		s.CountDown.doCountDown()
 		if s.CountDown.Tick < 0 {
-      s.SetGameState(pb.GameState_GameStateRun, logger)
+			s.SetGameState(pb.GameState_GameStateRun, logger)
 			s.Cards = make(map[string]*pb.ListCard, 0) // clear map of list card
 			s.CountDown.reset(DelayBeforeRewardGameSec)
 			s.Label.Open = 0
@@ -276,7 +280,7 @@ func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, 
 		return s
 	}
 	if gameEvent == MathLoop {
-    // todo punishment as looser
+		// todo punishment as looser
 		if len(s.JoinInGame) <= 1 {
 			s.SetGameState(pb.GameState_GameStateReward, logger)
 			return s

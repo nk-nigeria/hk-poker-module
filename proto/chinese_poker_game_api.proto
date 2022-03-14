@@ -96,6 +96,8 @@ enum OpCodeUpdate {
     OPCODE_UPDATE_REJECTED = 5;
     // Update game state
     OPCODE_UPDATE_GAME_STATE = 6;
+    // update card state/combibne, show, delare
+    OPCODE_UPDATE_CARD_STATE = 7;
 }
 
 enum GameState {
