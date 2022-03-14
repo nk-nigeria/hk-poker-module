@@ -63,6 +63,9 @@ func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.
 		}
 		for _, uid2 := range s.Presences.Keys() {
 			userID2 := uid2.(string)
+			if userID1 == userID2 {
+				continue
+			}
 			cards2 := s.Cards[userID2]
 			hand2, err := NewHand(cards2)
 			if err != nil {
