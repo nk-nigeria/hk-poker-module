@@ -224,44 +224,16 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		logger.Info("closing idle match id")
 		return nil
 	}
+	m.checkAndSendUpdateGameState(logger, s, dispatcher)
 
 	if s.GetGameState() == pb.GameState_GameStateFinish {
-		m.processor.Finish(dispatcher, s)
 		return s
 	}
 
 	if s.GetGameState() == pb.GameState_GameStateCountdown {
-		if s.CountDown.IsUpdate {
-			pbGameState := pb.UpdateGameState{
-				State:     s.GetGameState(),
-				CountDown: s.CountDown.Sec,
-			}
-			data, err := m.marshaler.Marshal(&pbGameState)
-			logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), pb.GameState_GameStateRun.String(), s.CountDown.Sec)
-			if err == nil {
-				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), data, nil, nil, true)
-				s.CountDown.IsUpdate = false
-			} else {
-				logger.Debug("marshaler game state error %s", err.Error())
-			}
-		}
 	}
 
 	if s.GetGameState() == pb.GameState_GameStateReward {
-		if s.CountDown.IsUpdate {
-			pbGameState := pb.UpdateGameState{
-				State:     s.GetGameState(),
-				CountDown: s.CountDown.Sec,
-			}
-			data, err := m.marshaler.Marshal(&pbGameState)
-			logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), pb.GameState_GameStateFinish.String(), s.CountDown.Sec)
-			if err == nil {
-				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), data, nil, nil, true)
-				s.CountDown.IsUpdate = false
-			} else {
-				logger.Debug("marshaler game state error %s", err.Error())
-			}
-		}
 	}
 
 	// only accept command from client when
@@ -277,21 +249,13 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 
 	// send time remain before end game
 	if s.CountDown.IsUpdate {
-		pbGameState := pb.UpdateGameState{
-			State:     s.GetGameState(),
-			CountDown: s.CountDown.Sec,
-		}
-		logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), pb.GameState_GameStateReward.String(), s.CountDown.Sec)
 
-		if m.broadcastMessage(
-			logger, dispatcher,
-			int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
-			&pbGameState, nil, nil, true) == nil {
-			s.CountDown.IsUpdate = false
-		}
 		if s.CountDown.Sec == 0 {
 			logger.Info("Send notification all card of all user ")
-
+			pbGameState := pb.UpdateGameState{
+				State:     s.GetGameState(),
+				CountDown: s.CountDown.Sec,
+			}
 			pbGameState.PresenceCards = make([]*pb.PresenceCards, len(s.Cards))
 			for k, v := range s.Cards {
 				presenceCards := pb.PresenceCards{
@@ -460,6 +424,7 @@ func (m *MatchHandler) broadcastMessage(logger runtime.Logger, dispatcher runtim
 }
 
 func (m *MatchHandler) combineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+	logger.Info("User %d request combineCard", message.GetUserId())
 	msg := pb.UpdateGameState{
 		State: s.GetGameState(),
 		ArrangeCard: &pb.ArrangeCard{
@@ -471,6 +436,8 @@ func (m *MatchHandler) combineCard(logger runtime.Logger, dispatcher runtime.Mat
 }
 
 func (m *MatchHandler) showCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+	logger.Info("User %d request showCard", message.GetUserId())
+
 	msg := pb.UpdateGameState{
 		State: s.GetGameState(),
 		ArrangeCard: &pb.ArrangeCard{
@@ -487,6 +454,7 @@ func (m *MatchHandler) declareCard(logger runtime.Logger, dispatcher runtime.Mat
 	// 	Presences: []string{message.GetUserId()},
 	// }
 	//m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS), msg, nil, nil, true)
+	logger.Info("User %d request declareCard", message.GetUserId())
 	m.saveCard(logger, s, message)
 }
 
@@ -569,5 +537,19 @@ func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger 
 	if err != nil {
 		logger.WithField("err", err).Error("Wallets update error.")
 	}
+}
 
+func (m *MatchHandler) checkAndSendUpdateGameState(logger runtime.Logger, s *entity.MatchState, dispatcher runtime.MatchDispatcher) {
+	if s.CountDown.IsUpdate {
+		pbGameState := pb.UpdateGameState{
+			State:     s.GetGameState(),
+			CountDown: s.CountDown.Sec,
+		}
+		// data, err := m.marshaler.Marshal(&pbGameState)
+		logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), pb.GameState_GameStateFinish.String(), s.CountDown.Sec)
+		err := m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), &pbGameState, nil, nil, true)
+		if err == nil {
+			s.CountDown.IsUpdate = false
+		}
+	}
 }

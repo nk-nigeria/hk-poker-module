@@ -15,7 +15,7 @@ const (
 	MinPlayer                = 2
 	MaxEmptySec              = 60 * TickRate // 60s
 	DelayBeforeRunGameSec    = 5 * TickRate  // 5s
-	DelayBeforeRewardGameSec = 30 * TickRate // 30s
+	DelayBeforeRewardGameSec = 60 * TickRate // 30s
 	DelayBeforeFinishGameSec = 30 * TickRate // 30s
 )
 
@@ -83,10 +83,10 @@ func NewCountDown(duration int64) CountDown {
 }
 
 func (cd *CountDown) doCountDown() {
+	cd.Tick--
 	if cd.Tick < 0 {
 		return
 	}
-	cd.Tick--
 	v := math.Ceil(float64(cd.Tick) / float64(TickRate))
 	if cd.Sec != int64(v) {
 		cd.Sec = int64(v)
@@ -177,6 +177,7 @@ func (s *MatchState) SetGameState(gameState pb.GameState, logger runtime.Logger)
 		if s.gameState == pb.GameState_GameStateLobby {
 			s.EmptyTicks = 0
 		}
+		s.CountDown.reset(0)
 	}
 	return s.gameState
 }
