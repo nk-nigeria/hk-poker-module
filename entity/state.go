@@ -250,7 +250,7 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 	if gameEvent == MathLoop {
 		s.CountDown.doCountDown()
 		if s.CountDown.Tick < 0 {
-			s.SetGameState(pb.GameState_GameStateRun, logger)
+      s.SetGameState(pb.GameState_GameStateRun, logger)
 			s.Cards = make(map[string]*pb.ListCard, 0) // clear map of list card
 			s.CountDown.reset(DelayBeforeRewardGameSec)
 			s.Label.Open = 0
@@ -275,7 +275,7 @@ func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, 
 		return s
 	}
 	if gameEvent == MathLoop {
-		// todo punishment as looser
+    // todo punishment as looser
 		if len(s.JoinInGame) <= 1 {
 			s.SetGameState(pb.GameState_GameStateReward, logger)
 			return s
@@ -308,6 +308,7 @@ func (s *MatchState) handlerGameReward(gameEvent GameEvent, logger runtime.Logge
 }
 
 func (s *MatchState) handlerGameFinish(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
+	s.Playing = false
 	if gameEvent == MatchJoin {
 		s.addPresence(presences)
 	}
