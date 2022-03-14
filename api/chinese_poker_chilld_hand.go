@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/logger"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -13,7 +12,6 @@ type ChildHand struct {
 
 func (ch *ChildHand) calculatePoint() {
 	if ch.Point != nil {
-		logger.Warnf("child hand already calculate")
 		return
 	}
 	ch.Point, ch.Cards = GetHandPoint(ch.Cards.ListCard)
