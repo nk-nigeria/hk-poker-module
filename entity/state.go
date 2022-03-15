@@ -15,8 +15,8 @@ const (
 	MinPlayer                = 2
 	MaxEmptySec              = 60 * TickRate // 60s
 	DelayBeforeRunGameSec    = 5 * TickRate  // 5s
-	DelayBeforeRewardGameSec = 60 * TickRate // 30s
-	DelayBeforeFinishGameSec = 30 * TickRate // 30s
+	DelayBeforeRewardGameSec = 20 * TickRate // 30s
+	DelayBeforeFinishGameSec = 10 * TickRate // 30s
 )
 
 type MatchLabel struct {
@@ -321,13 +321,13 @@ func (s *MatchState) handlerGameFinish(gameEvent GameEvent, logger runtime.Logge
 		s.removePresence(presences)
 	}
 	if s.Presences.Size() >= MinPlayer {
-		s.CountDown.reset(DelayBeforeRunGameSec)
 		s.SetGameState(pb.GameState_GameStateCountdown, logger)
+		s.CountDown.reset(DelayBeforeRunGameSec)
 		return s
 	}
 	if s.Presences.Size() > 0 {
-		s.CountDown.reset(DelayBeforeRunGameSec)
 		s.SetGameState(pb.GameState_GameStatePrepare, logger)
+		s.CountDown.reset(DelayBeforeRunGameSec)
 		return s
 	}
 	s.SetGameState(pb.GameState_GameStateLobby, logger)
