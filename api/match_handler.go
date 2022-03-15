@@ -224,39 +224,16 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		logger.Info("closing idle match id")
 		return nil
 	}
-	// if s.Presences.Size()+s.JoinsInProgress == 0 {
-	// 	s.EmptyTicks++
-	// 	if s.EmptyTicks >= entity.MaxEmptySec*entity.TickRate {
-	// 		// Match has been empty for too long, close it.
-	// 		logger.Info("closing idle match")
-	// 		return nil
-	// 	}
-	// }
-
-	// if m.checkAutoNewGame(logger, dispatcher, s) {
-	// 	return s
-	// }
+	m.checkAndSendUpdateGameState(logger, s, dispatcher)
 
 	if s.GetGameState() == pb.GameState_GameStateFinish {
-		m.processor.FinishGame(dispatcher, s)
 		return s
 	}
 
 	if s.GetGameState() == pb.GameState_GameStateCountdown {
-		if s.CountDown.IsUpdate {
-			pbGameState := pb.UpdateGameState{
-				State:     s.GetGameState(),
-				CountDown: s.CountDown.Sec,
-			}
-			data, err := m.marshaler.Marshal(&pbGameState)
-			logger.Info("Send notification game start countdown %d", s.CountDown.Sec)
-			if err == nil {
-				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), data, nil, nil, true)
-				s.CountDown.IsUpdate = false
-			} else {
-				logger.Debug("marshaler game state error %s", err.Error())
-			}
-		}
+	}
+
+	if s.GetGameState() == pb.GameState_GameStateReward {
 	}
 
 	// only accept command from client when
@@ -268,6 +245,38 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	if !s.Playing {
 		m.processNewGame(logger, dispatcher, s)
 		s.Playing = true
+	}
+
+	// send time remain before end game
+	if s.CountDown.IsUpdate {
+
+		if s.CountDown.Sec == 0 {
+			logger.Info("Send notification all card of all user ")
+			pbGameState := pb.UpdateGameState{
+				State:     s.GetGameState(),
+				CountDown: s.CountDown.Sec,
+			}
+			pbGameState.PresenceCards = make([]*pb.PresenceCards, len(s.Cards))
+			for k, v := range s.Cards {
+				presenceCards := pb.PresenceCards{
+					Presence: k,
+					Cards:    v.GetCards(),
+				}
+				pbGameState.State = pb.GameState_GameStateReward
+				pbGameState.PresenceCards = append(pbGameState.PresenceCards, &presenceCards)
+				m.broadcastMessage(
+					logger, dispatcher,
+					int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+					&pbGameState, nil, nil, true)
+			}
+
+			// update finish
+			updateFinish := m.processor.Finish(dispatcher, s)
+			m.broadcastMessage(
+				logger, dispatcher,
+				int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
+				updateFinish, nil, nil, true)
+		}
 	}
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
 	for _, message := range messages {
@@ -286,6 +295,18 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			m.processOrganize(dispatcher, s, message.GetUserId(), msg)
 		case pb.OpCodeRequest_OPCODE_REQUEST_LEAVE_GAME:
 			m.checkLeaveGame(logger, dispatcher, s)
+		case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
+			{
+				m.combineCard(logger, dispatcher, s, message)
+			}
+		case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
+			{
+				m.showCard(logger, dispatcher, s, message)
+			}
+		case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
+			{
+				m.declareCard(logger, dispatcher, s, message)
+			}
 		default:
 			// No other opcodes are expected from the client, so automatically treat it as an error.
 			_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_REJECTED), nil, []runtime.Presence{message}, nil, true)
@@ -348,6 +369,7 @@ func (m *MatchHandler) checkAutoNewGame(logger runtime.Logger, dispatcher runtim
 // Call when client request or timeout
 func (m *MatchHandler) processNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	err := m.processor.NewGame(s)
+	m.processor.Deal(s)
 	if err == nil {
 		for k, v := range s.Cards {
 			buf, err := m.marshaler.Marshal(&pb.UpdateDeal{
@@ -381,8 +403,155 @@ func (m *MatchHandler) processOrganize(dispatcher runtime.MatchDispatcher, s *en
 
 // Check should finish game due to enough organize or timeout
 func (m *MatchHandler) checkFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-	m.processor.FinishGame(dispatcher, s)
+	m.processor.Finish(dispatcher, s)
 }
 
 func (m *MatchHandler) checkLeaveGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+}
+
+func (m *MatchHandler) broadcastMessage(logger runtime.Logger, dispatcher runtime.MatchDispatcher, opCode int64, data proto.Message, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
+	dataJson, err := m.marshaler.Marshal(data)
+	if err != nil {
+		logger.Error("Error when marshaler data for broadcastMessage")
+		return err
+	}
+	err = dispatcher.BroadcastMessage(opCode, dataJson, nil, nil, true)
+	if err != nil {
+		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
+		return err
+	}
+	return nil
+}
+
+func (m *MatchHandler) combineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+	logger.Info("User %s request combineCard", message.GetUserId())
+	msg := pb.UpdateGameState{
+		State: s.GetGameState(),
+		ArrangeCard: &pb.ArrangeCard{
+			Presence:  message.GetUserId(),
+			CardEvent: pb.CardEvent_COMBINE,
+		},
+	}
+	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
+}
+
+func (m *MatchHandler) showCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+	logger.Info("User %s request showCard", message.GetUserId())
+
+	msg := pb.UpdateGameState{
+		State: s.GetGameState(),
+		ArrangeCard: &pb.ArrangeCard{
+			Presence:  message.GetUserId(),
+			CardEvent: pb.CardEvent_SHOW,
+		},
+	}
+	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
+	m.saveCard(logger, s, message)
+}
+
+func (m *MatchHandler) declareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+	// msg := &pb.UpdatePresence{
+	// 	Presences: []string{message.GetUserId()},
+	// }
+	//m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS), msg, nil, nil, true)
+	logger.Info("User %d request declareCard", message.GetUserId())
+	m.saveCard(logger, s, message)
+}
+
+func (m *MatchHandler) saveCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
+	cards := s.Cards[message.GetUserId()]
+	organize := &pb.Organize{}
+	err := m.unmarshaler.Unmarshal(message.GetData(), organize)
+	if err != nil {
+		logger.Error("Parse organize cards from client error %s", err.Error())
+		return
+	}
+	cardsByClient := organize.Cards
+	// check len card
+	if len(cardsByClient.GetCards()) != len(cards.GetCards()) {
+		logger.Error("Amount cards from client [%d] different amount card in server [%d]",
+			len(cardsByClient.GetCards()), len(cards.GetCards()))
+		return
+	}
+	// check card send by client is the same card in server
+	if !entity.IsSameCards(cards.GetCards(), cardsByClient.GetCards()) {
+		logger.Error("cards from client not the same card in server, invalid action",
+			len(cardsByClient.GetCards()), len(cards.GetCards()))
+		return
+	}
+
+	// TODO: recheck
+	s.Cards[message.GetUserId()] = cardsByClient
+	s.OrganizeCards[message.GetUserId()] = cardsByClient
+}
+
+func (m *MatchHandler) addChip(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userID string, amountChip int) {
+	changeset := map[string]int64{
+		"chips": int64(amountChip), // Add amountChip coins to the user's wallet.
+	}
+	metadata := map[string]interface{}{
+		"game_topup": "topup",
+	}
+
+	_, _, err := nk.WalletUpdate(ctx, userID, changeset, metadata, true)
+	if err != nil {
+		logger.WithField("err", err).Error("Wallet update error.")
+	}
+
+}
+
+func (m *MatchHandler) subtractChip(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userID string, amountChip int) {
+	changeset := map[string]int64{
+		"chips": -int64(amountChip), // Substract amountChip coins to the user's wallet.
+	}
+	metadata := map[string]interface{}{
+		"game_topup": "topup",
+	}
+
+	_, _, err := nk.WalletUpdate(ctx, userID, changeset, metadata, true)
+	if err != nil {
+		logger.WithField("err", err).Error("Wallet update error.")
+	}
+}
+
+func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, resultGame *pb.UpdateFinish) {
+	walletUpdates := make([]*runtime.WalletUpdate, len(resultGame.Results))
+	for _, result := range resultGame.Results {
+		amountChip := int64(0)
+		amountChip = 200*(result.FrontFactor+result.MiddleFactor+result.BackFactor) +
+			(result.FrontBonus + result.MiddleBonus + result.BackBonus)
+		changeset := map[string]int64{
+			"chips": amountChip, // Substract amountChip coins to the user's wallet.
+		}
+		metadata := map[string]interface{}{
+			"game_topup": "topup",
+		}
+		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
+			UserID:    result.UserId,
+			Changeset: changeset,
+			Metadata:  metadata,
+		})
+	}
+
+	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
+	if err != nil {
+		logger.WithField("err", err).Error("Wallets update error.")
+	}
+}
+
+func (m *MatchHandler) checkAndSendUpdateGameState(logger runtime.Logger, s *entity.MatchState, dispatcher runtime.MatchDispatcher) {
+	if s.CountDown.IsUpdate {
+		pbGameState := pb.UpdateGameState{
+			State:     s.GetGameState(),
+			CountDown: s.CountDown.Sec,
+		}
+		// data, err := m.marshaler.Marshal(&pbGameState)
+		if s.CountDown.Sec == 0 {
+			logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), s.GetNextGameState().String(), s.CountDown.Sec)
+		}
+		err := m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), &pbGameState, nil, nil, true)
+		if err == nil {
+			s.CountDown.IsUpdate = false
+		}
+	}
 }
