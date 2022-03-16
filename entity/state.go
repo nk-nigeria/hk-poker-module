@@ -57,12 +57,7 @@ type MatchState struct {
 	NextGameRemainingTicks int64
 
 	gameState pb.GameState
-	// countdonw to change state to run
 	CountDown CountDown
-	// // countdonw to change state to reward
-	// CountDownToRewardGame CountDown
-	// // countdonw to change state to finish
-	// CountDownToFinishGame CountDown
 }
 
 type CountDown struct {
@@ -124,7 +119,7 @@ func PbGameStateString(gp pb.GameState) string {
 		return "GameStatePrepare"
 	case pb.GameState_GameStateCountdown:
 		return "GameStateCountdown"
-	case pb.GameState_GameStateRun:
+	case pb.GameState_GameStatePlay:
 		return "GameStateRun"
 	case pb.GameState_GameStateReward:
 		return "GameStateReward"
@@ -196,7 +191,7 @@ func (s *MatchState) ProcessEvent(gameEvent GameEvent, logger runtime.Logger, pr
 		s.handlerGamePrepare(gameEvent, logger, presences)
 	case pb.GameState_GameStateCountdown:
 		s.handlerGameCountDown(gameEvent, logger, presences)
-	case pb.GameState_GameStateRun:
+	case pb.GameState_GameStatePlay:
 		s.handlerGameRun(gameEvent, logger, presences)
 	case pb.GameState_GameStateReward:
 		s.handlerGameReward(gameEvent, logger, presences)
@@ -255,7 +250,7 @@ func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Lo
 	if gameEvent == MathLoop {
 		s.CountDown.doCountDown()
 		if s.CountDown.Tick < 0 {
-			s.SetGameState(pb.GameState_GameStateRun, logger)
+			s.SetGameState(pb.GameState_GameStatePlay, logger)
 			s.Cards = make(map[string]*pb.ListCard, 0) // clear map of list card
 			s.CountDown.reset(DelayBeforeRewardGameSec)
 			s.Label.Open = 0

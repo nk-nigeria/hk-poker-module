@@ -9,7 +9,7 @@ import (
 const (
 	stateWait       = "Wait"
 	statePrepairing = "Preparing"
-	stateRun        = "Ringing"
+	statePlay       = "Play"
 	stateReward     = "Reward"
 	stateFinish     = "Finish"
 )
@@ -18,10 +18,15 @@ const (
 	triggerPresenceReady    = "GamePresenceReady"
 	triggerPrepairingDone   = "GamePrepairingDone"
 	triggerPrepairingFailed = "GamePrepairingFailed"
-	triggerRunTimeout       = "GameRunTimeout"
-	triggerRunCombineAll    = "GameRunCombineAll"
+	triggerPlayTimeout      = "GamePlayTimeout"
+	triggerPlayCombineAll   = "GamePlayCombineAll"
 	triggerRewardTimeout    = "GameRewardTimeout"
 	triggerNoOne            = "GameNoOne"
+
+	triggerProcessWait      = "GameProcessWait"
+	triggerProcessPreparing = "GameProcessPrepairing"
+	triggerProcessPlay      = "GameProcessPlay"
+	triggerProcessReward    = "GameProcessReward"
 )
 
 type GameStateMachine struct {
@@ -29,10 +34,11 @@ type GameStateMachine struct {
 }
 
 func (m *GameStateMachine) configure() {
-	waitHandler := NewStateWait()
+	wait := NewStateWait()
 	m.state.Configure(stateWait).
-		OnEntry(waitHandler.Enter).
-		OnExit(waitHandler.Exit).
+		OnEntry(wait.Enter).
+		OnExit(wait.Exit).
+		InternalTransition(triggerProcessWait, wait.Process).
 		Permit(triggerPresenceReady, statePrepairing).
 		Permit(triggerNoOne, stateFinish)
 
@@ -40,20 +46,23 @@ func (m *GameStateMachine) configure() {
 	m.state.Configure(statePrepairing).
 		OnEntry(preparing.Enter).
 		OnExit(preparing.Exit).
-		Permit(triggerPrepairingDone, stateRun).
+		InternalTransition(triggerProcessPreparing, preparing.Process).
+		Permit(triggerPrepairingDone, statePlay).
 		Permit(triggerPrepairingFailed, stateWait)
 
 	run := NewStateRun()
-	m.state.Configure(stateRun).
+	m.state.Configure(statePlay).
 		OnEntry(run.Enter).
 		OnExit(run.Exit).
-		Permit(triggerRunTimeout, stateReward).
-		Permit(triggerRunCombineAll, stateReward)
+		InternalTransition(triggerProcessPlay, run.Process).
+		Permit(triggerPlayTimeout, stateReward).
+		Permit(triggerPlayCombineAll, stateReward)
 
 	reward := NewStateReward()
 	m.state.Configure(stateReward).
 		OnEntry(reward.Enter).
 		OnExit(reward.Exit).
+		InternalTransition(triggerProcessReward, reward.Process).
 		Permit(triggerRewardTimeout, statePrepairing)
 
 	m.state.ToGraph()

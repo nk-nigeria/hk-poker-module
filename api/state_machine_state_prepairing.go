@@ -21,3 +21,7 @@ func (s *StatePrepairing) Exit(_ context.Context, _ ...interface{}) error {
 	log.Info("[preparing] exit")
 	return nil
 }
+
+func (s *StatePrepairing) Process(ctx context.Context, args ...interface{}) error {
+	return nil
+}
