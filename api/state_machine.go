@@ -15,12 +15,13 @@ const (
 )
 
 const (
-	triggerPresenceReady  = "GamePresenceReady"
-	triggerPrepairingDone = "GamePrepairingDone"
-	triggerRunTimeout     = "GameRunTimeout"
-	triggerRunCombineAll  = "GameRunCombineAll"
-	triggerRewardTimeout  = "GameRewardTimeout"
-	triggerFinish         = "GameFinish"
+	triggerPresenceReady    = "GamePresenceReady"
+	triggerPrepairingDone   = "GamePrepairingDone"
+	triggerPrepairingFailed = "GamePrepairingFailed"
+	triggerRunTimeout       = "GameRunTimeout"
+	triggerRunCombineAll    = "GameRunCombineAll"
+	triggerRewardTimeout    = "GameRewardTimeout"
+	triggerNoOne            = "GameNoOne"
 )
 
 type GameStateMachine struct {
@@ -33,13 +34,14 @@ func (m *GameStateMachine) configure() {
 		OnEntry(waitHandler.Enter).
 		OnExit(waitHandler.Exit).
 		Permit(triggerPresenceReady, statePrepairing).
-		Permit(triggerFinish, stateFinish)
+		Permit(triggerNoOne, stateFinish)
 
 	preparing := NewStatePrepairing()
 	m.state.Configure(statePrepairing).
 		OnEntry(preparing.Enter).
 		OnExit(preparing.Exit).
-		Permit(triggerPrepairingDone, stateRun)
+		Permit(triggerPrepairingDone, stateRun).
+		Permit(triggerPrepairingFailed, stateWait)
 
 	run := NewStateRun()
 	m.state.Configure(stateRun).
