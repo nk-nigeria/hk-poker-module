@@ -72,6 +72,21 @@ func (m *GameStateMachine) Fire(trigger stateless.Trigger, args ...interface{}) 
 	return m.state.Fire(trigger, args)
 }
 
+func (m *GameStateMachine) FireProcessEvent(args ...interface{}) error {
+	var trigger stateless.State
+	switch m.state.MustState() {
+	case stateWait:
+		trigger = triggerProcessWait
+	case statePrepairing:
+		trigger = triggerProcessPreparing
+	case statePlay:
+		trigger = triggerProcessPlay
+	case stateReward:
+		trigger = triggerProcessReward
+	}
+	return m.state.Fire(trigger, args)
+}
+
 func (m *GameStateMachine) MustState() stateless.State {
 	return m.state.MustState()
 }

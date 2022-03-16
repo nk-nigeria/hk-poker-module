@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/qmuntal/stateless"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -28,22 +29,8 @@ import (
 )
 
 const (
-	delayBetweenGamesSec = 5
-	turnTimeFastSec      = 10
-	turnTimeNormalSec    = 20
-	maxPlayer            = 4
+	maxPlayer = 4
 )
-
-var winningPositions = [][]int32{
-	{0, 1, 2},
-	{3, 4, 5},
-	{6, 7, 8},
-	{0, 3, 6},
-	{1, 4, 7},
-	{2, 5, 8},
-	{0, 4, 8},
-	{2, 4, 6},
-}
 
 // Compile-time check to make sure all required functions are implemented.
 var _ runtime.Match = &MatchHandler{}
@@ -60,6 +47,10 @@ func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson
 		marshaler:   marshaler,
 		unmarshaler: unmarshaler,
 	}
+}
+
+func (m *MatchHandler) GetState() stateless.State {
+	return m.stateMachine.MustState()
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
@@ -109,116 +100,13 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	return &matchState, entity.TickRate, string(labelJSON)
 }
 
-func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
-	s := state.(*entity.MatchState)
-	logger.Info("match join attempt, state=%v, meta=%v", s, metadata)
-
-	// Check if it's a user attempting to rejoin after a disconnect.
-	if presence, ok := s.Presences.Get(presence.GetUserId()); ok {
-		if presence == nil {
-			// User rejoining after a disconnect.
-			s.JoinsInProgress++
-			return s, true, ""
-		} else {
-			// User attempting to join from 2 different devices at the same time.
-			return s, false, "already joined"
-		}
-	}
-
-	// Check if match is full.
-	if s.Presences.Size()+s.JoinsInProgress >= maxPlayer {
-		return s, false, "match full"
-	}
-
-	// New player attempting to connect.
-	s.JoinsInProgress++
-	return s, true, ""
-}
-
-func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences []runtime.Presence) interface{} {
-	s := state.(*entity.MatchState)
-	logger.Info("match join, state=%v, presences=%v", s, presences)
-
-	s = s.ProcessEvent(entity.MatchJoin, logger, presences)
-	for _, presence := range presences {
-		// Check if we must send a message to this user to update them on the current game state.
-		var msg proto.Message
-		var currentPresences []string
-		for _, p := range s.Presences.Keys() {
-			currentPresences = append(currentPresences, p.(string))
-		}
-		msg = &pb.UpdatePresence{
-			JoinPresence: presence.GetUserId(),
-			Presences:    currentPresences,
-		}
-
-		// Send a message to the user that just joined, if one is needed based on the logic above.
-		if msg != nil {
-			buf, err := m.marshaler.Marshal(msg)
-			if err != nil {
-				logger.Error("error encoding message: %v", err)
-			} else {
-				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE), buf, nil, nil, true)
-			}
-		}
-	}
-
-	// Check if matchwas open to new players, but should now be closed.
-	if s.Presences.Size() >= 2 && s.Label.LastOpenValueNoti == 1 {
-		s.Label.Open = 0
-		s.Label.LastOpenValueNoti = 0
-		if labelJSON, err := json.Marshal(s.Label); err != nil {
-			logger.Error("error encoding label: %v", err)
-		} else {
-			if err := dispatcher.MatchLabelUpdate(string(labelJSON)); err != nil {
-				logger.Error("error updating label: %v", err)
-			}
-		}
-	}
-
-	return s
-}
-
-func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences []runtime.Presence) interface{} {
-	s := state.(*entity.MatchState)
-	logger.Info("match leave, state=%v, presences=%v", s, presences)
-
-	s = s.ProcessEvent(entity.MatchLeave, logger, presences)
-
-	// Check if we must send a message to this user to update them on the current game state.
-	var msg proto.Message
-	for _, presence := range presences {
-		_, found := s.Presences.Get(presence.GetUserId())
-		if found {
-			var currentPresences []string
-			for _, p := range s.Presences.Keys() {
-				currentPresences = append(currentPresences, p.(string))
-			}
-			msg = &pb.UpdatePresence{
-				LeavePresence: presence.GetUserId(),
-				Presences:     currentPresences,
-			}
-
-			// Send a message to the user that just joined, if one is needed based on the logic above.
-			if msg != nil {
-				buf, err := m.marshaler.Marshal(msg)
-				if err != nil {
-					logger.Error("error encoding message: %v", err)
-				} else {
-					_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE), buf, nil, nil, true)
-				}
-			}
-		}
-	}
-
-	return s
-}
-
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*entity.MatchState)
 	// logger.Info("match loop, state=%v, messages=%v, game state: %s", s, messages, s.GetGameState().String())
 
-	s = s.ProcessEvent(entity.MathLoop, logger, nil)
+	m.stateMachine.FireProcessEvent(logger, dispatcher, messages)
+
+	//s = s.ProcessEvent(entity.MathLoop, logger, nil)
 	if s.GetGameState() == pb.GameState_GameStateLobby && s.EmptyTicks > entity.MaxEmptySec {
 		logger.Info("closing idle match id")
 		return nil

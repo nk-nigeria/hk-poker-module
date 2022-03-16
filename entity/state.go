@@ -180,152 +180,153 @@ func (s *MatchState) SetGameState(gameState pb.GameState, logger runtime.Logger)
 	}
 	return s.gameState
 }
-func (s *MatchState) ProcessEvent(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	if gameEvent != MathLoop {
-		logger.Info("ProccessEvent %s, current gameState %s", gameEvent.String(), s.GetGameState().String())
-	}
-	switch s.gameState {
-	case pb.GameState_GameStateLobby:
-		s.handlerGameStateLobby(gameEvent, logger, presences)
-	case pb.GameState_GameStatePrepare:
-		s.handlerGamePrepare(gameEvent, logger, presences)
-	case pb.GameState_GameStateCountdown:
-		s.handlerGameCountDown(gameEvent, logger, presences)
-	case pb.GameState_GameStatePlay:
-		s.handlerGameRun(gameEvent, logger, presences)
-	case pb.GameState_GameStateReward:
-		s.handlerGameReward(gameEvent, logger, presences)
-	case pb.GameState_GameStateFinish:
-		s.handlerGameFinish(gameEvent, logger, presences)
-	}
-	return s
-}
+
+//func (s *MatchState) ProcessEvent(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
+//	if gameEvent != MathLoop {
+//		logger.Info("ProccessEvent %s, current gameState %s", gameEvent.String(), s.GetGameState().String())
+//	}
+//	switch s.gameState {
+//	case pb.GameState_GameStateLobby:
+//		s.handlerGameStateLobby(gameEvent, logger, presences)
+//	case pb.GameState_GameStatePrepare:
+//		s.handlerGamePrepare(gameEvent, logger, presences)
+//	case pb.GameState_GameStateCountdown:
+//		s.handlerGameCountDown(gameEvent, logger, presences)
+//	case pb.GameState_GameStatePlay:
+//		s.handlerGameRun(gameEvent, logger, presences)
+//	case pb.GameState_GameStateReward:
+//		s.handlerGameReward(gameEvent, logger, presences)
+//	case pb.GameState_GameStateFinish:
+//		s.handlerGameFinish(gameEvent, logger, presences)
+//	}
+//	return s
+//}
 
 func (s *MatchState) handlerGameStateLobby(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	s.Label.Open = 1
-	if gameEvent == MatchJoin {
-		s.addPresence(presences)
-		s.SetGameState(pb.GameState_GameStatePrepare, logger)
-		return s
-	}
-
-	if gameEvent == MathLoop {
-		if s.Presences.Size()+s.JoinsInProgress == 0 {
-			s.EmptyTicks++
-		}
-	}
+	//s.Label.Open = 1
+	//if gameEvent == MatchJoin {
+	//	s.addPresence(presences)
+	//	s.SetGameState(pb.GameState_GameStatePrepare, logger)
+	//	return s
+	//}
+	//
+	//if gameEvent == MathLoop {
+	//	if s.Presences.Size()+s.JoinsInProgress == 0 {
+	//		s.EmptyTicks++
+	//	}
+	//}
 	return s
 }
 
 func (s *MatchState) handlerGamePrepare(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	s.Label.Open = 1
-	if gameEvent == MatchLeave {
-		s.removePresence(presences)
-		if s.Presences.Size() == 0 {
-			s.SetGameState(pb.GameState_GameStateLobby, logger)
-		}
-		return s
-	}
-	if gameEvent == MatchJoin {
-		s.addPresence(presences)
-		if s.Presences.Size() >= MinPlayer {
-			s.SetGameState(pb.GameState_GameStateCountdown, logger)
-			s.CountDown.reset(DelayBeforeRunGameSec)
-		}
-		return s
-	}
+	//s.Label.Open = 1
+	//if gameEvent == MatchLeave {
+	//	s.removePresence(presences)
+	//	if s.Presences.Size() == 0 {
+	//		s.SetGameState(pb.GameState_GameStateLobby, logger)
+	//	}
+	//	return s
+	//}
+	//if gameEvent == MatchJoin {
+	//	s.addPresence(presences)
+	//	if s.Presences.Size() >= MinPlayer {
+	//		s.SetGameState(pb.GameState_GameStateCountdown, logger)
+	//		s.CountDown.reset(DelayBeforeRunGameSec)
+	//	}
+	//	return s
+	//}
 	return s
 }
 
 func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	if gameEvent == MatchLeave {
-		s.removePresence(presences)
-		return s
-	}
-	if gameEvent == MatchJoin {
-		s.addPresence(presences)
-		return s
-	}
-
-	if gameEvent == MathLoop {
-		s.CountDown.doCountDown()
-		if s.CountDown.Tick < 0 {
-			s.SetGameState(pb.GameState_GameStatePlay, logger)
-			s.Cards = make(map[string]*pb.ListCard, 0) // clear map of list card
-			s.CountDown.reset(DelayBeforeRewardGameSec)
-			s.Label.Open = 0
-		}
-	}
+	//if gameEvent == MatchLeave {
+	//	s.removePresence(presences)
+	//	return s
+	//}
+	//if gameEvent == MatchJoin {
+	//	s.addPresence(presences)
+	//	return s
+	//}
+	//
+	//if gameEvent == MathLoop {
+	//	s.CountDown.doCountDown()
+	//	if s.CountDown.Tick < 0 {
+	//		s.SetGameState(pb.GameState_GameStatePlay, logger)
+	//		s.Cards = make(map[string]*pb.ListCard, 0) // clear map of list card
+	//		s.CountDown.reset(DelayBeforeRewardGameSec)
+	//		s.Label.Open = 0
+	//	}
+	//}
 	return s
 }
 
 func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	if gameEvent == MatchJoin {
-		// todo handler add presence when game aldready run
-		s.addPresence(presences)
-
-		return s
-	}
-	if gameEvent == MatchLeave {
-		s.removePresence(presences)
-		return s
-	}
-	if gameEvent == MathDone {
-		s.SetGameState(pb.GameState_GameStateReward, logger)
-		return s
-	}
-	if gameEvent == MathLoop {
-		// todo punishment as looser
-		if len(s.JoinInGame) <= 1 {
-			s.SetGameState(pb.GameState_GameStateReward, logger)
-			return s
-		}
-		s.CountDown.doCountDown()
-		if s.CountDown.Tick < 0 {
-			s.SetGameState(pb.GameState_GameStateReward, logger)
-			s.CountDown.reset(DelayBeforeFinishGameSec)
-			return s
-		}
-	}
+	//if gameEvent == MatchJoin {
+	//	// todo handler add presence when game aldready run
+	//	s.addPresence(presences)
+	//
+	//	return s
+	//}
+	//if gameEvent == MatchLeave {
+	//	s.removePresence(presences)
+	//	return s
+	//}
+	//if gameEvent == MathDone {
+	//	s.SetGameState(pb.GameState_GameStateReward, logger)
+	//	return s
+	//}
+	//if gameEvent == MathLoop {
+	//	// todo punishment as looser
+	//	if len(s.JoinInGame) <= 1 {
+	//		s.SetGameState(pb.GameState_GameStateReward, logger)
+	//		return s
+	//	}
+	//	s.CountDown.doCountDown()
+	//	if s.CountDown.Tick < 0 {
+	//		s.SetGameState(pb.GameState_GameStateReward, logger)
+	//		s.CountDown.reset(DelayBeforeFinishGameSec)
+	//		return s
+	//	}
+	//}
 	// todo add param user commnad
 	return s
 }
 
 func (s *MatchState) handlerGameReward(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	if gameEvent == MatchJoin {
-		s.addPresence(presences)
-	}
-	if gameEvent == MatchLeave {
-		s.removePresence(presences)
-	}
-	// todo calc reward here
-
-	s.CountDown.doCountDown()
-	if s.CountDown.Tick < 0 {
-		s.SetGameState(pb.GameState_GameStateFinish, logger)
-	}
+	//if gameEvent == MatchJoin {
+	//	s.addPresence(presences)
+	//}
+	//if gameEvent == MatchLeave {
+	//	s.removePresence(presences)
+	//}
+	//// todo calc reward here
+	//
+	//s.CountDown.doCountDown()
+	//if s.CountDown.Tick < 0 {
+	//	s.SetGameState(pb.GameState_GameStateFinish, logger)
+	//}
 	return s
 }
 
 func (s *MatchState) handlerGameFinish(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	s.Playing = false
-	if gameEvent == MatchJoin {
-		s.addPresence(presences)
-	}
-	if gameEvent == MatchLeave {
-		s.removePresence(presences)
-	}
-	if s.Presences.Size() >= MinPlayer {
-		s.SetGameState(pb.GameState_GameStateCountdown, logger)
-		s.CountDown.reset(DelayBeforeRunGameSec)
-		return s
-	}
-	if s.Presences.Size() > 0 {
-		s.SetGameState(pb.GameState_GameStatePrepare, logger)
-		s.CountDown.reset(DelayBeforeRunGameSec)
-		return s
-	}
-	s.SetGameState(pb.GameState_GameStateLobby, logger)
+	//s.Playing = false
+	//if gameEvent == MatchJoin {
+	//	s.addPresence(presences)
+	//}
+	//if gameEvent == MatchLeave {
+	//	s.removePresence(presences)
+	//}
+	//if s.Presences.Size() >= MinPlayer {
+	//	s.SetGameState(pb.GameState_GameStateCountdown, logger)
+	//	s.CountDown.reset(DelayBeforeRunGameSec)
+	//	return s
+	//}
+	//if s.Presences.Size() > 0 {
+	//	s.SetGameState(pb.GameState_GameStatePrepare, logger)
+	//	s.CountDown.reset(DelayBeforeRunGameSec)
+	//	return s
+	//}
+	//s.SetGameState(pb.GameState_GameStateLobby, logger)
 	return s
 }
 
@@ -334,7 +335,7 @@ func (s *MatchState) handlerGameTerminate(gameEvent GameEvent, logger runtime.Lo
 	return s
 }
 
-func (s *MatchState) addPresence(presences []runtime.Presence) {
+func (s *MatchState) AddPresence(presences []runtime.Presence) {
 	for _, presence := range presences {
 		s.EmptyTicks = 0
 		s.Presences.Put(presence.GetUserId(), presence)
@@ -345,7 +346,7 @@ func (s *MatchState) addPresence(presences []runtime.Presence) {
 	}
 }
 
-func (s *MatchState) removePresence(presences []runtime.Presence) {
+func (s *MatchState) RemovePresence(presences []runtime.Presence) {
 	for _, presence := range presences {
 		s.Presences.Remove(presence.GetUserId())
 		if _, exist := s.Cards[presence.GetUserId()]; exist {

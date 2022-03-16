@@ -11,6 +11,6 @@ func TestStateMachine(t *testing.T) {
 	game := NewGameStateMachine()
 	fmt.Printf("State is %v\n", game.MustState())
 
-	game.Fire(triggerFinish)
+	game.Fire(triggerNoOne)
 	fmt.Printf("State is %v\n", game.MustState())
 }
