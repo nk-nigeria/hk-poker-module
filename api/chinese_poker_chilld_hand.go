@@ -14,19 +14,21 @@ func (ch *ChildHand) calculatePoint() {
 	if ch.Point != nil {
 		return
 	}
-	ch.Point, ch.Cards = GetHandPoint(ch.Cards.ListCard)
+	ch.Point, ch.Cards = CaculatorPoint(ch.Cards.ListCard)
 }
 
 func NewChildHand(cards entity.ListCard) *ChildHand {
 	child := ChildHand{
 		Cards: &HandCards{
-			ListCard: cards,
+			// ListCard: make(entity.ListCard, 0, len(cards)),
 		},
 	}
+	// copy(child.Cards.ListCard, cards)
+	child.Cards.ListCard = cards[:]
 	return &child
 }
 
-func compareChildHand(h1, h2 *ChildHand) int {
+func (h1 *ChildHand) CompareHand(h2 *ChildHand) int {
 	h1.calculatePoint()
 	h2.calculatePoint()
 
@@ -78,16 +80,16 @@ func compareChildHand(h1, h2 *ChildHand) int {
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1.GetMaxPointCard()
-		point2 = x2.GetMaxPointCard()
+		point1 = x1.GetMaxRankPointCard()
+		point2 = x2.GetMaxRankPointCard()
 	case pb.HandRanking_Straight:
 		x1 := h1.Cards.ListCard
 		x2 := h2.Cards.ListCard
 		if len(x1) == 0 || len(x1) != len(x2) {
 			return resultPoint
 		}
-		point1 = x1.GetMaxPointCard()
-		point2 = x2.GetMaxPointCard()
+		point1 = x1.GetMaxRankPointCard()
+		point2 = x2.GetMaxRankPointCard()
 	case pb.HandRanking_ThreeOfAKind:
 		x1 := h1.Cards.MapCardType[pb.HandRanking_ThreeOfAKind]
 		x2 := h2.Cards.MapCardType[pb.HandRanking_ThreeOfAKind]

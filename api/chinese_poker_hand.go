@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
@@ -73,28 +74,27 @@ func (h *Hand) calculatePoint() int {
 
 func (h *Hand) calculatePointFrontHand() {
 	var handCard *HandCards
-	h.frontHand.Point, handCard = GetHandPoint(h.frontHand.Cards.ListCard)
+	h.frontHand.Point, handCard = CaculatorPoint(h.frontHand.Cards.ListCard)
 	// copy(h.backHand.Child[:], sortedCard[:3])
 	h.frontHand.Cards = handCard
 }
 
 func (h *Hand) calculatePointMiddleHand() {
 	var handCard *HandCards
-	h.middleHand.Point, handCard = GetHandPoint(h.middleHand.Cards.ListCard)
+	h.middleHand.Point, handCard = CaculatorPoint(h.middleHand.Cards.ListCard)
 	h.middleHand.Cards = handCard
 }
 
 func (h *Hand) calculatePointBackHand() {
 	var handCard *HandCards
-	h.backHand.Point, handCard = GetHandPoint(h.middleHand.Cards.ListCard)
+	h.backHand.Point, handCard = CaculatorPoint(h.middleHand.Cards.ListCard)
 	h.backHand.Cards = handCard
-
 }
 
 func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
 	result := &pb.ComparisonResult{}
-	result.FrontFactor = int64(compareChildHand(h1.frontHand, h2.frontHand))
-	result.MiddleFactor = int64(compareChildHand(h1.middleHand, h2.middleHand))
-	result.BackFactor = int64(compareChildHand(h1.backHand, h2.backHand))
+	result.FrontFactor = int64(h1.frontHand.CompareHand(h2.frontHand))
+	result.MiddleFactor = int64(h1.middleHand.CompareHand(h2.middleHand))
+	result.BackFactor = int64(h1.backHand.CompareHand(h2.backHand))
 	return result
 }

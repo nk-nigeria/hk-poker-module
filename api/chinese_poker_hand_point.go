@@ -34,35 +34,64 @@ func (h *HandPoint) IsFlush() bool {
 
 type CheckFunc func(entity.ListCard) (*HandCards, bool)
 
-var HandChecker = map[pb.HandRanking]CheckFunc{
-	pb.HandRanking_StraightFlush: CheckStraightFlush,
-	pb.HandRanking_FourOfAKind:   CheckFourOfAKind,
-	pb.HandRanking_FullHouse:     CheckFullHouse,
-	pb.HandRanking_Flush:         CheckFlush,
-	pb.HandRanking_Straight:      CheckStraight,
-	pb.HandRanking_ThreeOfAKind:  CheckThreeOfAKind,
-	pb.HandRanking_TwoPairs:      CheckTwoPairs,
-	pb.HandRanking_Pair:          CheckPair,
+var HandChecker *linkedhashmap.Map
+
+var HandCheckerFront *linkedhashmap.Map
+
+func init() {
+	HandChecker = linkedhashmap.New()
+	HandChecker.Put(pb.HandRanking_StraightFlush, CheckStraightFlush)
+	HandChecker.Put(pb.HandRanking_FourOfAKind, CheckFourOfAKind)
+	HandChecker.Put(pb.HandRanking_FullHouse, CheckFullHouse)
+	HandChecker.Put(pb.HandRanking_Flush, CheckFlush)
+	HandChecker.Put(pb.HandRanking_Straight, CheckStraight)
+	HandChecker.Put(pb.HandRanking_ThreeOfAKind, CheckThreeOfAKind)
+	HandChecker.Put(pb.HandRanking_TwoPairs, CheckTwoPairs)
+	HandChecker.Put(pb.HandRanking_Pair, CheckPair)
+
+	HandCheckerFront = linkedhashmap.New()
+	HandCheckerFront.Put(pb.HandRanking_ThreeOfAKind, CheckThreeOfAKind)
+	HandCheckerFront.Put(pb.HandRanking_Pair, CheckPair)
 }
 
-var HandCheckerFront = map[pb.HandRanking]CheckFunc{
-	pb.HandRanking_ThreeOfAKind: CheckThreeOfAKind,
-	pb.HandRanking_Pair:         CheckPair,
-}
+// var HandChecker = map[pb.HandRanking]CheckFunc{
+// 	pb.HandRanking_StraightFlush: CheckStraightFlush,
+// 	pb.HandRanking_FourOfAKind:   CheckFourOfAKind,
+// 	pb.HandRanking_FullHouse:     CheckFullHouse,
+// 	pb.HandRanking_Flush:         CheckFlush,
+// 	pb.HandRanking_Straight:      CheckStraight,
+// 	pb.HandRanking_ThreeOfAKind:  CheckThreeOfAKind,
+// 	pb.HandRanking_TwoPairs:      CheckTwoPairs,
+// 	pb.HandRanking_Pair:          CheckPair,
+// }
 
-func GetHandPoint(listCard entity.ListCard) (*HandPoint, *HandCards) {
+// var HandCheckerFront = map[pb.HandRanking]CheckFunc{
+// 	pb.HandRanking_ThreeOfAKind: CheckThreeOfAKind,
+// 	pb.HandRanking_Pair:         CheckPair,
+// }
+
+func CaculatorPoint(listCard entity.ListCard) (*HandPoint, *HandCards) {
 	if len(listCard) == 3 {
 		// For check front
-		for rank, check := range HandCheckerFront {
-			if handCard, valid := check(listCard); valid {
+		for _, key := range HandCheckerFront.Keys() {
+			rank := key.(pb.HandRanking)
+			val, _ := (HandCheckerFront.Get(rank))
+			fn := val.(func(listCard entity.ListCard) (*HandCards, bool))
+			if handCard, valid := fn(listCard); valid {
 				return &HandPoint{
 					rankingType: rank,
 				}, handCard
 			}
 		}
 	} else {
-		for rank, check := range HandChecker {
-			if handCard, valid := check(listCard); valid {
+		for _, key := range HandChecker.Keys() {
+			rank := key.(pb.HandRanking)
+			val, exist := HandChecker.Get(rank)
+			if !exist {
+				return nil, nil
+			}
+			fn := val.(func(listCard entity.ListCard) (*HandCards, bool))
+			if handCard, valid := fn(listCard); valid {
 				return &HandPoint{
 					rankingType: rank,
 				}, handCard
@@ -73,7 +102,8 @@ func GetHandPoint(listCard entity.ListCard) (*HandPoint, *HandCards) {
 	// Sort for high card
 	listCard = SortCard(listCard)
 	handCard := HandCards{
-		ListCard: listCard,
+		ListCard:    listCard,
+		MapCardType: make(map[pb.HandRanking]entity.ListCard),
 	}
 	return &HandPoint{
 		rankingType: pb.HandRanking_HighCard,
@@ -97,9 +127,13 @@ func CheckStraightFlush(listCard entity.ListCard) (*HandCards, bool) {
 	if !valid {
 		return nil, false
 	}
+	if handCard.MapCardType == nil {
+		handCard.MapCardType = make(map[pb.HandRanking]entity.ListCard)
+	}
 	for k, v := range handCard2.MapCardType {
 		handCard.MapCardType[k] = v
 	}
+	handCard.MapCardType[pb.HandRanking_StraightFlush] = listCard
 	handCard.ListCard = handCard2.ListCard
 	return handCard, true
 }
@@ -203,8 +237,10 @@ func CheckFlush(listCard entity.ListCard) (*HandCards, bool) {
 		}
 	}
 	handCard := HandCards{
-		ListCard: listCard,
+		ListCard:    listCard,
+		MapCardType: make(map[pb.HandRanking]entity.ListCard),
 	}
+	handCard.MapCardType[pb.HandRanking_Flush] = listCard
 	return &handCard, true
 }
 
@@ -223,8 +259,10 @@ func CheckStraight(listCard entity.ListCard) (*HandCards, bool) {
 		}
 	}
 	handCards := HandCards{
-		ListCard: listCard,
+		ListCard:    listCard,
+		MapCardType: make(map[pb.HandRanking]entity.ListCard),
 	}
+	handCards.MapCardType[pb.HandRanking_Straight] = listCard
 	return &handCards, true
 }
 
