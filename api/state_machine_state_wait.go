@@ -6,10 +6,13 @@ import (
 )
 
 type StateWait struct {
+	fn FireFn
 }
 
-func NewStateWait() *StateWait {
-	return &StateWait{}
+func NewStateWait(fn FireFn) *StateWait {
+	return &StateWait{
+		fn: fn,
+	}
 }
 
 func (s *StateWait) Enter(_ context.Context, _ ...interface{}) error {
@@ -22,6 +25,13 @@ func (s *StateWait) Exit(_ context.Context, _ ...interface{}) error {
 	return nil
 }
 
-func (s *StateWait) Process(ctx context.Context, i ...interface{}) error {
+func (s *StateWait) Process(ctx context.Context, args ...interface{}) error {
+	log.Infof("[wait] processing %v, %v", len(args), args[0])
+	state := GetState(args...)
+	log.Info("state presences size ", state.Presences.Size())
+	if state.Presences.Size() >= state.MinPresences {
+		s.fn(triggerPresenceReady, state)
+	}
+
 	return nil
 }

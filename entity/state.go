@@ -12,11 +12,12 @@ import (
 
 const (
 	TickRate                 = 5
-	MinPlayer                = 2
 	MaxEmptySec              = 60 * TickRate // 60s
 	DelayBeforeRunGameSec    = 5 * TickRate  // 5s
 	DelayBeforeRewardGameSec = 20 * TickRate // 30s
 	DelayBeforeFinishGameSec = 10 * TickRate // 30s
+
+	MinPresences = 2
 )
 
 type MatchLabel struct {
@@ -30,9 +31,10 @@ type MatchLabel struct {
 }
 
 type MatchState struct {
-	Random     *rand.Rand
-	Label      *MatchLabel
-	EmptyTicks int
+	Random       *rand.Rand
+	Label        *MatchLabel
+	MinPresences int
+	EmptyTicks   int
 
 	// Currently connected users, or reserved spaces.
 	Presences *linkedhashmap.Map
@@ -41,23 +43,14 @@ type MatchState struct {
 	// Number of user currently dealt with game
 	JoinInGame map[string]bool
 
-	// True if there's a game currently in progress.
-	Playing bool
 	// Mark assignments to player user IDs.
 	Cards map[string]*pb.ListCard
 	// Mark assignments to player user IDs.
 	OrganizeCards map[string]*pb.ListCard
 	// Whose turn it currently is.
-	Turn string
-	// Ticks until they must submit their move.
-	DeadlineRemainingTicks int64
-	//// The winner positions.
-	//winnerPositions []int32
-	// Ticks until the next game starts, if applicable.
-	NextGameRemainingTicks int64
 
-	gameState pb.GameState
-	CountDown CountDown
+	gameState          pb.GameState
+	CountDownReachTime time.Time
 }
 
 type CountDown struct {
@@ -97,15 +90,10 @@ func (cd *CountDown) reset(sec int64) {
 
 func NewMathState(label *MatchLabel) MatchState {
 	m := MatchState{
-		Random:  rand.New(rand.NewSource(time.Now().UnixNano())),
-		Label:   label,
-		Playing: false,
-		//presences: make(map[string]runtime.Presence, maxPlayer),
-		Presences: linkedhashmap.New(),
-		gameState: pb.GameState_GameStateLobby,
-		CountDown: NewCountDown(DelayBeforeRunGameSec),
-		// CountDownToRewardGame: NewCountDown(DelayBeforeRewardGameSec),
-		// CountDownToFinishGame: NewCountDown(DelayBeforeFinishGameSec),
+		Random:       rand.New(rand.NewSource(time.Now().UnixNano())),
+		Label:        label,
+		MinPresences: MinPresences,
+		Presences:    linkedhashmap.New(),
 	}
 	m.Label.LastOpenValueNoti = m.Label.Open
 	return m
@@ -113,20 +101,16 @@ func NewMathState(label *MatchLabel) MatchState {
 
 func PbGameStateString(gp pb.GameState) string {
 	switch gp {
-	case pb.GameState_GameStateLobby:
-		return "GameStateLobby"
-	case pb.GameState_GameStatePrepare:
-		return "GameStatePrepare"
-	case pb.GameState_GameStateCountdown:
-		return "GameStateCountdown"
+	case pb.GameState_GameStateWait:
+		return "GameStateWait"
+	case pb.GameState_GameStatePreparing:
+		return "GameStatePreparing"
 	case pb.GameState_GameStatePlay:
 		return "GameStateRun"
 	case pb.GameState_GameStateReward:
 		return "GameStateReward"
 	case pb.GameState_GameStateFinish:
 		return "GameStateFinish"
-	case pb.GameState_GameStateEnd:
-		return "GameStateEnd"
 	}
 	return "unknow"
 }
@@ -168,18 +152,18 @@ func (s *MatchState) GetNextGameState() pb.GameState {
 	return (s.gameState + 1) % 7
 }
 
-func (s *MatchState) SetGameState(gameState pb.GameState, logger runtime.Logger) pb.GameState {
-	if s.gameState != gameState {
-		logger.Info("Game state change %s -- > %s", s.gameState.String(), gameState.String())
-		s.gameState = gameState
-		// reset duration empty room
-		if s.gameState == pb.GameState_GameStateLobby {
-			s.EmptyTicks = 0
-		}
-		s.CountDown.reset(0)
-	}
-	return s.gameState
-}
+//func (s *MatchState) SetGameState(gameState pb.GameState, logger runtime.Logger) pb.GameState {
+//	if s.gameState != gameState {
+//		logger.Info("Game state change %s -- > %s", s.gameState.String(), gameState.String())
+//		s.gameState = gameState
+//		// reset duration empty room
+//		if s.gameState == pb.GameState_GameStateLobby {
+//			s.EmptyTicks = 0
+//		}
+//		s.CountDown.reset(0)
+//	}
+//	return s.gameState
+//}
 
 //func (s *MatchState) ProcessEvent(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
 //	if gameEvent != MathLoop {
@@ -353,4 +337,14 @@ func (s *MatchState) RemovePresence(presences []runtime.Presence) {
 			s.JoinInGame[presence.GetUserId()] = false
 		}
 	}
+}
+
+func (s *MatchState) SetUpCountDown(duration time.Duration) {
+	s.CountDownReachTime = time.Now().Add(duration)
+}
+
+func (s *MatchState) GetRemainCountDown() int {
+	currentTime := time.Now()
+	difference := s.CountDownReachTime.Sub(currentTime)
+	return int(difference.Seconds())
 }

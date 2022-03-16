@@ -9,7 +9,7 @@ import (
 
 func TestGame(t *testing.T) {
 	t.Logf("Test Game")
-	processor := NewProcessor()
+	processor := NewChinesePokerEngine()
 
 	// mock presense
 	presense := linkedhashmap.New()

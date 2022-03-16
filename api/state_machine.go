@@ -1,27 +1,29 @@
 package api
 
 import (
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	_ "github.com/filecoin-project/go-statemachine"
+	"github.com/heroiclabs/nakama-common/runtime"
 	_ "github.com/ipfs/go-datastore"
 	"github.com/qmuntal/stateless"
 )
 
 const (
-	stateWait       = "Wait"
-	statePrepairing = "Preparing"
-	statePlay       = "Play"
-	stateReward     = "Reward"
-	stateFinish     = "Finish"
+	stateWait      = "Wait"
+	statePreparing = "Preparing"
+	statePlay      = "Play"
+	stateReward    = "Reward"
+	stateFinish    = "Finish"
 )
 
 const (
-	triggerPresenceReady    = "GamePresenceReady"
-	triggerPrepairingDone   = "GamePrepairingDone"
-	triggerPrepairingFailed = "GamePrepairingFailed"
-	triggerPlayTimeout      = "GamePlayTimeout"
-	triggerPlayCombineAll   = "GamePlayCombineAll"
-	triggerRewardTimeout    = "GameRewardTimeout"
-	triggerNoOne            = "GameNoOne"
+	triggerPresenceReady   = "GamePresenceReady"
+	triggerPreparingDone   = "GamePrepairingDone"
+	triggerPreparingFailed = "GamePrepairingFailed"
+	triggerPlayTimeout     = "GamePlayTimeout"
+	triggerPlayCombineAll  = "GamePlayCombineAll"
+	triggerRewardTimeout   = "GameRewardTimeout"
+	triggerNoOne           = "GameNoOne"
 
 	triggerProcessWait      = "GameProcessWait"
 	triggerProcessPreparing = "GameProcessPrepairing"
@@ -34,27 +36,27 @@ type GameStateMachine struct {
 }
 
 func (m *GameStateMachine) configure() {
-	wait := NewStateWait()
+	wait := NewStateWait(m.state.Fire)
 	m.state.Configure(stateWait).
 		OnEntry(wait.Enter).
 		OnExit(wait.Exit).
 		InternalTransition(triggerProcessWait, wait.Process).
-		Permit(triggerPresenceReady, statePrepairing).
+		Permit(triggerPresenceReady, statePreparing).
 		Permit(triggerNoOne, stateFinish)
 
-	preparing := NewStatePrepairing()
-	m.state.Configure(statePrepairing).
+	preparing := NewStatePreparing(m.state.Fire)
+	m.state.Configure(statePreparing).
 		OnEntry(preparing.Enter).
 		OnExit(preparing.Exit).
 		InternalTransition(triggerProcessPreparing, preparing.Process).
-		Permit(triggerPrepairingDone, statePlay).
-		Permit(triggerPrepairingFailed, stateWait)
+		Permit(triggerPreparingDone, statePlay).
+		Permit(triggerPreparingFailed, stateWait)
 
-	run := NewStateRun()
+	play := NewStatePlay()
 	m.state.Configure(statePlay).
-		OnEntry(run.Enter).
-		OnExit(run.Exit).
-		InternalTransition(triggerProcessPlay, run.Process).
+		OnEntry(play.Enter).
+		OnExit(play.Exit).
+		InternalTransition(triggerProcessPlay, play.Process).
 		Permit(triggerPlayTimeout, stateReward).
 		Permit(triggerPlayCombineAll, stateReward)
 
@@ -63,7 +65,7 @@ func (m *GameStateMachine) configure() {
 		OnEntry(reward.Enter).
 		OnExit(reward.Exit).
 		InternalTransition(triggerProcessReward, reward.Process).
-		Permit(triggerRewardTimeout, statePrepairing)
+		Permit(triggerRewardTimeout, statePreparing)
 
 	m.state.ToGraph()
 }
@@ -77,14 +79,14 @@ func (m *GameStateMachine) FireProcessEvent(args ...interface{}) error {
 	switch m.state.MustState() {
 	case stateWait:
 		trigger = triggerProcessWait
-	case statePrepairing:
+	case statePreparing:
 		trigger = triggerProcessPreparing
 	case statePlay:
 		trigger = triggerProcessPlay
 	case stateReward:
 		trigger = triggerProcessReward
 	}
-	return m.state.Fire(trigger, args)
+	return m.state.Fire(trigger, args...)
 }
 
 func (m *GameStateMachine) MustState() stateless.State {
@@ -99,4 +101,25 @@ func NewGameStateMachine() *GameStateMachine {
 	gs.configure()
 
 	return gs
+}
+
+type FireFn func(trigger stateless.Trigger, args ...interface{}) error
+type StateBase struct {
+	fireFn FireFn
+}
+
+func GetState(args ...interface{}) *entity.MatchState {
+	return args[0].(*entity.MatchState)
+}
+
+func GetLogger(args ...interface{}) runtime.Logger {
+	return args[1].(runtime.Logger)
+}
+
+func GetDispatcher(args ...interface{}) runtime.MatchDispatcher {
+	return args[2].(runtime.MatchDispatcher)
+}
+
+func GetProcessor(args ...interface{}) *MatchProcessor {
+	return args[3].(*MatchProcessor)
 }

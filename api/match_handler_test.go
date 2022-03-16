@@ -32,9 +32,10 @@ func TestMatch(t *testing.T) {
 	var stop = make(chan bool)
 	go func() {
 		t.Logf("start mock loop")
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 20; i++ {
 			t.Logf("log %d", i)
 			time.Sleep(time.Millisecond * 500)
+			m.MatchLoop(nil, logger, nil, nil, dispatcher, 0, s, nil)
 		}
 
 		t.Logf("current state %v", m.GetState())
@@ -52,6 +53,7 @@ func TestMatch(t *testing.T) {
 
 		m.MatchJoin(nil, logger, nil, nil, dispatcher, 0, s, presences)
 
+		time.Sleep(time.Second * 2)
 		presences[0] = &mock.MockPresence{
 			UserId: "user2",
 		}

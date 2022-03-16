@@ -12,7 +12,7 @@ type ChinesePokerGame struct {
 	deck *entity.Deck
 }
 
-func NewProcessor() *ChinesePokerGame {
+func NewChinesePokerEngine() *ChinesePokerGame {
 	return &ChinesePokerGame{}
 }
 
