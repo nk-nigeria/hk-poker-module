@@ -11,6 +11,7 @@ import (
 
 const (
 	MinPresences = 2
+	MaxPresences = 4
 )
 
 type MatchLabel struct {

@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -27,7 +26,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	}
 
 	// Check if match is full.
-	if s.Presences.Size()+s.JoinsInProgress >= maxPlayer {
+	if s.Presences.Size()+s.JoinsInProgress >= entity.MaxPresences {
 		return s, false, "match full"
 	}
 
@@ -62,19 +61,6 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 				logger.Error("error encoding message: %v", err)
 			} else {
 				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE), buf, nil, nil, true)
-			}
-		}
-	}
-
-	// Check if match was open to new players, but should now be closed.
-	if s.Presences.Size() >= 2 && s.Label.LastOpenValueNoti == 1 {
-		s.Label.Open = 0
-		s.Label.LastOpenValueNoti = 0
-		if labelJSON, err := json.Marshal(s.Label); err != nil {
-			logger.Error("error encoding label: %v", err)
-		} else {
-			if err := dispatcher.MatchLabelUpdate(string(labelJSON)); err != nil {
-				logger.Error("error updating label: %v", err)
 			}
 		}
 	}

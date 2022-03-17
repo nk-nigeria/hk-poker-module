@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 	"testing"
@@ -24,7 +25,7 @@ func TestMatch(t *testing.T) {
 	params["name"] = "name"
 	params["password"] = "password"
 
-	logger := &mock.MockLog{}
+	logger := log.GetLogger()
 	dispatcher := mock.MockDispatcher{}
 	s, _, _ := m.MatchInit(nil, logger, nil, nil, params)
 

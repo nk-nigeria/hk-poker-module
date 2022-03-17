@@ -26,8 +26,7 @@ import (
 )
 
 const (
-	maxPlayer = 4
-	tickRate  = 5
+	tickRate = 5
 )
 
 var errFinish = errors.New("process.error.finish")
@@ -80,12 +79,13 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		Code:     entity.ModuleName,
 		Name:     name,
 		Password: password,
+		MaxSize:  entity.MaxPresences,
 	}
 
 	labelJSON, err := json.Marshal(label)
 	if err != nil {
-		logger.WithField("error", err).Error("match init failed")
-		labelJSON = []byte("{}")
+		logger.Error("match init json label failed ", err)
+		return nil, tickRate, ""
 	}
 
 	logger.Info("match init label=", string(labelJSON))
