@@ -49,9 +49,11 @@ type GameStateMachine struct {
 func (m *GameStateMachine) configure() {
 	fireCtx := m.state.FireCtx
 
+	// init state
 	m.state.Configure(stateInit).
 		Permit(triggerIdle, stateIdle)
 
+	// idle state: wait for first user, check no one and timeout
 	idle := NewIdleState(fireCtx)
 	m.state.Configure(stateIdle).
 		OnEntry(idle.Enter).
@@ -60,6 +62,7 @@ func (m *GameStateMachine) configure() {
 		Permit(triggerMatching, stateMatching).
 		Permit(triggerNoOne, stateFinish)
 
+	// matching state: wait for reach min user => switch to preparing, check no one and timeout => switch to idle
 	matching := NewStateMatching(fireCtx)
 	m.state.Configure(stateMatching).
 		OnEntry(matching.Enter).
@@ -68,6 +71,7 @@ func (m *GameStateMachine) configure() {
 		Permit(triggerPresenceReady, statePreparing).
 		Permit(triggerIdle, stateIdle)
 
+	// preparing state: wait for reach min user in duration => switch to play, check not enough and timeout => switch to idle
 	preparing := NewStatePreparing(fireCtx)
 	m.state.Configure(statePreparing).
 		OnEntry(preparing.Enter).
@@ -76,6 +80,7 @@ func (m *GameStateMachine) configure() {
 		Permit(triggerPreparingDone, statePlay).
 		Permit(triggerPreparingFailed, stateMatching)
 
+	// playing state: wait for all user show card or timeout => switch to reward
 	play := NewStatePlay(fireCtx)
 	m.state.Configure(statePlay).
 		OnEntry(play.Enter).
@@ -84,6 +89,7 @@ func (m *GameStateMachine) configure() {
 		Permit(triggerPlayTimeout, stateReward).
 		Permit(triggerPlayCombineAll, stateReward)
 
+	// reward state: wait for reward timeout => switch to
 	reward := NewStateReward(fireCtx)
 	m.state.Configure(stateReward).
 		OnEntry(reward.Enter).

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
 type StateMatching struct {
@@ -19,6 +20,17 @@ func NewStateMatching(fn FireFn) *StateMatching {
 
 func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	log.GetLogger().Info("[matching] enter")
+	procPkg := GetProcessorPackagerFromContext(ctx)
+	state := procPkg.GetState()
+
+	procPkg.GetProcessor().notifyUpdateGameState(
+		state,
+		procPkg.GetLogger(),
+		procPkg.GetDispatcher(),
+		&pb.UpdateGameState{
+			State: pb.GameState_GameStateMatching,
+		},
+	)
 
 	return nil
 }

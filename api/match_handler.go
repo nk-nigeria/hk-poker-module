@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/qmuntal/stateless"
@@ -28,6 +29,8 @@ const (
 	maxPlayer = 4
 	tickRate  = 5
 )
+
+var errFinish = errors.New("process.error.finish")
 
 // Compile-time check to make sure all required functions are implemented.
 var _ runtime.Match = &MatchHandler{}
@@ -98,7 +101,12 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*entity.MatchState)
-	m.processor.stateMachine.FireProcessEvent(GetContextWithProcessorPackager(NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
+
+	err := m.processor.stateMachine.FireProcessEvent(GetContextWithProcessorPackager(NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
+	if err == errFinish {
+		logger.Info("match need finish")
+		return nil
+	}
 
 	return s
 }

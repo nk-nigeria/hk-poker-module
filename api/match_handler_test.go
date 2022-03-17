@@ -32,7 +32,7 @@ func TestMatch(t *testing.T) {
 	var stop = make(chan bool)
 	go func() {
 		t.Logf("start mock loop")
-		for i := 0; i < 50; i++ {
+		for i := 0; i < 2*120; i++ {
 			t.Logf("log %d", i)
 			time.Sleep(time.Millisecond * 500)
 			m.MatchLoop(nil, logger, nil, nil, dispatcher, 0, s, nil)

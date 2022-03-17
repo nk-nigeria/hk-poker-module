@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
 type StateIdle struct {
@@ -23,6 +24,21 @@ func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	state.SetUpCountDown(idleTimeout)
+
+	dispatcher := procPkg.GetDispatcher()
+	if dispatcher == nil {
+		log.GetLogger().Warn("missing dispatcher don't broadcast")
+		return nil
+	}
+
+	procPkg.GetProcessor().notifyUpdateGameState(
+		state,
+		procPkg.GetLogger(),
+		procPkg.GetDispatcher(),
+		&pb.UpdateGameState{
+			State: pb.GameState_GameStateIdle,
+		},
+	)
 
 	return nil
 }
@@ -45,6 +61,7 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	if state.GetRemainCountDown() < 0 {
 		// Do finish here
 		//s.Trigger(ctx, triggerFinish)
+		return errFinish
 	}
 
 	return nil

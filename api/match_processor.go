@@ -46,7 +46,7 @@ func (m *MatchProcessor) processNewGame(logger runtime.Logger, dispatcher runtim
 			if err != nil {
 				logger.Error("error encoding message: %v", err)
 			} else {
-				presence, found := s.Presences.Get(k)
+				presence, found := s.PlayingPresences.Get(k)
 				if found {
 					_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_DEAL), buf, []runtime.Presence{presence.(runtime.Presence)}, nil, true)
 				}
@@ -55,10 +55,26 @@ func (m *MatchProcessor) processNewGame(logger runtime.Logger, dispatcher runtim
 	}
 }
 
-func (m *MatchProcessor) checkLeaveGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-}
-
 func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+	// check autofill
+	// send organize card to all
+	pbGameState := pb.UpdateGameState{
+		State: pb.GameState_GameStateReward,
+	}
+	pbGameState.PresenceCards = make([]*pb.PresenceCards, len(s.Cards))
+	for k, v := range s.Cards {
+		presenceCards := pb.PresenceCards{
+			Presence: k,
+			Cards:    v.GetCards(),
+		}
+		pbGameState.PresenceCards = append(pbGameState.PresenceCards, &presenceCards)
+	}
+
+	m.broadcastMessage(
+		logger, dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+		&pbGameState, nil, nil, true)
+
 	// update finish
 	updateFinish := m.gameEngine.Finish(dispatcher, s)
 	m.broadcastMessage(
@@ -126,4 +142,11 @@ func (m *MatchProcessor) saveCard(logger runtime.Logger, s *entity.MatchState, m
 
 func (m *MatchProcessor) removeShowCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
 	s.RemoveShowCard(message.GetUserId())
+}
+
+func (m *MatchProcessor) notifyUpdateGameState(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
+	m.broadcastMessage(
+		logger, dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+		updateState, nil, nil, true)
 }

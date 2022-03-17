@@ -24,6 +24,17 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	state := procPkg.GetState()
 	// Setup count down
 	state.SetUpCountDown(playTimeout)
+
+	procPkg.GetProcessor().notifyUpdateGameState(
+		state,
+		procPkg.GetLogger(),
+		procPkg.GetDispatcher(),
+		&pb.UpdateGameState{
+			State:     pb.GameState_GameStatePlay,
+			CountDown: int64(state.GetRemainCountDown()),
+		},
+	)
+
 	// Setup playing presences
 	state.SetupPlayingPresence()
 	// New game here

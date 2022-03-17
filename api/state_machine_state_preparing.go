@@ -25,6 +25,16 @@ func (s *StatePreparing) Enter(ctx context.Context, args ...interface{}) error {
 	log.GetLogger().Info("state %v", state.Presences)
 	state.SetUpCountDown(preparingTimeout)
 
+	procPkg.GetProcessor().notifyUpdateGameState(
+		state,
+		procPkg.GetLogger(),
+		procPkg.GetDispatcher(),
+		&pb.UpdateGameState{
+			State:     pb.GameState_GameStatePreparing,
+			CountDown: int64(state.GetRemainCountDown()),
+		},
+	)
+
 	return nil
 }
 
@@ -38,15 +48,15 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
-		pbGameState := pb.UpdateGameState{
-			State:     pb.GameState_GameStatePreparing,
-			CountDown: int64(remain),
-		}
-
-		err := procPkg.GetProcessor().broadcastMessage(procPkg.GetLogger(), procPkg.GetDispatcher(), int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), &pbGameState, nil, nil, true)
-		if err != nil {
-			log.GetLogger().Warn("broadcast message error %v", err)
-		}
+		procPkg.GetProcessor().notifyUpdateGameState(
+			state,
+			procPkg.GetLogger(),
+			procPkg.GetDispatcher(),
+			&pb.UpdateGameState{
+				State:     pb.GameState_GameStatePreparing,
+				CountDown: int64(state.GetRemainCountDown()),
+			},
+		)
 	} else {
 		// check preparing condition
 		log.GetLogger().Info("[preparing] preparing timeout check presence count")
