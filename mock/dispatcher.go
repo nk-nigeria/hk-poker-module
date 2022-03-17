@@ -9,12 +9,12 @@ type MockDispatcher struct {
 }
 
 func (m MockDispatcher) BroadcastMessage(opCode int64, data []byte, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
-	log.GetLogger().Info("broadcast opcode: ", opCode, " data ", string(data), " to presences ", presences)
+	log.GetLogger().Info("broadcast opcode: %v data %v to presences %v", opCode, string(data), presences)
 	return nil
 }
 
 func (m MockDispatcher) BroadcastMessageDeferred(opCode int64, data []byte, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
-	log.GetLogger().Info("broadcast defer opcode: ", opCode, " data ", string(data), " to presences ", presences)
+	log.GetLogger().Info("broadcast defer opcode: %v data %v to presences %v", opCode, string(data), presences)
 	return nil
 }
 

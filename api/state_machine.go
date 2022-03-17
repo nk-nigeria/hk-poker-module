@@ -35,7 +35,9 @@ const (
 	idleTimeout      = time.Second * 15
 	preparingTimeout = time.Second * 10
 	playTimeout      = time.Second * 60
-	rewardTimeout    = time.Second * 30
+	//playTimeout      = time.Second * 10
+	rewardTimeout = time.Second * 30
+	//rewardTimeout    = time.Second * 10
 )
 
 type GameStateMachine struct {

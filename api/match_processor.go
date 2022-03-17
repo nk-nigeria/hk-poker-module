@@ -17,23 +17,11 @@ type MatchProcessor struct {
 	unmarshaler  *protojson.UnmarshalOptions
 }
 
-func (m *MatchProcessor) broadcastMessage(logger runtime.Logger, dispatcher runtime.MatchDispatcher, opCode int64, data proto.Message, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
-	dataJson, err := m.marshaler.Marshal(data)
-	if err != nil {
-		logger.Error("Error when marshaler data for broadcastMessage")
-		return err
-	}
-	err = dispatcher.BroadcastMessage(opCode, dataJson, nil, nil, true)
-	if err != nil {
-		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
-		return err
-	}
-	return nil
-}
-
 // Call when client request or timeout
 func (m *MatchProcessor) processNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+	// clean up game state
 	m.gameEngine.NewGame(s)
+
 	if err := m.gameEngine.Deal(s); err == nil {
 		for k, v := range s.Cards {
 			buf, err := m.marshaler.Marshal(&pb.UpdateDeal{
@@ -56,6 +44,7 @@ func (m *MatchProcessor) processNewGame(logger runtime.Logger, dispatcher runtim
 }
 
 func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
 	pbGameState := pb.UpdateGameState{
 		State: pb.GameState_GameStateReward,
@@ -64,7 +53,7 @@ func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher run
 	for k, v := range s.Cards {
 		organizeCards := s.OrganizeCards[k]
 		if organizeCards == nil {
-			logger.Warn("user ", k, " not submit cards use deal cards")
+			logger.Warn("user %s not submit cards use deal cards", k)
 			organizeCards = v
 			s.OrganizeCards[k] = v
 		}
@@ -86,6 +75,8 @@ func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher run
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
 		updateFinish, nil, nil, true)
+
+	logger.Info("process finish game done %v", updateFinish)
 }
 
 func (m *MatchProcessor) combineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
@@ -117,6 +108,7 @@ func (m *MatchProcessor) showCard(logger runtime.Logger, dispatcher runtime.Matc
 
 func (m *MatchProcessor) declareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
 	logger.Info("User %d request declareCard", message.GetUserId())
+	// TODO: check royalties
 	m.saveCard(logger, s, message)
 }
 
@@ -142,11 +134,25 @@ func (m *MatchProcessor) saveCard(logger runtime.Logger, s *entity.MatchState, m
 		return
 	}
 
-	s.UpdateShowCard(message.GetUserId(), cardsByClient)
+	m.gameEngine.Organize(s, message.GetUserId(), cardsByClient)
 }
 
 func (m *MatchProcessor) removeShowCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
-	s.RemoveShowCard(message.GetUserId())
+	m.gameEngine.Combine(s, message.GetUserId())
+}
+
+func (m *MatchProcessor) broadcastMessage(logger runtime.Logger, dispatcher runtime.MatchDispatcher, opCode int64, data proto.Message, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
+	dataJson, err := m.marshaler.Marshal(data)
+	if err != nil {
+		logger.Error("Error when marshaler data for broadcastMessage")
+		return err
+	}
+	err = dispatcher.BroadcastMessage(opCode, dataJson, nil, nil, true)
+	if err != nil {
+		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
+		return err
+	}
+	return nil
 }
 
 func (m *MatchProcessor) notifyUpdateGameState(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {

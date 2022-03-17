@@ -50,7 +50,7 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 	} else if presenceCount <= 0 {
 		s.Trigger(ctx, triggerIdle)
 	} else {
-		log.GetLogger().Info("state idle presences size ", presenceCount)
+		log.GetLogger().Info("state idle presences size %v", presenceCount)
 	}
 
 	return nil

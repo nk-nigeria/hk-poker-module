@@ -52,7 +52,7 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	log.GetLogger().Info("[idle] processing")
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-	log.GetLogger().Info("state presences size ", state.GetPresenceSize())
+	log.GetLogger().Info("state presences size %v", state.GetPresenceSize())
 
 	if state.GetPresenceSize() > 0 {
 		s.Trigger(ctx, triggerMatching)

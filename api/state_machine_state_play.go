@@ -64,6 +64,8 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 				processor.combineCard(logger, dispatcher, state, message)
 			case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
 				processor.showCard(logger, dispatcher, state, message)
+			case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
+				processor.declareCard(logger, dispatcher, state, message)
 			}
 		}
 

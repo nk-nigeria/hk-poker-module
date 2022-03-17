@@ -17,6 +17,8 @@ func NewChinesePokerEngine() *ChinesePokerGame {
 }
 
 func (c *ChinesePokerGame) NewGame(s *entity.MatchState) error {
+	s.JoinInGame = make(map[string]bool)
+	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
 
 	return nil
@@ -26,10 +28,8 @@ func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
 
-	s.JoinInGame = make(map[string]bool)
-	s.Cards = make(map[string]*pb.ListCard)
 	// loop on userid in match
-	for _, k := range s.Presences.Keys() {
+	for _, k := range s.PlayingPresences.Keys() {
 		userId := k.(string)
 		cards, err := c.deck.Deal(MaxPresenceCard)
 		if err == nil {
@@ -43,8 +43,13 @@ func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
 	return nil
 }
 
-func (c *ChinesePokerGame) Organize(dispatcher runtime.MatchDispatcher, s *entity.MatchState, presence string, cards *pb.ListCard) error {
-	s.OrganizeCards[presence] = cards
+func (c *ChinesePokerGame) Organize(s *entity.MatchState, presence string, cards *pb.ListCard) error {
+	s.UpdateShowCard(presence, cards)
+	return nil
+}
+
+func (c *ChinesePokerGame) Combine(s *entity.MatchState, presence string) error {
+	s.RemoveShowCard(presence)
 	return nil
 }
 
