@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"math"
 	"math/rand"
 	"time"
 
@@ -58,34 +57,6 @@ type CountDown struct {
 	Tick      int64
 	Sec       int64
 	IsUpdate  bool
-}
-
-func NewCountDown(duration int64) CountDown {
-	cd := CountDown{
-		delayInit: duration,
-		Tick:      duration,
-	}
-	cd.Sec = 0
-	cd.IsUpdate = true
-	return cd
-}
-
-func (cd *CountDown) doCountDown() {
-	cd.Tick--
-	if cd.Tick < 0 {
-		return
-	}
-	v := math.Ceil(float64(cd.Tick) / float64(TickRate))
-	if cd.Sec != int64(v) {
-		cd.Sec = int64(v)
-		cd.IsUpdate = true
-	}
-}
-
-func (cd *CountDown) reset(sec int64) {
-	cd.Tick = sec
-	cd.Sec = cd.Tick / TickRate
-	cd.IsUpdate = true
 }
 
 func NewMathState(label *MatchLabel) MatchState {
@@ -347,4 +318,12 @@ func (s *MatchState) GetRemainCountDown() int {
 	currentTime := time.Now()
 	difference := s.CountDownReachTime.Sub(currentTime)
 	return int(difference.Seconds())
+}
+
+func (s *MatchState) GetPresenceSize() int {
+	return s.Presences.Size()
+}
+
+func (s *MatchState) IsReadyToPlay() bool {
+	return s.Presences.Size() >= s.MinPresences
 }

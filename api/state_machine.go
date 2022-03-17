@@ -1,11 +1,11 @@
 package api
 
 import (
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"context"
 	_ "github.com/filecoin-project/go-statemachine"
-	"github.com/heroiclabs/nakama-common/runtime"
 	_ "github.com/ipfs/go-datastore"
 	"github.com/qmuntal/stateless"
+	"time"
 )
 
 const (
@@ -31,12 +31,18 @@ const (
 	triggerProcessReward    = "GameProcessReward"
 )
 
+const (
+	preparingTimeout = time.Second * 10
+	playTimeout      = time.Second * 60
+)
+
 type GameStateMachine struct {
 	state *stateless.StateMachine
 }
 
 func (m *GameStateMachine) configure() {
-	wait := NewStateWait(m.state.Fire)
+	fireCtx := m.state.FireCtx
+	wait := NewStateWait(fireCtx)
 	m.state.Configure(stateWait).
 		OnEntry(wait.Enter).
 		OnExit(wait.Exit).
@@ -44,7 +50,7 @@ func (m *GameStateMachine) configure() {
 		Permit(triggerPresenceReady, statePreparing).
 		Permit(triggerNoOne, stateFinish)
 
-	preparing := NewStatePreparing(m.state.Fire)
+	preparing := NewStatePreparing(fireCtx)
 	m.state.Configure(statePreparing).
 		OnEntry(preparing.Enter).
 		OnExit(preparing.Exit).
@@ -52,7 +58,7 @@ func (m *GameStateMachine) configure() {
 		Permit(triggerPreparingDone, statePlay).
 		Permit(triggerPreparingFailed, stateWait)
 
-	play := NewStatePlay()
+	play := NewStatePlay(fireCtx)
 	m.state.Configure(statePlay).
 		OnEntry(play.Enter).
 		OnExit(play.Exit).
@@ -60,7 +66,7 @@ func (m *GameStateMachine) configure() {
 		Permit(triggerPlayTimeout, stateReward).
 		Permit(triggerPlayCombineAll, stateReward)
 
-	reward := NewStateReward()
+	reward := NewStateReward(fireCtx)
 	m.state.Configure(stateReward).
 		OnEntry(reward.Enter).
 		OnExit(reward.Exit).
@@ -70,11 +76,7 @@ func (m *GameStateMachine) configure() {
 	m.state.ToGraph()
 }
 
-func (m *GameStateMachine) Fire(trigger stateless.Trigger, args ...interface{}) error {
-	return m.state.Fire(trigger, args)
-}
-
-func (m *GameStateMachine) FireProcessEvent(args ...interface{}) error {
+func (m *GameStateMachine) FireProcessEvent(ctx context.Context, args ...interface{}) error {
 	var trigger stateless.State
 	switch m.state.MustState() {
 	case stateWait:
@@ -86,7 +88,7 @@ func (m *GameStateMachine) FireProcessEvent(args ...interface{}) error {
 	case stateReward:
 		trigger = triggerProcessReward
 	}
-	return m.state.Fire(trigger, args...)
+	return m.state.FireCtx(ctx, trigger, args...)
 }
 
 func (m *GameStateMachine) MustState() stateless.State {
@@ -103,23 +105,11 @@ func NewGameStateMachine() *GameStateMachine {
 	return gs
 }
 
-type FireFn func(trigger stateless.Trigger, args ...interface{}) error
+type FireFn func(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error
 type StateBase struct {
 	fireFn FireFn
 }
 
-func GetState(args ...interface{}) *entity.MatchState {
-	return args[0].(*entity.MatchState)
-}
-
-func GetLogger(args ...interface{}) runtime.Logger {
-	return args[1].(runtime.Logger)
-}
-
-func GetDispatcher(args ...interface{}) runtime.MatchDispatcher {
-	return args[2].(runtime.MatchDispatcher)
-}
-
-func GetProcessor(args ...interface{}) *MatchProcessor {
-	return args[3].(*MatchProcessor)
+func (s *StateBase) Trigger(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error {
+	return s.fireFn(ctx, trigger, args...)
 }

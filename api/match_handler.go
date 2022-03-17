@@ -20,12 +20,10 @@ import (
 	"encoding/json"
 	"github.com/qmuntal/stateless"
 
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const (
@@ -34,12 +32,6 @@ const (
 
 // Compile-time check to make sure all required functions are implemented.
 var _ runtime.Match = &MatchHandler{}
-
-type MatchProcessor struct {
-	gameEngine  *ChinesePokerGame
-	marshaler   *protojson.MarshalOptions
-	unmarshaler *protojson.UnmarshalOptions
-}
 
 type MatchHandler struct {
 	processor    *MatchProcessor
@@ -110,7 +102,8 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	s := state.(*entity.MatchState)
 	// logger.Info("match loop, state=%v, messages=%v, game state: %s", s, messages, s.GetGameState().String())
 
-	m.stateMachine.FireProcessEvent(state, logger, dispatcher, m.processor, messages)
+	// update index when change to state machine
+	m.stateMachine.FireProcessEvent(GetContextWithProcessorPackager(NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
 
 	//s = s.ProcessEvent(entity.MathLoop, logger, nil)
 	//if s.GetGameState() == pb.GameState_GameStateLobby && s.EmptyTicks > entity.MaxEmptySec {
@@ -203,111 +196,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 func (m *MatchHandler) MatchTerminate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, graceSeconds int) interface{} {
 	logger.Info("match terminate, state=%v")
 	return state
-}
-
-// Call when client request or timeout
-func (m *MatchHandler) processNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-	err := m.processor.gameEngine.NewGame(s)
-	m.processor.gameEngine.Deal(s)
-	if err == nil {
-		for k, v := range s.Cards {
-			buf, err := m.processor.marshaler.Marshal(&pb.UpdateDeal{
-				PresenceCard: &pb.PresenceCards{
-					Presence: k,
-					Cards:    v.Cards,
-				},
-			})
-
-			if err != nil {
-				logger.Error("error encoding message: %v", err)
-			} else {
-				presence, found := s.Presences.Get(k)
-				if found {
-					_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_DEAL), buf, []runtime.Presence{presence.(runtime.Presence)}, nil, true)
-				}
-			}
-		}
-	}
-}
-
-// Check should finish game due to enough organize or timeout
-func (m *MatchHandler) checkFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-	m.processor.gameEngine.Finish(dispatcher, s)
-}
-
-func (m *MatchHandler) checkLeaveGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-}
-
-func (mp *MatchProcessor) broadcastMessage(logger runtime.Logger, dispatcher runtime.MatchDispatcher, opCode int64, data proto.Message, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
-	dataJson, err := mp.marshaler.Marshal(data)
-	if err != nil {
-		logger.Error("Error when marshaler data for broadcastMessage")
-		return err
-	}
-	err = dispatcher.BroadcastMessage(opCode, dataJson, nil, nil, true)
-	if err != nil {
-		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
-		return err
-	}
-	return nil
-}
-
-func (m *MatchHandler) combineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
-	logger.Info("User %s request combineCard", message.GetUserId())
-	msg := pb.UpdateGameState{
-		State: s.GetGameState(),
-		ArrangeCard: &pb.ArrangeCard{
-			Presence:  message.GetUserId(),
-			CardEvent: pb.CardEvent_COMBINE,
-		},
-	}
-	m.processor.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
-}
-
-func (m *MatchHandler) showCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
-	logger.Info("User %s request showCard", message.GetUserId())
-
-	msg := pb.UpdateGameState{
-		State: s.GetGameState(),
-		ArrangeCard: &pb.ArrangeCard{
-			Presence:  message.GetUserId(),
-			CardEvent: pb.CardEvent_SHOW,
-		},
-	}
-	m.processor.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
-	m.saveCard(logger, s, message)
-}
-
-func (m *MatchHandler) declareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
-	logger.Info("User %d request declareCard", message.GetUserId())
-	m.saveCard(logger, s, message)
-}
-
-func (m *MatchHandler) saveCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
-	cards := s.Cards[message.GetUserId()]
-	organize := &pb.Organize{}
-	err := m.processor.unmarshaler.Unmarshal(message.GetData(), organize)
-	if err != nil {
-		logger.Error("Parse organize cards from client error %s", err.Error())
-		return
-	}
-	cardsByClient := organize.Cards
-	// check len card
-	if len(cardsByClient.GetCards()) != len(cards.GetCards()) {
-		logger.Error("Amount cards from client [%d] different amount card in server [%d]",
-			len(cardsByClient.GetCards()), len(cards.GetCards()))
-		return
-	}
-	// check card send by client is the same card in server
-	if !entity.IsSameCards(cards.GetCards(), cardsByClient.GetCards()) {
-		logger.Error("cards from client not the same card in server, invalid action",
-			len(cardsByClient.GetCards()), len(cards.GetCards()))
-		return
-	}
-
-	// TODO: recheck
-	s.Cards[message.GetUserId()] = cardsByClient
-	s.OrganizeCards[message.GetUserId()] = cardsByClient
 }
 
 func (m *MatchHandler) addChip(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userID string, amountChip int) {

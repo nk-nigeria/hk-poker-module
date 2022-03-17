@@ -6,10 +6,15 @@ import (
 )
 
 type StateReward struct {
+	StateBase
 }
 
-func NewStateReward() *StateReward {
-	return &StateReward{}
+func NewStateReward(fn FireFn) *StateReward {
+	return &StateReward{
+		StateBase: StateBase{
+			fireFn: fn,
+		},
+	}
 }
 
 func (s *StateReward) Enter(_ context.Context, _ ...interface{}) error {
