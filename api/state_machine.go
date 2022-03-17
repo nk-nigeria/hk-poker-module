@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	_ "github.com/filecoin-project/go-statemachine"
 	_ "github.com/ipfs/go-datastore"
 	"github.com/qmuntal/stateless"
@@ -9,7 +10,9 @@ import (
 )
 
 const (
-	stateWait      = "Wait"
+	stateInit      = "Init" // Only for initialize
+	stateIdle      = "Idle"
+	stateMatching  = "Matching"
 	statePreparing = "Preparing"
 	statePlay      = "Play"
 	stateReward    = "Reward"
@@ -17,23 +20,28 @@ const (
 )
 
 const (
+	triggerIdle            = "GameIdle"
+	triggerMatching        = "GameMatching"
 	triggerPresenceReady   = "GamePresenceReady"
-	triggerPreparingDone   = "GamePrepairingDone"
-	triggerPreparingFailed = "GamePrepairingFailed"
+	triggerPreparingDone   = "GamePreparingDone"
+	triggerPreparingFailed = "GamePreparingFailed"
 	triggerPlayTimeout     = "GamePlayTimeout"
 	triggerPlayCombineAll  = "GamePlayCombineAll"
 	triggerRewardTimeout   = "GameRewardTimeout"
 	triggerNoOne           = "GameNoOne"
 
-	triggerProcessWait      = "GameProcessWait"
-	triggerProcessPreparing = "GameProcessPrepairing"
+	triggerProcessIdle      = "GameProcessIdle"
+	triggerProcessMatching  = "GameProcessMatching"
+	triggerProcessPreparing = "GameProcessPreparing"
 	triggerProcessPlay      = "GameProcessPlay"
 	triggerProcessReward    = "GameProcessReward"
 )
 
 const (
+	idleTimeout      = time.Second * 15
 	preparingTimeout = time.Second * 10
 	playTimeout      = time.Second * 60
+	rewardTimeout    = time.Second * 30
 )
 
 type GameStateMachine struct {
@@ -42,13 +50,25 @@ type GameStateMachine struct {
 
 func (m *GameStateMachine) configure() {
 	fireCtx := m.state.FireCtx
-	wait := NewStateWait(fireCtx)
-	m.state.Configure(stateWait).
-		OnEntry(wait.Enter).
-		OnExit(wait.Exit).
-		InternalTransition(triggerProcessWait, wait.Process).
-		Permit(triggerPresenceReady, statePreparing).
+
+	m.state.Configure(stateInit).
+		Permit(triggerIdle, stateIdle)
+
+	idle := NewIdleState(fireCtx)
+	m.state.Configure(stateIdle).
+		OnEntry(idle.Enter).
+		OnExit(idle.Exit).
+		InternalTransition(triggerProcessIdle, idle.Process).
+		Permit(triggerMatching, stateMatching).
 		Permit(triggerNoOne, stateFinish)
+
+	matching := NewStateMatching(fireCtx)
+	m.state.Configure(stateMatching).
+		OnEntry(matching.Enter).
+		OnExit(matching.Exit).
+		InternalTransition(triggerProcessMatching, matching.Process).
+		Permit(triggerPresenceReady, statePreparing).
+		Permit(triggerIdle, stateIdle)
 
 	preparing := NewStatePreparing(fireCtx)
 	m.state.Configure(statePreparing).
@@ -56,7 +76,7 @@ func (m *GameStateMachine) configure() {
 		OnExit(preparing.Exit).
 		InternalTransition(triggerProcessPreparing, preparing.Process).
 		Permit(triggerPreparingDone, statePlay).
-		Permit(triggerPreparingFailed, stateWait)
+		Permit(triggerPreparingFailed, stateMatching)
 
 	play := NewStatePlay(fireCtx)
 	m.state.Configure(statePlay).
@@ -71,7 +91,7 @@ func (m *GameStateMachine) configure() {
 		OnEntry(reward.Enter).
 		OnExit(reward.Exit).
 		InternalTransition(triggerProcessReward, reward.Process).
-		Permit(triggerRewardTimeout, statePreparing)
+		Permit(triggerRewardTimeout, stateMatching)
 
 	m.state.ToGraph()
 }
@@ -79,14 +99,18 @@ func (m *GameStateMachine) configure() {
 func (m *GameStateMachine) FireProcessEvent(ctx context.Context, args ...interface{}) error {
 	var trigger stateless.State
 	switch m.state.MustState() {
-	case stateWait:
-		trigger = triggerProcessWait
+	case stateIdle:
+		trigger = triggerProcessIdle
+	case stateMatching:
+		trigger = triggerProcessMatching
 	case statePreparing:
 		trigger = triggerProcessPreparing
 	case statePlay:
 		trigger = triggerProcessPlay
 	case stateReward:
 		trigger = triggerProcessReward
+	default:
+		return nil
 	}
 	return m.state.FireCtx(ctx, trigger, args...)
 }
@@ -95,14 +119,35 @@ func (m *GameStateMachine) MustState() stateless.State {
 	return m.state.MustState()
 }
 
+func (m *GameStateMachine) GetPbState() pb.GameState {
+	switch m.state.MustState() {
+	case stateIdle:
+		return pb.GameState_GameStateIdle
+	case stateMatching:
+		return pb.GameState_GameStateMatching
+	case statePreparing:
+		return pb.GameState_GameStatePreparing
+	case statePlay:
+		return pb.GameState_GameStatePlay
+	case stateReward:
+		return pb.GameState_GameStateReward
+	default:
+		return pb.GameState_GameStateUnknown
+	}
+}
+
 func NewGameStateMachine() *GameStateMachine {
 	gs := &GameStateMachine{
-		state: stateless.NewStateMachine(stateWait),
+		state: stateless.NewStateMachine(stateInit),
 	}
 
 	gs.configure()
 
 	return gs
+}
+
+func (m *GameStateMachine) Trigger(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error {
+	return m.state.FireCtx(ctx, trigger, args...)
 }
 
 type FireFn func(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error

@@ -10,12 +10,6 @@ import (
 )
 
 const (
-	TickRate                 = 5
-	MaxEmptySec              = 60 * TickRate // 60s
-	DelayBeforeRunGameSec    = 5 * TickRate  // 5s
-	DelayBeforeRewardGameSec = 20 * TickRate // 30s
-	DelayBeforeFinishGameSec = 10 * TickRate // 30s
-
 	MinPresences = 2
 )
 
@@ -36,7 +30,8 @@ type MatchState struct {
 	EmptyTicks   int
 
 	// Currently connected users, or reserved spaces.
-	Presences *linkedhashmap.Map
+	Presences        *linkedhashmap.Map
+	PlayingPresences *linkedhashmap.Map
 	// Number of users currently in the process of connecting to the match.
 	JoinsInProgress int
 	// Number of user currently dealt with game
@@ -52,13 +47,6 @@ type MatchState struct {
 	CountDownReachTime time.Time
 }
 
-type CountDown struct {
-	delayInit int64
-	Tick      int64
-	Sec       int64
-	IsUpdate  bool
-}
-
 func NewMathState(label *MatchLabel) MatchState {
 	m := MatchState{
 		Random:       rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -68,226 +56,6 @@ func NewMathState(label *MatchLabel) MatchState {
 	}
 	m.Label.LastOpenValueNoti = m.Label.Open
 	return m
-}
-
-func PbGameStateString(gp pb.GameState) string {
-	switch gp {
-	case pb.GameState_GameStateWait:
-		return "GameStateWait"
-	case pb.GameState_GameStatePreparing:
-		return "GameStatePreparing"
-	case pb.GameState_GameStatePlay:
-		return "GameStateRun"
-	case pb.GameState_GameStateReward:
-		return "GameStateReward"
-	case pb.GameState_GameStateFinish:
-		return "GameStateFinish"
-	}
-	return "unknow"
-}
-
-type GameEvent int
-
-const (
-	MatchJoin GameEvent = iota
-	MatchJoinAttempt
-	MatchLeave
-	MathDone
-	MathLoop
-	MatchTerminate
-)
-
-func (ge GameEvent) String() string {
-	switch ge {
-	case MatchJoin:
-		return "MatchJoin"
-	case MatchJoinAttempt:
-		return "MatchJoinAttempt"
-	case MatchLeave:
-		return "MatchLeave"
-	case MathDone:
-		return "MathDone"
-	case MathLoop:
-		return "MathLoop"
-	case MatchTerminate:
-		return "MatchTerminate"
-	}
-	return "unknow"
-}
-
-func (s *MatchState) GetGameState() pb.GameState {
-	return s.gameState
-}
-
-func (s *MatchState) GetNextGameState() pb.GameState {
-	return (s.gameState + 1) % 7
-}
-
-//func (s *MatchState) SetGameState(gameState pb.GameState, logger runtime.Logger) pb.GameState {
-//	if s.gameState != gameState {
-//		logger.Info("Game state change %s -- > %s", s.gameState.String(), gameState.String())
-//		s.gameState = gameState
-//		// reset duration empty room
-//		if s.gameState == pb.GameState_GameStateLobby {
-//			s.EmptyTicks = 0
-//		}
-//		s.CountDown.reset(0)
-//	}
-//	return s.gameState
-//}
-
-//func (s *MatchState) ProcessEvent(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-//	if gameEvent != MathLoop {
-//		logger.Info("ProccessEvent %s, current gameState %s", gameEvent.String(), s.GetGameState().String())
-//	}
-//	switch s.gameState {
-//	case pb.GameState_GameStateLobby:
-//		s.handlerGameStateLobby(gameEvent, logger, presences)
-//	case pb.GameState_GameStatePrepare:
-//		s.handlerGamePrepare(gameEvent, logger, presences)
-//	case pb.GameState_GameStateCountdown:
-//		s.handlerGameCountDown(gameEvent, logger, presences)
-//	case pb.GameState_GameStatePlay:
-//		s.handlerGameRun(gameEvent, logger, presences)
-//	case pb.GameState_GameStateReward:
-//		s.handlerGameReward(gameEvent, logger, presences)
-//	case pb.GameState_GameStateFinish:
-//		s.handlerGameFinish(gameEvent, logger, presences)
-//	}
-//	return s
-//}
-
-func (s *MatchState) handlerGameStateLobby(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	//s.Label.Open = 1
-	//if gameEvent == MatchJoin {
-	//	s.addPresence(presences)
-	//	s.SetGameState(pb.GameState_GameStatePrepare, logger)
-	//	return s
-	//}
-	//
-	//if gameEvent == MathLoop {
-	//	if s.Presences.Size()+s.JoinsInProgress == 0 {
-	//		s.EmptyTicks++
-	//	}
-	//}
-	return s
-}
-
-func (s *MatchState) handlerGamePrepare(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	//s.Label.Open = 1
-	//if gameEvent == MatchLeave {
-	//	s.removePresence(presences)
-	//	if s.Presences.Size() == 0 {
-	//		s.SetGameState(pb.GameState_GameStateLobby, logger)
-	//	}
-	//	return s
-	//}
-	//if gameEvent == MatchJoin {
-	//	s.addPresence(presences)
-	//	if s.Presences.Size() >= MinPlayer {
-	//		s.SetGameState(pb.GameState_GameStateCountdown, logger)
-	//		s.CountDown.reset(DelayBeforeRunGameSec)
-	//	}
-	//	return s
-	//}
-	return s
-}
-
-func (s *MatchState) handlerGameCountDown(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	//if gameEvent == MatchLeave {
-	//	s.removePresence(presences)
-	//	return s
-	//}
-	//if gameEvent == MatchJoin {
-	//	s.addPresence(presences)
-	//	return s
-	//}
-	//
-	//if gameEvent == MathLoop {
-	//	s.CountDown.doCountDown()
-	//	if s.CountDown.Tick < 0 {
-	//		s.SetGameState(pb.GameState_GameStatePlay, logger)
-	//		s.Cards = make(map[string]*pb.ListCard, 0) // clear map of list card
-	//		s.CountDown.reset(DelayBeforeRewardGameSec)
-	//		s.Label.Open = 0
-	//	}
-	//}
-	return s
-}
-
-func (s *MatchState) handlerGameRun(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	//if gameEvent == MatchJoin {
-	//	// todo handler add presence when game aldready run
-	//	s.addPresence(presences)
-	//
-	//	return s
-	//}
-	//if gameEvent == MatchLeave {
-	//	s.removePresence(presences)
-	//	return s
-	//}
-	//if gameEvent == MathDone {
-	//	s.SetGameState(pb.GameState_GameStateReward, logger)
-	//	return s
-	//}
-	//if gameEvent == MathLoop {
-	//	// todo punishment as looser
-	//	if len(s.JoinInGame) <= 1 {
-	//		s.SetGameState(pb.GameState_GameStateReward, logger)
-	//		return s
-	//	}
-	//	s.CountDown.doCountDown()
-	//	if s.CountDown.Tick < 0 {
-	//		s.SetGameState(pb.GameState_GameStateReward, logger)
-	//		s.CountDown.reset(DelayBeforeFinishGameSec)
-	//		return s
-	//	}
-	//}
-	// todo add param user commnad
-	return s
-}
-
-func (s *MatchState) handlerGameReward(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	//if gameEvent == MatchJoin {
-	//	s.addPresence(presences)
-	//}
-	//if gameEvent == MatchLeave {
-	//	s.removePresence(presences)
-	//}
-	//// todo calc reward here
-	//
-	//s.CountDown.doCountDown()
-	//if s.CountDown.Tick < 0 {
-	//	s.SetGameState(pb.GameState_GameStateFinish, logger)
-	//}
-	return s
-}
-
-func (s *MatchState) handlerGameFinish(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	//s.Playing = false
-	//if gameEvent == MatchJoin {
-	//	s.addPresence(presences)
-	//}
-	//if gameEvent == MatchLeave {
-	//	s.removePresence(presences)
-	//}
-	//if s.Presences.Size() >= MinPlayer {
-	//	s.SetGameState(pb.GameState_GameStateCountdown, logger)
-	//	s.CountDown.reset(DelayBeforeRunGameSec)
-	//	return s
-	//}
-	//if s.Presences.Size() > 0 {
-	//	s.SetGameState(pb.GameState_GameStatePrepare, logger)
-	//	s.CountDown.reset(DelayBeforeRunGameSec)
-	//	return s
-	//}
-	//s.SetGameState(pb.GameState_GameStateLobby, logger)
-	return s
-}
-
-func (s *MatchState) handlerGameTerminate(gameEvent GameEvent, logger runtime.Logger, presences []runtime.Presence) *MatchState {
-	// todo Game Terminate by server shutdown
-	return s
 }
 
 func (s *MatchState) AddPresence(presences []runtime.Presence) {
@@ -310,6 +78,13 @@ func (s *MatchState) RemovePresence(presences []runtime.Presence) {
 	}
 }
 
+func (s *MatchState) SetupPlayingPresence() {
+	s.PlayingPresences = linkedhashmap.New()
+	s.Presences.Each(func(key interface{}, value interface{}) {
+		s.PlayingPresences.Put(key, value)
+	})
+}
+
 func (s *MatchState) SetUpCountDown(duration time.Duration) {
 	s.CountDownReachTime = time.Now().Add(duration)
 }
@@ -324,6 +99,26 @@ func (s *MatchState) GetPresenceSize() int {
 	return s.Presences.Size()
 }
 
+func (s *MatchState) GetPlayingPresenceSize() int {
+	return s.PlayingPresences.Size()
+}
+
 func (s *MatchState) IsReadyToPlay() bool {
 	return s.Presences.Size() >= s.MinPresences
+}
+
+func (s *MatchState) UpdateShowCard(userId string, cards *pb.ListCard) {
+	s.OrganizeCards[userId] = cards
+}
+
+func (s *MatchState) RemoveShowCard(userId string) {
+	delete(s.OrganizeCards, userId)
+}
+
+func (s *MatchState) GetPlayingCount() int {
+	return s.PlayingPresences.Size()
+}
+
+func (s *MatchState) GetShowCardCount() int {
+	return len(s.OrganizeCards)
 }

@@ -24,6 +24,8 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	state := procPkg.GetState()
 	// Setup count down
 	state.SetUpCountDown(playTimeout)
+	// Setup playing presences
+	state.SetupPlayingPresence()
 	// New game here
 	procPkg.GetProcessor().processNewGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
 
@@ -53,9 +55,14 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 				processor.showCard(logger, dispatcher, state, message)
 			}
 		}
+
+		// Check all user show card
+		if state.GetShowCardCount() >= state.GetPlayingCount() {
+			s.Trigger(ctx, triggerPlayCombineAll)
+		}
 	} else {
 		log.Infof("[play] timeout reach %v", remain)
-		s.Trigger(ctx, triggerPlayTimeout, state)
+		s.Trigger(ctx, triggerPlayTimeout)
 	}
 	return nil
 }

@@ -17,8 +17,16 @@ func NewStateReward(fn FireFn) *StateReward {
 	}
 }
 
-func (s *StateReward) Enter(_ context.Context, _ ...interface{}) error {
+func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
 	log.Info("[reward] enter")
+	procPkg := GetProcessorPackagerFromContext(ctx)
+	// setup reward timeout
+	state := procPkg.GetState()
+	state.SetUpCountDown(rewardTimeout)
+
+	// process finish
+	procPkg.processor.processFinishGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
+
 	return nil
 }
 
@@ -28,5 +36,13 @@ func (s *StateReward) Exit(_ context.Context, _ ...interface{}) error {
 }
 
 func (s *StateReward) Process(ctx context.Context, args ...interface{}) error {
+	procPkg := GetProcessorPackagerFromContext(ctx)
+	state := procPkg.GetState()
+	if remain := state.GetRemainCountDown(); remain <= 0 {
+		s.Trigger(ctx, triggerRewardTimeout)
+	} else {
+		log.Info("[reward] not timeout")
+	}
+
 	return nil
 }

@@ -18,37 +18,37 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/qmuntal/stateless"
-
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/qmuntal/stateless"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const (
 	maxPlayer = 4
+	tickRate  = 5
 )
 
 // Compile-time check to make sure all required functions are implemented.
 var _ runtime.Match = &MatchHandler{}
 
 type MatchHandler struct {
-	processor    *MatchProcessor
-	stateMachine *GameStateMachine
+	processor *MatchProcessor
 }
 
 func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) *MatchHandler {
 	return &MatchHandler{
 		processor: &MatchProcessor{
-			marshaler:   marshaler,
-			unmarshaler: unmarshaler,
+			marshaler:    marshaler,
+			unmarshaler:  unmarshaler,
+			gameEngine:   NewChinesePokerEngine(),
+			stateMachine: NewGameStateMachine(),
 		},
 	}
 }
 
 func (m *MatchHandler) GetState() stateless.State {
-	return m.stateMachine.MustState()
+	return m.processor.stateMachine.MustState()
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
@@ -87,108 +87,18 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	logger.Info("match init label=", string(labelJSON))
 
-	m.processor.gameEngine = NewChinesePokerEngine()
-
 	matchState := entity.NewMathState(label)
 
-	// State machine created with state wait
-	m.stateMachine = NewGameStateMachine()
+	// fire idle event
+	procPkg := NewProcessorPackage(&matchState, m.processor, logger, nil, nil)
+	m.processor.stateMachine.Trigger(GetContextWithProcessorPackager(procPkg), triggerIdle)
 
-	//matchState.SetGameState(pb.GameState_GameStateLobby, logger)
-	return &matchState, entity.TickRate, string(labelJSON)
+	return &matchState, tickRate, string(labelJSON)
 }
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*entity.MatchState)
-	// logger.Info("match loop, state=%v, messages=%v, game state: %s", s, messages, s.GetGameState().String())
-
-	// update index when change to state machine
-	m.stateMachine.FireProcessEvent(GetContextWithProcessorPackager(NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
-
-	//s = s.ProcessEvent(entity.MathLoop, logger, nil)
-	//if s.GetGameState() == pb.GameState_GameStateLobby && s.EmptyTicks > entity.MaxEmptySec {
-	//	logger.Info("closing idle match id")
-	//	return nil
-	//}
-	//
-	//m.checkAndSendUpdateGameState(logger, s, dispatcher)
-	//
-	//if s.GetGameState() == pb.GameState_GameStateFinish {
-	//	return s
-	//}
-	//
-	//if s.GetGameState() == pb.GameState_GameStateCountdown {
-	//}
-	//
-	//if s.GetGameState() == pb.GameState_GameStateReward {
-	//}
-	//
-	//// only accept command from client when
-	//// game in state run
-	//if s.GetGameState() != pb.GameState_GameStatePlay {
-	//	return s
-	//}
-	//
-	//if !s.Playing {
-	//	m.processNewGame(logger, dispatcher, s)
-	//	s.Playing = true
-	//}
-	//
-	//// send time remain before end game
-	//if s.CountDown.IsUpdate {
-	//
-	//	if s.CountDown.Sec == 0 {
-	//		logger.Info("Send notification all card of all user ")
-	//		pbGameState := pb.UpdateGameState{
-	//			State:     s.GetGameState(),
-	//			CountDown: s.CountDown.Sec,
-	//		}
-	//		pbGameState.PresenceCards = make([]*pb.PresenceCards, len(s.Cards))
-	//		for k, v := range s.Cards {
-	//			presenceCards := pb.PresenceCards{
-	//				Presence: k,
-	//				Cards:    v.GetCards(),
-	//			}
-	//			pbGameState.State = pb.GameState_GameStateReward
-	//			pbGameState.PresenceCards = append(pbGameState.PresenceCards, &presenceCards)
-	//			m.broadcastMessage(
-	//				logger, dispatcher,
-	//				int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
-	//				&pbGameState, nil, nil, true)
-	//		}
-	//
-	//		// update finish
-	//		updateFinish := m.processor.Finish(dispatcher, s)
-	//		m.broadcastMessage(
-	//			logger, dispatcher,
-	//			int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
-	//			updateFinish, nil, nil, true)
-	//	}
-	//}
-	//// There's a game in progress. Check for input, update match state, and send messages to clients.
-	//for _, message := range messages {
-	//	switch pb.OpCodeRequest(message.GetOpCode()) {
-	//	case pb.OpCodeRequest_OPCODE_REQUEST_NEW_GAME:
-	//		m.processNewGame(logger, dispatcher, s)
-	//	case pb.OpCodeRequest_OPCODE_REQUEST_LEAVE_GAME:
-	//		m.checkLeaveGame(logger, dispatcher, s)
-	//	case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
-	//		{
-	//			m.combineCard(logger, dispatcher, s, message)
-	//		}
-	//	case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
-	//		{
-	//			m.showCard(logger, dispatcher, s, message)
-	//		}
-	//	case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
-	//		{
-	//			m.declareCard(logger, dispatcher, s, message)
-	//		}
-	//	default:
-	//		// No other opcodes are expected from the client, so automatically treat it as an error.
-	//		_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_REJECTED), nil, []runtime.Presence{message}, nil, true)
-	//	}
-	//}
+	m.processor.stateMachine.FireProcessEvent(GetContextWithProcessorPackager(NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
 
 	return s
 }
@@ -196,75 +106,4 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 func (m *MatchHandler) MatchTerminate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, graceSeconds int) interface{} {
 	logger.Info("match terminate, state=%v")
 	return state
-}
-
-func (m *MatchHandler) addChip(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userID string, amountChip int) {
-	changeset := map[string]int64{
-		"chips": int64(amountChip), // Add amountChip coins to the user's wallet.
-	}
-	metadata := map[string]interface{}{
-		"game_topup": "topup",
-	}
-
-	_, _, err := nk.WalletUpdate(ctx, userID, changeset, metadata, true)
-	if err != nil {
-		logger.WithField("err", err).Error("Wallet update error.")
-	}
-
-}
-
-func (m *MatchHandler) subtractChip(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userID string, amountChip int) {
-	changeset := map[string]int64{
-		"chips": -int64(amountChip), // Substract amountChip coins to the user's wallet.
-	}
-	metadata := map[string]interface{}{
-		"game_topup": "topup",
-	}
-
-	_, _, err := nk.WalletUpdate(ctx, userID, changeset, metadata, true)
-	if err != nil {
-		logger.WithField("err", err).Error("Wallet update error.")
-	}
-}
-
-func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, resultGame *pb.UpdateFinish) {
-	walletUpdates := make([]*runtime.WalletUpdate, len(resultGame.Results))
-	for _, result := range resultGame.Results {
-		amountChip := int64(0)
-		amountChip = 200*(result.FrontFactor+result.MiddleFactor+result.BackFactor) +
-			(result.FrontBonus + result.MiddleBonus + result.BackBonus)
-		changeset := map[string]int64{
-			"chips": amountChip, // Substract amountChip coins to the user's wallet.
-		}
-		metadata := map[string]interface{}{
-			"game_topup": "topup",
-		}
-		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
-			UserID:    result.UserId,
-			Changeset: changeset,
-			Metadata:  metadata,
-		})
-	}
-
-	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
-	if err != nil {
-		logger.WithField("err", err).Error("Wallets update error.")
-	}
-}
-
-func (m *MatchHandler) checkAndSendUpdateGameState(logger runtime.Logger, s *entity.MatchState, dispatcher runtime.MatchDispatcher) {
-	//if s.CountDown.IsUpdate {
-	//	pbGameState := pb.UpdateGameState{
-	//		State:     s.GetGameState(),
-	//		CountDown: s.CountDown.Sec,
-	//	}
-	//	// data, err := m.marshaler.Marshal(&pbGameState)
-	//	if s.CountDown.Sec == 0 {
-	//		logger.Info("Send notification countdown from %s --> %s, %d", s.GetGameState().String(), s.GetNextGameState().String(), s.CountDown.Sec)
-	//	}
-	//	err := m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE), &pbGameState, nil, nil, true)
-	//	if err == nil {
-	//		s.CountDown.IsUpdate = false
-	//	}
-	//}
 }
