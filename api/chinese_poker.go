@@ -51,22 +51,22 @@ func (c *ChinesePokerGame) Organize(dispatcher runtime.MatchDispatcher, s *entit
 func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.MatchState) *pb.UpdateFinish {
 	// Check every user
 	updateFinish := pb.UpdateFinish{}
-	for _, uid1 := range s.Presences.Keys() {
+	for _, uid1 := range s.PlayingPresences.Keys() {
 		userID1 := uid1.(string)
 		result := pb.ComparisonResult{
 			UserId: userID1,
 		}
-		cards1 := s.Cards[userID1]
+		cards1 := s.OrganizeCards[userID1]
 		hand1, err := NewHand(cards1)
 		if err != nil {
 			continue
 		}
-		for _, uid2 := range s.Presences.Keys() {
+		for _, uid2 := range s.PlayingPresences.Keys() {
 			userID2 := uid2.(string)
 			if userID1 == userID2 {
 				continue
 			}
-			cards2 := s.Cards[userID2]
+			cards2 := s.OrganizeCards[userID2]
 			hand2, err := NewHand(cards2)
 			if err != nil {
 				continue

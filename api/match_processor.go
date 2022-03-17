@@ -56,16 +56,21 @@ func (m *MatchProcessor) processNewGame(logger runtime.Logger, dispatcher runtim
 }
 
 func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
-	// check autofill
 	// send organize card to all
 	pbGameState := pb.UpdateGameState{
 		State: pb.GameState_GameStateReward,
 	}
 	pbGameState.PresenceCards = make([]*pb.PresenceCards, len(s.Cards))
 	for k, v := range s.Cards {
+		organizeCards := s.OrganizeCards[k]
+		if organizeCards == nil {
+			logger.Warn("user ", k, " not submit cards use deal cards")
+			organizeCards = v
+			s.OrganizeCards[k] = v
+		}
 		presenceCards := pb.PresenceCards{
 			Presence: k,
-			Cards:    v.GetCards(),
+			Cards:    organizeCards.GetCards(),
 		}
 		pbGameState.PresenceCards = append(pbGameState.PresenceCards, &presenceCards)
 	}

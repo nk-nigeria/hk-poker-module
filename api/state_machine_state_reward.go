@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
 type StateReward struct {
@@ -24,15 +23,6 @@ func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
 	// setup reward timeout
 	state := procPkg.GetState()
 	state.SetUpCountDown(rewardTimeout)
-
-	procPkg.GetProcessor().notifyUpdateGameState(
-		state,
-		procPkg.GetLogger(),
-		procPkg.GetDispatcher(),
-		&pb.UpdateGameState{
-			State: pb.GameState_GameStateReward,
-		},
-	)
 
 	// process finish
 	procPkg.processor.processFinishGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
