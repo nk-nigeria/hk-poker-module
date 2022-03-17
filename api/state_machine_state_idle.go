@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
+	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 )
 
 type StateIdle struct {
@@ -18,7 +18,7 @@ func NewIdleState(fn FireFn) *StateIdle {
 }
 
 func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
-	log.Info("[idle] enter")
+	log.GetLogger().Info("[idle] enter")
 	// setup idle timeout
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
@@ -28,15 +28,15 @@ func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 }
 
 func (s *StateIdle) Exit(_ context.Context, _ ...interface{}) error {
-	log.Info("[idle] exit")
+	log.GetLogger().Info("[idle] exit")
 	return nil
 }
 
 func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
-	log.Infof("[idle] processing")
+	log.GetLogger().Info("[idle] processing")
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-	log.Info("state presences size ", state.GetPresenceSize())
+	log.GetLogger().Info("state presences size ", state.GetPresenceSize())
 
 	if state.GetPresenceSize() > 0 {
 		s.Trigger(ctx, triggerMatching)

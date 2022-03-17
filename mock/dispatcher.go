@@ -1,29 +1,29 @@
 package mock
 
 import (
+	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/heroiclabs/nakama-common/runtime"
-	log "github.com/sirupsen/logrus"
 )
 
 type MockDispatcher struct {
 }
 
 func (m MockDispatcher) BroadcastMessage(opCode int64, data []byte, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
-	log.Info("broadcast opcode", opCode, " data ", string(data), " to presences ", presences)
+	log.GetLogger().Info("broadcast opcode", opCode, " data ", string(data), " to presences ", presences)
 	return nil
 }
 
 func (m MockDispatcher) BroadcastMessageDeferred(opCode int64, data []byte, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
-	log.Info("broadcast opcode", opCode, " data ", string(data), " to presences ", presences)
+	log.GetLogger().Info("broadcast opcode", opCode, " data ", string(data), " to presences ", presences)
 	return nil
 }
 
 func (m MockDispatcher) MatchKick(presences []runtime.Presence) error {
-	log.Info("kick ", presences)
+	log.GetLogger().Info("kick ", presences)
 	return nil
 }
 
 func (m MockDispatcher) MatchLabelUpdate(label string) error {
-	log.Info("label update ", label)
+	log.GetLogger().Info("label update ", label)
 	return nil
 }

@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
+	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 )
 
 type StateReward struct {
@@ -18,7 +18,7 @@ func NewStateReward(fn FireFn) *StateReward {
 }
 
 func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
-	log.Info("[reward] enter")
+	log.GetLogger().Info("[reward] enter")
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	// setup reward timeout
 	state := procPkg.GetState()
@@ -31,7 +31,7 @@ func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
 }
 
 func (s *StateReward) Exit(_ context.Context, _ ...interface{}) error {
-	log.Info("[reward] exit")
+	log.GetLogger().Info("[reward] exit")
 	return nil
 }
 
@@ -41,7 +41,7 @@ func (s *StateReward) Process(ctx context.Context, args ...interface{}) error {
 	if remain := state.GetRemainCountDown(); remain <= 0 {
 		s.Trigger(ctx, triggerRewardTimeout)
 	} else {
-		log.Info("[reward] not timeout")
+		log.GetLogger().Info("[reward] not timeout")
 	}
 
 	return nil

@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
+	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 )
 
 type StateMatching struct {
@@ -18,18 +18,18 @@ func NewStateMatching(fn FireFn) *StateMatching {
 }
 
 func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
-	log.Info("[matching] enter")
+	log.GetLogger().Info("[matching] enter")
 
 	return nil
 }
 
 func (s *StateMatching) Exit(_ context.Context, _ ...interface{}) error {
-	log.Info("[matching] exit")
+	log.GetLogger().Info("[matching] exit")
 	return nil
 }
 
 func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error {
-	log.Infof("[matching] processing")
+	log.GetLogger().Info("[matching] processing")
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	presenceCount := state.GetPresenceSize()
@@ -38,7 +38,7 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 	} else if presenceCount <= 0 {
 		s.Trigger(ctx, triggerIdle)
 	} else {
-		log.Info("state idle presences size ", presenceCount)
+		log.GetLogger().Info("state idle presences size ", presenceCount)
 	}
 
 	return nil

@@ -2,8 +2,8 @@ package api
 
 import (
 	"context"
+	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	log "github.com/sirupsen/logrus"
 )
 
 type StatePlay struct {
@@ -19,7 +19,7 @@ func NewStatePlay(fn FireFn) *StatePlay {
 }
 
 func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
-	log.Info("[play] enter")
+	log.GetLogger().Info("[play] enter")
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	// Setup count down
@@ -33,16 +33,16 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 }
 
 func (s *StatePlay) Exit(_ context.Context, _ ...interface{}) error {
-	log.Info("[play] exit")
+	log.GetLogger().Info("[play] exit")
 	return nil
 }
 
 func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
-	log.Infof("[play] processing")
+	log.GetLogger().Info("[play] processing")
 	procPkg := GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
-		log.Infof("[play] not timeout %v", remain)
+		log.GetLogger().Info("[play] not timeout %v", remain)
 		messages := procPkg.GetMessages()
 		processor := procPkg.GetProcessor()
 		logger := procPkg.GetLogger()
@@ -61,7 +61,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 			s.Trigger(ctx, triggerPlayCombineAll)
 		}
 	} else {
-		log.Infof("[play] timeout reach %v", remain)
+		log.GetLogger().Info("[play] timeout reach %v", remain)
 		s.Trigger(ctx, triggerPlayTimeout)
 	}
 	return nil
