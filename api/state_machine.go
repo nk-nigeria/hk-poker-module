@@ -28,11 +28,7 @@ const (
 	triggerRewardTimeout   = "GameRewardTimeout"
 	triggerNoOne           = "GameNoOne"
 
-	triggerProcessIdle      = "GameProcessIdle"
-	triggerProcessMatching  = "GameProcessMatching"
-	triggerProcessPreparing = "GameProcessPreparing"
-	triggerProcessPlay      = "GameProcessPlay"
-	triggerProcessReward    = "GameProcessReward"
+	triggerProcess = "GameProcess"
 )
 
 const (
@@ -58,7 +54,7 @@ func (m *GameStateMachine) configure() {
 	m.state.Configure(stateIdle).
 		OnEntry(idle.Enter).
 		OnExit(idle.Exit).
-		InternalTransition(triggerProcessIdle, idle.Process).
+		InternalTransition(triggerProcess, idle.Process).
 		Permit(triggerMatching, stateMatching).
 		Permit(triggerNoOne, stateFinish)
 
@@ -67,7 +63,7 @@ func (m *GameStateMachine) configure() {
 	m.state.Configure(stateMatching).
 		OnEntry(matching.Enter).
 		OnExit(matching.Exit).
-		InternalTransition(triggerProcessMatching, matching.Process).
+		InternalTransition(triggerProcess, matching.Process).
 		Permit(triggerPresenceReady, statePreparing).
 		Permit(triggerIdle, stateIdle)
 
@@ -76,7 +72,7 @@ func (m *GameStateMachine) configure() {
 	m.state.Configure(statePreparing).
 		OnEntry(preparing.Enter).
 		OnExit(preparing.Exit).
-		InternalTransition(triggerProcessPreparing, preparing.Process).
+		InternalTransition(triggerProcess, preparing.Process).
 		Permit(triggerPreparingDone, statePlay).
 		Permit(triggerPreparingFailed, stateMatching)
 
@@ -85,7 +81,7 @@ func (m *GameStateMachine) configure() {
 	m.state.Configure(statePlay).
 		OnEntry(play.Enter).
 		OnExit(play.Exit).
-		InternalTransition(triggerProcessPlay, play.Process).
+		InternalTransition(triggerProcess, play.Process).
 		Permit(triggerPlayTimeout, stateReward).
 		Permit(triggerPlayCombineAll, stateReward)
 
@@ -94,29 +90,14 @@ func (m *GameStateMachine) configure() {
 	m.state.Configure(stateReward).
 		OnEntry(reward.Enter).
 		OnExit(reward.Exit).
-		InternalTransition(triggerProcessReward, reward.Process).
+		InternalTransition(triggerProcess, reward.Process).
 		Permit(triggerRewardTimeout, stateMatching)
 
 	m.state.ToGraph()
 }
 
 func (m *GameStateMachine) FireProcessEvent(ctx context.Context, args ...interface{}) error {
-	var trigger stateless.State
-	switch m.state.MustState() {
-	case stateIdle:
-		trigger = triggerProcessIdle
-	case stateMatching:
-		trigger = triggerProcessMatching
-	case statePreparing:
-		trigger = triggerProcessPreparing
-	case statePlay:
-		trigger = triggerProcessPlay
-	case stateReward:
-		trigger = triggerProcessReward
-	default:
-		return nil
-	}
-	return m.state.FireCtx(ctx, trigger, args...)
+	return m.state.FireCtx(ctx, triggerProcess, args...)
 }
 
 func (m *GameStateMachine) MustState() stateless.State {

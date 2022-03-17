@@ -19,7 +19,8 @@ func TestGame(t *testing.T) {
 
 	// mock state
 	state := &entity.MatchState{
-		Presences: presense,
+		Presences:        presense,
+		PlayingPresences: linkedhashmap.New(),
 	}
 
 	var err = processor.NewGame(state)
