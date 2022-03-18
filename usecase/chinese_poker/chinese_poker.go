@@ -1,35 +1,34 @@
-package api
+package chinese_poker
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"github.com/heroiclabs/nakama-common/runtime"
 )
 
 const MaxPresenceCard = 13
 
-type ChinesePokerGame struct {
+type Engine struct {
 	deck *entity.Deck
 }
 
-func NewProcessor() *ChinesePokerGame {
-	return &ChinesePokerGame{}
+func NewChinesePokerEngine() UseCase {
+	return &Engine{}
 }
 
-func (c *ChinesePokerGame) NewGame(s *entity.MatchState) error {
+func (c *Engine) NewGame(s *entity.MatchState) error {
+	s.JoinInGame = make(map[string]bool)
+	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
 
 	return nil
 }
 
-func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
+func (c *Engine) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
 
-	s.JoinInGame = make(map[string]bool)
-	s.Cards = make(map[string]*pb.ListCard)
 	// loop on userid in match
-	for _, k := range s.Presences.Keys() {
+	for _, k := range s.PlayingPresences.Keys() {
 		userId := k.(string)
 		cards, err := c.deck.Deal(MaxPresenceCard)
 		if err == nil {
@@ -43,30 +42,35 @@ func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
 	return nil
 }
 
-func (c *ChinesePokerGame) Organize(dispatcher runtime.MatchDispatcher, s *entity.MatchState, presence string, cards *pb.ListCard) error {
-	s.OrganizeCards[presence] = cards
+func (c *Engine) Organize(s *entity.MatchState, presence string, cards *pb.ListCard) error {
+	s.UpdateShowCard(presence, cards)
 	return nil
 }
 
-func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.MatchState) *pb.UpdateFinish {
+func (c *Engine) Combine(s *entity.MatchState, presence string) error {
+	s.RemoveShowCard(presence)
+	return nil
+}
+
+func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	// Check every user
 	updateFinish := pb.UpdateFinish{}
-	for _, uid1 := range s.Presences.Keys() {
+	for _, uid1 := range s.PlayingPresences.Keys() {
 		userID1 := uid1.(string)
 		result := pb.ComparisonResult{
 			UserId: userID1,
 		}
-		cards1 := s.Cards[userID1]
+		cards1 := s.OrganizeCards[userID1]
 		hand1, err := NewHand(cards1)
 		if err != nil {
 			continue
 		}
-		for _, uid2 := range s.Presences.Keys() {
+		for _, uid2 := range s.PlayingPresences.Keys() {
 			userID2 := uid2.(string)
 			if userID1 == userID2 {
 				continue
 			}
-			cards2 := s.Cards[userID2]
+			cards2 := s.OrganizeCards[userID2]
 			hand2, err := NewHand(cards2)
 			if err != nil {
 				continue

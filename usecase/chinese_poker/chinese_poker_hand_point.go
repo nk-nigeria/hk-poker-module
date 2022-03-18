@@ -1,4 +1,4 @@
-package api
+package chinese_poker
 
 import (
 	"sort"
