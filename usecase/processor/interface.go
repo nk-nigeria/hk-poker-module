@@ -1,0 +1,17 @@
+package processor
+
+import (
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"github.com/heroiclabs/nakama-common/runtime"
+	"google.golang.org/protobuf/proto"
+)
+
+type UseCase interface {
+	ProcessNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
+	ProcessFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
+	CombineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)
+	ShowCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)
+	DeclareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)
+	NotifyUpdateGameState(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message)
+	NotifyUpdatePresences(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message)
+}

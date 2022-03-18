@@ -73,12 +73,10 @@ enum OpCodeRequest {
     OPCODE_UNSPECIFIED = 0;
     // New game round starting.
     OPCODE_REQUEST_NEW_GAME = 1; //message NewGame
-    // Organize cards request
-    OPCODE_REQUEST_ORGANIZE = 2; //message Organize
     // Request leave game
-    OPCODE_REQUEST_LEAVE_GAME = 3; //message Organize
+    OPCODE_REQUEST_LEAVE_GAME = 3;
     
-    OPCODE_REQUEST_COMBINE_CARDS = 4; //message Organize
+    OPCODE_REQUEST_COMBINE_CARDS = 4;
 
     OPCODE_REQUEST_SHOW_CARDS = 5; //message Organize
     
@@ -90,7 +88,7 @@ enum OpCodeUpdate {
     OPCODE_UPDATE_UNSPECIFIED = 0;
     OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
     OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
-    OPCODE_UPDATE_ORGANIZE_ACK = 3; //message UpdateDeal
+    OPCODE_UPDATE_ORGANIZE_ACK = 3; //TODO: remove
     OPCODE_UPDATE_FINISH = 4; //message UpdateFinish
     // Request was rejected.
     OPCODE_UPDATE_REJECTED = 5;
@@ -101,13 +99,13 @@ enum OpCodeUpdate {
 }
 
 enum GameState {
-    GameStateLobby = 0;
-    GameStatePrepare = 1;
-    GameStateCountdown = 2;
-    GameStateRun = 3;
-    GameStateReward = 4;
-    GameStateFinish = 5;
-    GameStateEnd = 6;
+    GameStateUnknown = 0;
+    GameStateIdle = 1;
+    GameStateMatching = 2;
+    GameStatePreparing = 3;
+    GameStatePlay = 4;
+    GameStateReward = 5;
+    GameStateFinish = 6;
 }
 
 // Message data sent by client to server representing the cards was organize.
@@ -162,7 +160,6 @@ message UpdateGameState {
     int64 count_down = 2;
     ArrangeCard arrange_card = 3;
     repeated PresenceCards presenceCards = 4;
-    
 }
 
 message ArrangeCard {

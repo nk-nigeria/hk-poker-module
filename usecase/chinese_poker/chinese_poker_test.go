@@ -1,4 +1,4 @@
-package api
+package chinese_poker
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 
 func TestGame(t *testing.T) {
 	t.Logf("Test Game")
-	processor := NewProcessor()
+	processor := NewChinesePokerEngine()
 
 	// mock presense
 	presense := linkedhashmap.New()
@@ -19,13 +19,14 @@ func TestGame(t *testing.T) {
 
 	// mock state
 	state := &entity.MatchState{
-		Presences: presense,
+		Presences:        presense,
+		PlayingPresences: linkedhashmap.New(),
 	}
 
-	var err = processor.NewGame(state)
-	if err != nil {
-		t.Errorf("new game error %v", err)
-	}
+	//var err = processor.NewGame(state)
+	//if err != nil {
+	//	t.Errorf("new game error %v", err)
+	//}
 
 	t.Logf("new game success")
 	processor.Deal(state)
@@ -43,9 +44,9 @@ func TestGame(t *testing.T) {
 	cardOrganize2 := entity.Shuffle(card2)
 	cardOrganize3 := entity.Shuffle(card3)
 
-	processor.Organize(nil, state, "user1", cardOrganize1)
-	processor.Organize(nil, state, "user2", cardOrganize2)
-	processor.Organize(nil, state, "user3", cardOrganize3)
+	processor.Organize(state, "user1", cardOrganize1)
+	processor.Organize(state, "user2", cardOrganize2)
+	processor.Organize(state, "user3", cardOrganize3)
 
 	processor.Finish(nil, state)
 	// check dealt cards
