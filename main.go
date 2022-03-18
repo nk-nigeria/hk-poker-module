@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
-	"time"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api"
 )
@@ -22,7 +23,8 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	initStart := time.Now()
 
 	marshaler := &protojson.MarshalOptions{
-		UseEnumNumbers: true,
+		UseEnumNumbers:  true,
+		EmitUnpopulated: true,
 	}
 	unmarshaler := &protojson.UnmarshalOptions{
 		DiscardUnknown: false,

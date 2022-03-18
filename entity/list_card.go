@@ -13,11 +13,14 @@ func NewListCard(list []*pb.Card) ListCard {
 	return newList
 }
 
-// GetMaxPointCard
-func (ls ListCard) GetMaxPointCard() uint8 {
+// GetMaxRankPointCard
+func (ls ListCard) GetMaxRankPointCard() uint8 {
 	isStraight := true
-	isContainCardRanK := false
+	isContainCardRankK := false
+	isContainCardRankA := false
 	prevRankPoint := ls[0].GetRank()
+	maxCard := ls[0]
+	secondMaxCard := ls[0]
 	for i := 1; i < len(ls); i++ {
 		card := ls[i]
 		if isStraight {
@@ -27,15 +30,23 @@ func (ls ListCard) GetMaxPointCard() uint8 {
 				isStraight = false
 			}
 		}
-		isContainCardRanK = card.GetRank() == RankK
+		isContainCardRankK = card.GetRank() == RankK
+		isContainCardRankA = card.GetRank() == RankA
+		if maxCard.GetRank() < card.GetRank() {
+			secondMaxCard = maxCard
+			maxCard = card
+		}
 	}
-	maxCard := ls[len(ls)-1]
+	// maxCard := ls[len(ls)-1]
 	// Chú ý rằng trong Mậu Binh có thể xếp sảnh (hoặc thùng phá sảnh) con A ghép với 2,3,4,5
 	// (tuy nhiên đây là bài sảnh hay thùng phá sảnh nhỏ nhất),
 	// còn con A ghép với 10,J,Q,K là lá bài lớn nhất.
-	if isStraight && !isContainCardRanK {
-		return 1
+	if isStraight && isContainCardRankA {
+		if !isContainCardRankK {
+			return secondMaxCard.GetRank()
+		}
 	}
+
 	return maxCard.GetRank()
 }
 

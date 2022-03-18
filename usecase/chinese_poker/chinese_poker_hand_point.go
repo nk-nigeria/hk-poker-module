@@ -24,6 +24,14 @@ func NewHandCards() *HandCards {
 	}
 }
 
+func (hc *HandCards) CopyMapCardType(mapCardType map[pb.HandRanking]entity.ListCard) {
+	for k, v := range mapCardType {
+		l := hc.MapCardType[k]
+		l = append(l, v...)
+		hc.MapCardType[k] = l
+	}
+}
+
 func (h *HandPoint) IsStraight() bool {
 	return h.rankingType == pb.HandRanking_Straight
 }
@@ -34,35 +42,64 @@ func (h *HandPoint) IsFlush() bool {
 
 type CheckFunc func(entity.ListCard) (*HandCards, bool)
 
-var HandChecker = map[pb.HandRanking]CheckFunc{
-	pb.HandRanking_StraightFlush: CheckStraightFlush,
-	pb.HandRanking_FourOfAKind:   CheckFourOfAKind,
-	pb.HandRanking_FullHouse:     CheckFullHouse,
-	pb.HandRanking_Flush:         CheckFlush,
-	pb.HandRanking_Straight:      CheckStraight,
-	pb.HandRanking_ThreeOfAKind:  CheckThreeOfAKind,
-	pb.HandRanking_TwoPairs:      CheckTwoPairs,
-	pb.HandRanking_Pair:          CheckPair,
+var HandChecker *linkedhashmap.Map
+
+var HandCheckerFront *linkedhashmap.Map
+
+func init() {
+	HandChecker = linkedhashmap.New()
+	HandChecker.Put(pb.HandRanking_StraightFlush, CheckStraightFlush)
+	HandChecker.Put(pb.HandRanking_FourOfAKind, CheckFourOfAKind)
+	HandChecker.Put(pb.HandRanking_FullHouse, CheckFullHouse)
+	HandChecker.Put(pb.HandRanking_Flush, CheckFlush)
+	HandChecker.Put(pb.HandRanking_Straight, CheckStraight)
+	HandChecker.Put(pb.HandRanking_ThreeOfAKind, CheckThreeOfAKind)
+	HandChecker.Put(pb.HandRanking_TwoPairs, CheckTwoPairs)
+	HandChecker.Put(pb.HandRanking_Pair, CheckPair)
+
+	HandCheckerFront = linkedhashmap.New()
+	HandCheckerFront.Put(pb.HandRanking_ThreeOfAKind, CheckThreeOfAKind)
+	HandCheckerFront.Put(pb.HandRanking_Pair, CheckPair)
 }
 
-var HandCheckerFront = map[pb.HandRanking]CheckFunc{
-	pb.HandRanking_ThreeOfAKind: CheckThreeOfAKind,
-	pb.HandRanking_Pair:         CheckPair,
-}
+// var HandChecker = map[pb.HandRanking]CheckFunc{
+// 	pb.HandRanking_StraightFlush: CheckStraightFlush,
+// 	pb.HandRanking_FourOfAKind:   CheckFourOfAKind,
+// 	pb.HandRanking_FullHouse:     CheckFullHouse,
+// 	pb.HandRanking_Flush:         CheckFlush,
+// 	pb.HandRanking_Straight:      CheckStraight,
+// 	pb.HandRanking_ThreeOfAKind:  CheckThreeOfAKind,
+// 	pb.HandRanking_TwoPairs:      CheckTwoPairs,
+// 	pb.HandRanking_Pair:          CheckPair,
+// }
 
-func GetHandPoint(listCard entity.ListCard) (*HandPoint, *HandCards) {
+// var HandCheckerFront = map[pb.HandRanking]CheckFunc{
+// 	pb.HandRanking_ThreeOfAKind: CheckThreeOfAKind,
+// 	pb.HandRanking_Pair:         CheckPair,
+// }
+
+func CaculatorPoint(listCard entity.ListCard) (*HandPoint, *HandCards) {
 	if len(listCard) == 3 {
 		// For check front
-		for rank, check := range HandCheckerFront {
-			if handCard, valid := check(listCard); valid {
+		for _, key := range HandCheckerFront.Keys() {
+			rank := key.(pb.HandRanking)
+			val, _ := (HandCheckerFront.Get(rank))
+			fn := val.(func(listCard entity.ListCard) (*HandCards, bool))
+			if handCard, valid := fn(listCard); valid {
 				return &HandPoint{
 					rankingType: rank,
 				}, handCard
 			}
 		}
 	} else {
-		for rank, check := range HandChecker {
-			if handCard, valid := check(listCard); valid {
+		for _, key := range HandChecker.Keys() {
+			rank := key.(pb.HandRanking)
+			val, exist := HandChecker.Get(rank)
+			if !exist {
+				return nil, nil
+			}
+			fn := val.(func(listCard entity.ListCard) (*HandCards, bool))
+			if handCard, valid := fn(listCard); valid {
 				return &HandPoint{
 					rankingType: rank,
 				}, handCard
@@ -73,7 +110,8 @@ func GetHandPoint(listCard entity.ListCard) (*HandPoint, *HandCards) {
 	// Sort for high card
 	listCard = SortCard(listCard)
 	handCard := HandCards{
-		ListCard: listCard,
+		ListCard:    listCard,
+		MapCardType: make(map[pb.HandRanking]entity.ListCard),
 	}
 	return &HandPoint{
 		rankingType: pb.HandRanking_HighCard,
@@ -97,9 +135,13 @@ func CheckStraightFlush(listCard entity.ListCard) (*HandCards, bool) {
 	if !valid {
 		return nil, false
 	}
+	if handCard.MapCardType == nil {
+		handCard.MapCardType = make(map[pb.HandRanking]entity.ListCard)
+	}
 	for k, v := range handCard2.MapCardType {
 		handCard.MapCardType[k] = v
 	}
+	handCard.MapCardType[pb.HandRanking_StraightFlush] = listCard
 	handCard.ListCard = handCard2.ListCard
 	return handCard, true
 }
@@ -203,8 +245,10 @@ func CheckFlush(listCard entity.ListCard) (*HandCards, bool) {
 		}
 	}
 	handCard := HandCards{
-		ListCard: listCard,
+		ListCard:    listCard,
+		MapCardType: make(map[pb.HandRanking]entity.ListCard),
 	}
+	handCard.MapCardType[pb.HandRanking_Flush] = listCard
 	return &handCard, true
 }
 
@@ -223,8 +267,10 @@ func CheckStraight(listCard entity.ListCard) (*HandCards, bool) {
 		}
 	}
 	handCards := HandCards{
-		ListCard: listCard,
+		ListCard:    listCard,
+		MapCardType: make(map[pb.HandRanking]entity.ListCard),
 	}
+	handCards.MapCardType[pb.HandRanking_Straight] = listCard
 	return &handCards, true
 }
 
@@ -393,4 +439,247 @@ func SortCard(listCard entity.ListCard) entity.ListCard {
 		return suitPointA < suitPointB
 	})
 	return listCard
+}
+
+//Mậu binh tới trắng: (Người chơi chiến thắng trực tiếp mà không cần so từng chi)
+// Sảnh rồng: 13 lá từ 2 -> A ko đồng chất.
+func IsDragon(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	_, isStraight := CheckStraight(listCard)
+	// check is straight
+	if !isStraight {
+		return nil, false
+	}
+	h := NewHandCards()
+	h.ListCard = SortCard(listCard)
+	return h, true
+}
+
+// Sảnh rồng: 13 lá từ 2 -> A đồng chất.
+func IsCleanDragon(listCard entity.ListCard) (*HandCards, bool) {
+	_, isDragon := CheckDragon(listCard)
+	// check is straight
+	if !isDragon {
+		return nil, false
+	}
+	_, isFullColor := IsFullColored(listCard)
+	if !isFullColor {
+		return nil, false
+	}
+	h := NewHandCards()
+	h.ListCard = SortCard(listCard)
+	return h, true
+}
+
+// 3 thùng phá sảnh: 3 thùng phá sảnh ở cả ba chi
+func IsThreeStraightFlushes(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	listCard = SortCard(listCard)
+	front := listCard[:3]
+	mid := listCard[3:8]
+	back := listCard[8:]
+	h := NewHandCards()
+	var handCard *HandCards
+	isStraightFlush := false
+	if handCard, isStraightFlush = CheckStraightFlush(front); !isStraightFlush {
+		return nil, false
+	}
+
+	h.CopyMapCardType(handCard.MapCardType)
+	if _, isStraightFlush = CheckStraight(mid); !isStraightFlush {
+		return nil, false
+	}
+	h.CopyMapCardType(handCard.MapCardType)
+	if _, isStraightFlush = CheckStraight(back); !isStraightFlush {
+		return nil, false
+	}
+	h.CopyMapCardType(handCard.MapCardType)
+	h.ListCard = SortCard(listCard)
+	return h, true
+}
+
+// Đồng màu 1: 13 lá đồng màu đen/đỏ.
+func IsFullColored(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	mapSuit := ToMapSuit(listCard)
+	// check all card same suit
+	if len(mapSuit.Keys()) == 1 {
+		h := NewHandCards()
+		h.ListCard = SortCard(listCard)
+		return h, true
+	}
+	return nil, false
+}
+
+// Đồng màu 2: bài có 12 lá đồng màu đen/đỏ hoặc đỏ/đen.
+func IsFullColored2(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	mapSuit := ToMapSuit(listCard)
+	// check all card same suit
+	if len(mapSuit.Keys()) != 2 {
+		return nil, false
+	}
+	for _, v := range mapSuit.Values() {
+		list := *(v.(*entity.ListCard))
+		if len(list) == 12 {
+			h := NewHandCards()
+			h.ListCard = SortCard(listCard)
+			return h, true
+		}
+	}
+	return nil, false
+}
+
+// 5 đôi 1 xám: bài có 5 đôi và 1 xám cô. Giống nhau so sánh đến lá lớn nhất trong xám.
+func IsFivePairThreeOfAKind(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	listCard = SortCard(listCard)
+	mapRank := ToMapRank(listCard)
+	numPair := 0
+	hasThreeOfAKind := false
+	h := NewHandCards()
+	for _, v := range mapRank.Values() {
+		list := *(v.(*entity.ListCard))
+		size := len(list)
+		if size > 3 {
+			return nil, false
+		}
+		if size%2 == 0 {
+			numPair += size / 2
+		}
+		if size == 3 {
+			h.MapCardType[pb.HandRanking_ThreeOfAKind] = list
+			hasThreeOfAKind = true
+		}
+	}
+	if numPair == 5 && hasThreeOfAKind {
+		h.ListCard = listCard
+		return h, true
+	}
+	return nil, false
+}
+
+// Lục phé bôn: bài có 6 đôi và 1 mậu thầu. Giống nhau so đến đôi cao nhất.
+func IsSixAndAHalfPairs(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	listCard = SortCard(listCard)
+	mapRank := ToMapRank(listCard)
+	numPair := 0
+	h := NewHandCards()
+	for _, v := range mapRank.Values() {
+		list := *(v.(*entity.ListCard))
+		size := len(list)
+		if size%2 == 0 {
+			numPair += size / 2
+			l := h.MapCardType[pb.HandRanking_TwoPairs]
+			l = append(l, list...)
+			h.MapCardType[pb.HandRanking_TwoPairs] = l
+			continue
+		}
+
+		return nil, false
+	}
+	valid := numPair == 6
+	if !valid {
+		return nil, false
+	}
+
+	h.ListCard = listCard
+	return h, true
+}
+
+// 3 tứ quý: bài có 3 tứ quý. Giống nhau so đến tứ quý cao nhất.
+func ThreeQuads(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	listCard = SortCard(listCard)
+	mapRank := ToMapRank(listCard)
+	h := NewHandCards()
+	if len(mapRank.Keys()) != 3 {
+		return nil, false
+	}
+	for _, v := range mapRank.Values() {
+		list := *(v.(*entity.ListCard))
+		if len(list) != 4 {
+			return nil, false
+		}
+		l := h.MapCardType[pb.HandRanking_FourOfAKind]
+		l = append(l, list...)
+		h.MapCardType[pb.HandRanking_FourOfAKind] = l
+	}
+	h.ListCard = listCard
+	return h, true
+}
+
+// 3 cái thùng: 3 chi mỗi chi là một thùng. Giống nhau so đến các thùng ở các chi. Có thể hoà.
+func IsThreeFlushes(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	listCard = SortCard(listCard)
+	front := listCard[:3]
+	mid := listCard[3:8]
+	back := listCard[8:]
+	h := NewHandCards()
+	var handCard *HandCards
+	isFlush := false
+	if handCard, isFlush = CheckFlush(front); !isFlush {
+		return nil, false
+	}
+
+	h.CopyMapCardType(handCard.MapCardType)
+	if handCard, isFlush = CheckFlush(mid); !isFlush {
+		return nil, false
+	}
+	h.CopyMapCardType(handCard.MapCardType)
+	if handCard, isFlush = CheckFlush(back); !isFlush {
+		return nil, false
+	}
+	h.CopyMapCardType(handCard.MapCardType)
+	h.ListCard = listCard
+	return h, true
+}
+
+// 3 cái sảnh: 3 chi mỗi chi là một sảnh. Giống nhau so đến các sảnh ở các chi. Có thể hoà.
+func IsThreeStraight(listCard entity.ListCard) (*HandCards, bool) {
+	if len(listCard) != 13 {
+		return nil, false
+	}
+	listCard = SortCard(listCard)
+	front := listCard[:3]
+	mid := listCard[3:8]
+	back := listCard[8:]
+	h := NewHandCards()
+	var handCard *HandCards
+	isStraight := false
+	if handCard, isStraight = CheckStraight(front); !isStraight {
+		return nil, false
+	}
+
+	h.CopyMapCardType(handCard.MapCardType)
+	if handCard, isStraight = CheckStraight(mid); !isStraight {
+		return nil, false
+	}
+
+	h.CopyMapCardType(handCard.MapCardType)
+	if handCard, isStraight = CheckStraight(back); !isStraight {
+		return nil, false
+	}
+
+	h.CopyMapCardType(handCard.MapCardType)
+	h.ListCard = listCard
+	return h, true
 }
