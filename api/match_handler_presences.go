@@ -55,14 +55,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		}
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
-		if msg != nil {
-			buf, err := m.processor.marshaler.Marshal(msg)
-			if err != nil {
-				logger.Error("error encoding message: %v", err)
-			} else {
-				_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE), buf, nil, nil, true)
-			}
-		}
+		m.processor.NotifyUpdatePresences(s, logger, dispatcher, msg)
 	}
 
 	return s
@@ -90,14 +83,7 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 			}
 
 			// Send a message to the user that just joined, if one is needed based on the logic above.
-			if msg != nil {
-				buf, err := m.processor.marshaler.Marshal(msg)
-				if err != nil {
-					logger.Error("error encoding message: %v", err)
-				} else {
-					_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE), buf, nil, nil, true)
-				}
-			}
+			m.processor.NotifyUpdatePresences(s, logger, dispatcher, msg)
 		}
 	}
 

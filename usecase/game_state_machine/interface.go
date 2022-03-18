@@ -1,0 +1,15 @@
+package game_state_machine
+
+import (
+	"context"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/qmuntal/stateless"
+)
+
+type UseCase interface {
+	FireProcessEvent(ctx context.Context, args ...interface{}) error
+	MustState() stateless.State
+	GetPbState() pb.GameState
+	Trigger(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error
+	TriggerIdle(ctx context.Context, args ...interface{}) error
+}

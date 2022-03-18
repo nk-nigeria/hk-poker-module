@@ -1,4 +1,4 @@
-package api
+package game_state_machine
 
 import (
 	"fmt"

@@ -5,7 +5,7 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
-type UserCase interface {
+type UseCase interface {
 	NewGame(s *entity.MatchState) error
 	Deal(s *entity.MatchState) error
 	Organize(s *entity.MatchState, presence string, cards *pb.ListCard) error

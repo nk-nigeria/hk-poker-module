@@ -1,4 +1,4 @@
-package api
+package processor
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
@@ -9,21 +9,26 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const processorKey = "pd"
+type processor struct {
+	engine      chinese_poker.UseCase
+	marshaler   *protojson.MarshalOptions
+	unmarshaler *protojson.UnmarshalOptions
+}
 
-type MatchProcessor struct {
-	gameEngine   chinese_poker.UserCase
-	stateMachine *GameStateMachine
-	marshaler    *protojson.MarshalOptions
-	unmarshaler  *protojson.UnmarshalOptions
+func NewMatchProcessor(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions, engine chinese_poker.UseCase) UseCase {
+	return &processor{
+		marshaler:   marshaler,
+		unmarshaler: unmarshaler,
+		engine:      engine,
+	}
 }
 
 // Call when client request or timeout
-func (m *MatchProcessor) processNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+func (m *processor) ProcessNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	// clean up game state
-	m.gameEngine.NewGame(s)
+	m.engine.NewGame(s)
 
-	if err := m.gameEngine.Deal(s); err == nil {
+	if err := m.engine.Deal(s); err == nil {
 		for k, v := range s.Cards {
 			buf, err := m.marshaler.Marshal(&pb.UpdateDeal{
 				PresenceCard: &pb.PresenceCards{
@@ -44,7 +49,7 @@ func (m *MatchProcessor) processNewGame(logger runtime.Logger, dispatcher runtim
 	}
 }
 
-func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+func (m *processor) ProcessFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
 	pbGameState := pb.UpdateGameState{
@@ -71,7 +76,7 @@ func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher run
 		&pbGameState, nil, nil, true)
 
 	// update finish
-	updateFinish := m.gameEngine.Finish(s)
+	updateFinish := m.engine.Finish(s)
 	m.broadcastMessage(
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
@@ -80,10 +85,10 @@ func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher run
 	logger.Info("process finish game done %v", updateFinish)
 }
 
-func (m *MatchProcessor) combineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+func (m *processor) CombineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
 	logger.Info("User %s request combineCard", message.GetUserId())
 	msg := pb.UpdateGameState{
-		State: m.stateMachine.GetPbState(),
+		State: pb.GameState_GameStatePlay,
 		ArrangeCard: &pb.ArrangeCard{
 			Presence:  message.GetUserId(),
 			CardEvent: pb.CardEvent_COMBINE,
@@ -93,11 +98,11 @@ func (m *MatchProcessor) combineCard(logger runtime.Logger, dispatcher runtime.M
 	m.removeShowCard(logger, s, message)
 }
 
-func (m *MatchProcessor) showCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+func (m *processor) ShowCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
 	logger.Info("User %s request showCard", message.GetUserId())
 
 	msg := pb.UpdateGameState{
-		State: m.stateMachine.GetPbState(),
+		State: pb.GameState_GameStatePlay,
 		ArrangeCard: &pb.ArrangeCard{
 			Presence:  message.GetUserId(),
 			CardEvent: pb.CardEvent_SHOW,
@@ -107,13 +112,13 @@ func (m *MatchProcessor) showCard(logger runtime.Logger, dispatcher runtime.Matc
 	m.saveCard(logger, s, message)
 }
 
-func (m *MatchProcessor) declareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
+func (m *processor) DeclareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
 	logger.Info("User %d request declareCard", message.GetUserId())
 	// TODO: check royalties
 	m.saveCard(logger, s, message)
 }
 
-func (m *MatchProcessor) saveCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
+func (m *processor) saveCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
 	cards := s.Cards[message.GetUserId()]
 	organize := &pb.Organize{}
 	err := m.unmarshaler.Unmarshal(message.GetData(), organize)
@@ -135,14 +140,14 @@ func (m *MatchProcessor) saveCard(logger runtime.Logger, s *entity.MatchState, m
 		return
 	}
 
-	m.gameEngine.Organize(s, message.GetUserId(), cardsByClient)
+	m.engine.Organize(s, message.GetUserId(), cardsByClient)
 }
 
-func (m *MatchProcessor) removeShowCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
-	m.gameEngine.Combine(s, message.GetUserId())
+func (m *processor) removeShowCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
+	m.engine.Combine(s, message.GetUserId())
 }
 
-func (m *MatchProcessor) broadcastMessage(logger runtime.Logger, dispatcher runtime.MatchDispatcher, opCode int64, data proto.Message, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
+func (m *processor) broadcastMessage(logger runtime.Logger, dispatcher runtime.MatchDispatcher, opCode int64, data proto.Message, presences []runtime.Presence, sender runtime.Presence, reliable bool) error {
 	dataJson, err := m.marshaler.Marshal(data)
 	if err != nil {
 		logger.Error("Error when marshaler data for broadcastMessage")
@@ -156,9 +161,16 @@ func (m *MatchProcessor) broadcastMessage(logger runtime.Logger, dispatcher runt
 	return nil
 }
 
-func (m *MatchProcessor) notifyUpdateGameState(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
+func (m *processor) NotifyUpdateGameState(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
 	m.broadcastMessage(
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+		updateState, nil, nil, true)
+}
+
+func (m *processor) NotifyUpdatePresences(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
+	m.broadcastMessage(
+		logger, dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE),
 		updateState, nil, nil, true)
 }

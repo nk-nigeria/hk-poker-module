@@ -1,8 +1,9 @@
-package api
+package game_state_machine
 
 import (
 	"context"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -20,12 +21,12 @@ func NewStatePlay(fn FireFn) *StatePlay {
 
 func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	log.GetLogger().Info("[play] enter")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	// Setup count down
 	state.SetUpCountDown(playTimeout)
 
-	procPkg.GetProcessor().notifyUpdateGameState(
+	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,
 		procPkg.GetLogger(),
 		procPkg.GetDispatcher(),
@@ -38,7 +39,7 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	// Setup playing presences
 	state.SetupPlayingPresence()
 	// New game here
-	procPkg.GetProcessor().processNewGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
+	procPkg.GetProcessor().ProcessNewGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
 
 	return nil
 }
@@ -50,7 +51,7 @@ func (s *StatePlay) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	log.GetLogger().Info("[play] processing")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
 		log.GetLogger().Info("[play] not timeout %v", remain)
@@ -61,11 +62,11 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 		for _, message := range messages {
 			switch pb.OpCodeRequest(message.GetOpCode()) {
 			case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
-				processor.combineCard(logger, dispatcher, state, message)
+				processor.CombineCard(logger, dispatcher, state, message)
 			case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
-				processor.showCard(logger, dispatcher, state, message)
+				processor.ShowCard(logger, dispatcher, state, message)
 			case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
-				processor.declareCard(logger, dispatcher, state, message)
+				processor.DeclareCard(logger, dispatcher, state, message)
 			}
 		}
 

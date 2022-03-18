@@ -1,8 +1,9 @@
-package api
+package game_state_machine
 
 import (
 	"context"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 )
 
 type StateReward struct {
@@ -19,13 +20,13 @@ func NewStateReward(fn FireFn) *StateReward {
 
 func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
 	log.GetLogger().Info("[reward] enter")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	// setup reward timeout
 	state := procPkg.GetState()
 	state.SetUpCountDown(rewardTimeout)
 
 	// process finish
-	procPkg.processor.processFinishGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
+	procPkg.GetProcessor().ProcessFinishGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
 
 	return nil
 }
@@ -36,7 +37,7 @@ func (s *StateReward) Exit(_ context.Context, _ ...interface{}) error {
 }
 
 func (s *StateReward) Process(ctx context.Context, args ...interface{}) error {
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain <= 0 {
 		s.Trigger(ctx, triggerRewardTimeout)

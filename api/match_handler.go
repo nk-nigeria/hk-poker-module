@@ -20,7 +20,10 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/game_state_machine"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/processor"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/qmuntal/stateless"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -36,22 +39,19 @@ var errFinish = errors.New("process.error.finish")
 var _ runtime.Match = &MatchHandler{}
 
 type MatchHandler struct {
-	processor *MatchProcessor
+	processor processor.UseCase
+	machine   game_state_machine.UseCase
 }
 
 func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) *MatchHandler {
 	return &MatchHandler{
-		processor: &MatchProcessor{
-			marshaler:    marshaler,
-			unmarshaler:  unmarshaler,
-			gameEngine:   chinese_poker.NewChinesePokerEngine(),
-			stateMachine: NewGameStateMachine(),
-		},
+		processor: processor.NewMatchProcessor(marshaler, unmarshaler, chinese_poker.NewChinesePokerEngine()),
+		machine:   game_state_machine.NewGameStateMachine(),
 	}
 }
 
 func (m *MatchHandler) GetState() stateless.State {
-	return m.processor.stateMachine.MustState()
+	return m.GetState()
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
@@ -94,8 +94,8 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	matchState := entity.NewMathState(label)
 
 	// fire idle event
-	procPkg := NewProcessorPackage(&matchState, m.processor, logger, nil, nil)
-	m.processor.stateMachine.Trigger(GetContextWithProcessorPackager(procPkg), triggerIdle)
+	procPkg := packager.NewProcessorPackage(&matchState, m.processor, logger, nil, nil)
+	m.machine.TriggerIdle(packager.GetContextWithProcessorPackager(procPkg))
 
 	return &matchState, tickRate, string(labelJSON)
 }
@@ -103,7 +103,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*entity.MatchState)
 
-	err := m.processor.stateMachine.FireProcessEvent(GetContextWithProcessorPackager(NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
+	err := m.machine.FireProcessEvent(packager.GetContextWithProcessorPackager(packager.NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
 	if err == errFinish {
 		logger.Info("match need finish")
 		return nil

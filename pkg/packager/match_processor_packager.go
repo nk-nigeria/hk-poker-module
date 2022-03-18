@@ -1,20 +1,23 @@
-package api
+package packager
 
 import (
 	"context"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	processor_interface "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/processor"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
+const processorKey = "pd"
+
 type ProcessorPackager struct {
 	state      *entity.MatchState
-	processor  *MatchProcessor
+	processor  processor_interface.UseCase
 	logger     runtime.Logger
 	dispatcher runtime.MatchDispatcher
 	messages   []runtime.MatchData
 }
 
-func NewProcessorPackage(state *entity.MatchState, processor *MatchProcessor, logger runtime.Logger, dispatcher runtime.MatchDispatcher, messages []runtime.MatchData) *ProcessorPackager {
+func NewProcessorPackage(state *entity.MatchState, processor processor_interface.UseCase, logger runtime.Logger, dispatcher runtime.MatchDispatcher, messages []runtime.MatchData) *ProcessorPackager {
 	return &ProcessorPackager{
 		state:      state,
 		processor:  processor,
@@ -28,7 +31,7 @@ func (p ProcessorPackager) GetState() *entity.MatchState {
 	return p.state
 }
 
-func (p ProcessorPackager) GetProcessor() *MatchProcessor {
+func (p ProcessorPackager) GetProcessor() processor_interface.UseCase {
 	return p.processor
 }
 

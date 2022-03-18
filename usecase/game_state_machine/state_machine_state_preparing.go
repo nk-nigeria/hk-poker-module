@@ -1,8 +1,9 @@
-package api
+package game_state_machine
 
 import (
 	"context"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -20,12 +21,12 @@ func NewStatePreparing(fn FireFn) *StatePreparing {
 
 func (s *StatePreparing) Enter(ctx context.Context, args ...interface{}) error {
 	log.GetLogger().Info("[preparing] enter")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	log.GetLogger().Info("state %v", state.Presences)
 	state.SetUpCountDown(preparingTimeout)
 
-	procPkg.GetProcessor().notifyUpdateGameState(
+	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,
 		procPkg.GetLogger(),
 		procPkg.GetDispatcher(),
@@ -45,10 +46,10 @@ func (s *StatePreparing) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error {
 	log.GetLogger().Info("[preparing] processing")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
-		procPkg.GetProcessor().notifyUpdateGameState(
+		procPkg.GetProcessor().NotifyUpdateGameState(
 			state,
 			procPkg.GetLogger(),
 			procPkg.GetDispatcher(),

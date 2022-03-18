@@ -11,7 +11,7 @@ type Engine struct {
 	deck *entity.Deck
 }
 
-func NewChinesePokerEngine() UserCase {
+func NewChinesePokerEngine() UseCase {
 	return &Engine{}
 }
 

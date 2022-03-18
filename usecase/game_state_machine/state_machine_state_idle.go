@@ -1,8 +1,10 @@
-package api
+package game_state_machine
 
 import (
 	"context"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -21,7 +23,7 @@ func NewIdleState(fn FireFn) *StateIdle {
 func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 	log.GetLogger().Info("[idle] enter")
 	// setup idle timeout
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	state.SetUpCountDown(idleTimeout)
 
@@ -31,7 +33,7 @@ func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 		return nil
 	}
 
-	procPkg.GetProcessor().notifyUpdateGameState(
+	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,
 		procPkg.GetLogger(),
 		procPkg.GetDispatcher(),
@@ -50,7 +52,7 @@ func (s *StateIdle) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	log.GetLogger().Info("[idle] processing")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	log.GetLogger().Info("state presences size %v", state.GetPresenceSize())
 
@@ -61,7 +63,7 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	if state.GetRemainCountDown() < 0 {
 		// Do finish here
 		//s.Trigger(ctx, triggerFinish)
-		return errFinish
+		return presenter.ErrGameFinish
 	}
 
 	return nil

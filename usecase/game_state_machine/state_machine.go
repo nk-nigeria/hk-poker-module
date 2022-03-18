@@ -1,4 +1,4 @@
-package api
+package game_state_machine
 
 import (
 	"context"
@@ -40,11 +40,11 @@ const (
 	//rewardTimeout    = time.Second * 10
 )
 
-type GameStateMachine struct {
+type Machine struct {
 	state *stateless.StateMachine
 }
 
-func (m *GameStateMachine) configure() {
+func (m *Machine) configure() {
 	fireCtx := m.state.FireCtx
 
 	// init state
@@ -98,15 +98,15 @@ func (m *GameStateMachine) configure() {
 	m.state.ToGraph()
 }
 
-func (m *GameStateMachine) FireProcessEvent(ctx context.Context, args ...interface{}) error {
+func (m *Machine) FireProcessEvent(ctx context.Context, args ...interface{}) error {
 	return m.state.FireCtx(ctx, triggerProcess, args...)
 }
 
-func (m *GameStateMachine) MustState() stateless.State {
+func (m *Machine) MustState() stateless.State {
 	return m.state.MustState()
 }
 
-func (m *GameStateMachine) GetPbState() pb.GameState {
+func (m *Machine) GetPbState() pb.GameState {
 	switch m.state.MustState() {
 	case stateIdle:
 		return pb.GameState_GameStateIdle
@@ -123,8 +123,8 @@ func (m *GameStateMachine) GetPbState() pb.GameState {
 	}
 }
 
-func NewGameStateMachine() *GameStateMachine {
-	gs := &GameStateMachine{
+func NewGameStateMachine() UseCase {
+	gs := &Machine{
 		state: stateless.NewStateMachine(stateInit),
 	}
 
@@ -133,8 +133,12 @@ func NewGameStateMachine() *GameStateMachine {
 	return gs
 }
 
-func (m *GameStateMachine) Trigger(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error {
+func (m *Machine) Trigger(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error {
 	return m.state.FireCtx(ctx, trigger, args...)
+}
+
+func (m *Machine) TriggerIdle(ctx context.Context, args ...interface{}) error {
+	return m.state.FireCtx(ctx, triggerIdle, args...)
 }
 
 type FireFn func(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error

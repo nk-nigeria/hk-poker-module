@@ -1,8 +1,9 @@
-package api
+package game_state_machine
 
 import (
 	"context"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -20,10 +21,10 @@ func NewStateMatching(fn FireFn) *StateMatching {
 
 func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	log.GetLogger().Info("[matching] enter")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 
-	procPkg.GetProcessor().notifyUpdateGameState(
+	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,
 		procPkg.GetLogger(),
 		procPkg.GetDispatcher(),
@@ -42,7 +43,7 @@ func (s *StateMatching) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error {
 	log.GetLogger().Info("[matching] processing")
-	procPkg := GetProcessorPackagerFromContext(ctx)
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	presenceCount := state.GetPresenceSize()
 	if state.IsReadyToPlay() {
