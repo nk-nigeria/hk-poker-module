@@ -51,7 +51,7 @@ func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson
 }
 
 func (m *MatchHandler) GetState() stateless.State {
-	return m.GetState()
+	return m.machine.MustState()
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {

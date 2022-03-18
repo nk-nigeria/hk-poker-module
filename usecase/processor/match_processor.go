@@ -113,7 +113,7 @@ func (m *processor) ShowCard(logger runtime.Logger, dispatcher runtime.MatchDisp
 }
 
 func (m *processor) DeclareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
-	logger.Info("User %d request declareCard", message.GetUserId())
+	logger.Info("User %s request declareCard", message.GetUserId())
 	// TODO: check royalties
 	m.saveCard(logger, s, message)
 }
@@ -154,6 +154,8 @@ func (m *processor) broadcastMessage(logger runtime.Logger, dispatcher runtime.M
 		return err
 	}
 	err = dispatcher.BroadcastMessage(opCode, dataJson, nil, nil, true)
+
+	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
 	if err != nil {
 		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
 		return err

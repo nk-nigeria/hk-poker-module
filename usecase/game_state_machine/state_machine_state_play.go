@@ -54,7 +54,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
-		log.GetLogger().Info("[play] not timeout %v", remain)
+		log.GetLogger().Info("[play] not timeout %v, message %v", remain, procPkg.GetMessages())
 		messages := procPkg.GetMessages()
 		processor := procPkg.GetProcessor()
 		logger := procPkg.GetLogger()
