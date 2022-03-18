@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	tickRate = 5
+	tickRate = 2
 )
 
 // Compile-time check to make sure all required functions are implemented.
