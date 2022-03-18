@@ -1,22 +1,21 @@
-package api
+package chinese_poker
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"github.com/heroiclabs/nakama-common/runtime"
 )
 
 const MaxPresenceCard = 13
 
-type ChinesePokerGame struct {
+type Engine struct {
 	deck *entity.Deck
 }
 
-func NewChinesePokerEngine() *ChinesePokerGame {
-	return &ChinesePokerGame{}
+func NewChinesePokerEngine() UserCase {
+	return &Engine{}
 }
 
-func (c *ChinesePokerGame) NewGame(s *entity.MatchState) error {
+func (c *Engine) NewGame(s *entity.MatchState) error {
 	s.JoinInGame = make(map[string]bool)
 	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
@@ -24,7 +23,7 @@ func (c *ChinesePokerGame) NewGame(s *entity.MatchState) error {
 	return nil
 }
 
-func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
+func (c *Engine) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
 
@@ -43,17 +42,17 @@ func (c *ChinesePokerGame) Deal(s *entity.MatchState) error {
 	return nil
 }
 
-func (c *ChinesePokerGame) Organize(s *entity.MatchState, presence string, cards *pb.ListCard) error {
+func (c *Engine) Organize(s *entity.MatchState, presence string, cards *pb.ListCard) error {
 	s.UpdateShowCard(presence, cards)
 	return nil
 }
 
-func (c *ChinesePokerGame) Combine(s *entity.MatchState, presence string) error {
+func (c *Engine) Combine(s *entity.MatchState, presence string) error {
 	s.RemoveShowCard(presence)
 	return nil
 }
 
-func (c *ChinesePokerGame) Finish(dispatcher runtime.MatchDispatcher, s *entity.MatchState) *pb.UpdateFinish {
+func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	// Check every user
 	updateFinish := pb.UpdateFinish{}
 	for _, uid1 := range s.PlayingPresences.Keys() {

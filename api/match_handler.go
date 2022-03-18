@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/qmuntal/stateless"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -43,7 +44,7 @@ func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson
 		processor: &MatchProcessor{
 			marshaler:    marshaler,
 			unmarshaler:  unmarshaler,
-			gameEngine:   NewChinesePokerEngine(),
+			gameEngine:   chinese_poker.NewChinesePokerEngine(),
 			stateMachine: NewGameStateMachine(),
 		},
 	}

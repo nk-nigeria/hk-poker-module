@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -11,7 +12,7 @@ import (
 const processorKey = "pd"
 
 type MatchProcessor struct {
-	gameEngine   *ChinesePokerGame
+	gameEngine   chinese_poker.UserCase
 	stateMachine *GameStateMachine
 	marshaler    *protojson.MarshalOptions
 	unmarshaler  *protojson.UnmarshalOptions
@@ -70,7 +71,7 @@ func (m *MatchProcessor) processFinishGame(logger runtime.Logger, dispatcher run
 		&pbGameState, nil, nil, true)
 
 	// update finish
-	updateFinish := m.gameEngine.Finish(dispatcher, s)
+	updateFinish := m.gameEngine.Finish(s)
 	m.broadcastMessage(
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),

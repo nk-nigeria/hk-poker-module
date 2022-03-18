@@ -1,4 +1,4 @@
-package api
+package chinese_poker
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
