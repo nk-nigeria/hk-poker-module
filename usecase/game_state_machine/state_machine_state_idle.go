@@ -63,6 +63,7 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	if state.GetRemainCountDown() < 0 {
 		// Do finish here
 		//s.Trigger(ctx, triggerFinish)
+		log.GetLogger().Info("[idle] idle timeout => exit")
 		return presenter.ErrGameFinish
 	}
 

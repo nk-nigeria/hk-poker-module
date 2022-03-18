@@ -18,7 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker"
@@ -32,8 +32,6 @@ import (
 const (
 	tickRate = 5
 )
-
-var errFinish = errors.New("process.error.finish")
 
 // Compile-time check to make sure all required functions are implemented.
 var _ runtime.Match = &MatchHandler{}
@@ -104,7 +102,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	s := state.(*entity.MatchState)
 
 	err := m.machine.FireProcessEvent(packager.GetContextWithProcessorPackager(packager.NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
-	if err == errFinish {
+	if err == presenter.ErrGameFinish {
 		logger.Info("match need finish")
 		return nil
 	}
