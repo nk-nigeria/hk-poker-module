@@ -1846,3 +1846,5 @@ func TestCompareHighCardVsHighCardHigher(t *testing.T) {
 	point := strainghtFlush1.CompareHand(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
+
+//

@@ -7,6 +7,21 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
+var cleanWinChecker map[int64]func(entity.ListCard) (*HandCards, bool)
+
+func init() {
+	cleanWinChecker = make(map[int64]func(entity.ListCard) (*HandCards, bool))
+	cleanWinChecker[entity.WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
+	cleanWinChecker[entity.WIN_TYPE_WIN_CLEAN_DRAGON] = IsDragon
+	cleanWinChecker[entity.WIN_TYPE_WIN_FIVE_PAIR_THREE_OF_A_KIND] = IsFivePairThreeOfAKind
+	cleanWinChecker[entity.WIN_TYPE_WIN_SIX_AND_A_HALF_PAIRS] = IsSixAndAHalfPairs
+	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH] = IsThreeStraightFlush
+	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT] = IsThreeStraight
+	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_FLUSH] = IsThreeFlushes
+	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
+	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
+}
+
 // Hand
 // Contain all presence card
 type Hand struct {
@@ -91,10 +106,180 @@ func (h *Hand) calculatePointBackHand() {
 	h.backHand.Cards = handCard
 }
 
-func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
-	result := &pb.ComparisonResult{}
-	result.FrontFactor = int64(h1.frontHand.CompareHand(h2.frontHand))
-	result.MiddleFactor = int64(h1.middleHand.CompareHand(h2.middleHand))
-	result.BackFactor = int64(h1.backHand.CompareHand(h2.backHand))
+func calculateBonus(result *pb.ComparisonResult) *pb.ComparisonResult {
+	t := result.WinType
+	if t&entity.WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND != 0 {
+		result.FrontBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND))
+	}
+	if t&entity.WIN_TYPE_WIN_MID_FULL_HOUSE != 0 {
+		result.MiddleBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_FULL_HOUSE))
+	}
+	if t&entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND != 0 {
+		result.BackBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND))
+	}
+	if t&entity.WIN_TYPE_WIN_MID_FOUR_OF_A_KIND != 0 {
+		result.MiddleBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_FOUR_OF_A_KIND))
+	}
+	if t&entity.WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH != 0 {
+		result.BackBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH))
+	}
+	if t&entity.WIN_TYPE_WIN_MID_STRAIGHT_FLUSH != 0 {
+		result.MiddleBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_STRAIGHT_FLUSH))
+	}
 	return result
+}
+
+func (h *Hand) CompareHand(h2 *Hand) *pb.ComparisonResult {
+	result := pb.ComparisonResult{
+		WinType: entity.WinType_WIN_TYPE_UNSPECIFIED,
+	}
+	// check clean win
+	for k, checkerFn := range cleanWinChecker {
+		l1, isHand1CleanWin := checkerFn(h.GetCards())
+		if isHand1CleanWin {
+			if k == entity.WIN_TYPE_WIN_CLEAN_DRAGON ||
+				k == entity.WIN_TYPE_WIN_DRAGON ||
+				k == entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH {
+				result.WinType = k
+				result.CleanWinBonus = int64(entity.GetWinFactorBonus(result.WinType))
+				return &result
+			}
+		}
+		l2, isHand2CleanWin := checkerFn(h.GetCards())
+		if !isHand1CleanWin && !isHand2CleanWin {
+			continue
+		}
+		result.WinType = k
+		result.CleanWinBonus = int64(entity.GetWinFactorBonus(result.WinType))
+		if isHand1CleanWin != isHand2CleanWin {
+			if isHand1CleanWin {
+				return &result
+			}
+			result.CleanWinBonus = -result.CleanWinBonus
+			return &result
+		}
+		switch k {
+		// 5 đôi 1 xám: bài có 5 đôi và 1 xám cô. Giống nhau so sánh đến lá lớn nhất trong xám.
+		case entity.WIN_TYPE_WIN_FIVE_PAIR_THREE_OF_A_KIND:
+			x1 := l1.MapCardType[pb.HandRanking_ThreeOfAKind]
+			x2 := l2.MapCardType[pb.HandRanking_ThreeOfAKind]
+			if x1[len(x1)-1].GetRank() < x2[len(x2)-1].GetRank() {
+				result.CleanWinBonus = -result.CleanWinBonus
+			}
+			return &result
+		// Lục phé bôn: bài có 6 đôi và 1 mậu thầu. Giống nhau so đến đôi cao nhất.
+		case entity.WIN_TYPE_WIN_SIX_AND_A_HALF_PAIRS:
+			x1 := l1.MapCardType[pb.HandRanking_TwoPairs]
+			x2 := l2.MapCardType[pb.HandRanking_TwoPairs]
+			for i := len(x1) - 1; i >= 0; i -= 2 {
+				r1 := x1[i].GetRank()
+				r2 := x2[i].GetRank()
+				if r1 == r2 {
+					continue
+				}
+				if r1 < r2 {
+					result.CleanWinBonus = -result.CleanWinBonus
+				}
+				return &result
+			}
+		case entity.WIN_TYPE_WIN_THREE_STRAIGHT:
+			x1 := l1.MapCardType[pb.HandRanking_Straight]
+			x2 := l2.MapCardType[pb.HandRanking_Straight]
+			arr1 := make([]entity.ListCard, 3)
+			arr1 = append(arr1, x1[8:])
+			arr1 = append(arr1, x1[3:8])
+			arr1 = append(arr1, x1[:3])
+
+			arr2 := make([]entity.ListCard, 3)
+			arr2 = append(arr2, x2[8:])
+			arr2 = append(arr2, x2[3:8])
+			arr2 = append(arr2, x2[:3])
+
+			for i := 0; i < 3; i++ {
+				compare := arr1[i].CompareHighCard(arr2[i])
+				if compare == 0 {
+					continue
+				}
+				if compare < 0 {
+					result.CleanWinBonus = -result.CleanWinBonus
+				}
+				return &result
+			}
+			// draw
+			result.CleanWinBonus = 0
+			return &result
+
+		case entity.WIN_TYPE_WIN_THREE_FLUSH:
+			x1 := l1.MapCardType[pb.HandRanking_Flush]
+			x2 := l2.MapCardType[pb.HandRanking_Flush]
+			arr1 := make([]entity.ListCard, 3)
+			arr1 = append(arr1, x1[8:])
+			arr1 = append(arr1, x1[3:8])
+			arr1 = append(arr1, x1[:3])
+
+			arr2 := make([]entity.ListCard, 3)
+			arr2 = append(arr2, x2[8:])
+			arr2 = append(arr2, x2[3:8])
+			arr2 = append(arr2, x2[:3])
+
+			for i := 0; i < 3; i++ {
+				compare := arr1[i].CompareHighCard(arr2[i])
+				if compare == 0 {
+					continue
+				}
+				if compare < 0 {
+					result.CleanWinBonus = -result.CleanWinBonus
+				}
+				return &result
+			}
+			// draw
+			result.CleanWinBonus = 0
+			return &result
+		}
+		// draw, comapre child
+	}
+	return &result
+}
+
+func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
+	result := h1.CompareHand(h2)
+	if result.WinType != 0 {
+		return result
+	}
+
+	//  chi dau
+	result.BackFactor = int64(h1.backHand.CompareHand(h2.backHand))
+	if result.BackFactor > 0 {
+		r := h1.middleHand.Point.rankingType
+		switch r {
+		case pb.HandRanking_FourOfAKind:
+			result.WinType |= entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND
+		case pb.HandRanking_StraightFlush:
+			result.WinType |= entity.WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH
+		}
+
+	}
+	// chi giua
+	result.MiddleFactor = int64(h1.middleHand.CompareHand(h2.middleHand))
+	if result.MiddleFactor > 0 {
+		r := h1.middleHand.Point.rankingType
+		switch r {
+		case pb.HandRanking_FullHouse:
+			result.WinType |= entity.WIN_TYPE_WIN_MID_FULL_HOUSE
+		case pb.HandRanking_FourOfAKind:
+			if h1.backHand.Point.rankingType == pb.HandRanking_FourOfAKind {
+				result.WinType |= entity.WIN_TYPE_WIN_MID_FOUR_OF_A_KIND
+			}
+		case pb.HandRanking_StraightFlush:
+			if h1.backHand.Point.rankingType == pb.HandRanking_StraightFlush {
+				result.WinType |= entity.WIN_TYPE_WIN_MID_STRAIGHT_FLUSH
+			}
+		}
+	}
+	// chi cuoi
+	result.FrontFactor = int64(h1.frontHand.CompareHand(h2.frontHand))
+	if result.FrontBonus > 0 && h1.frontHand.Point.rankingType == pb.HandRanking_ThreeOfAKind {
+		result.WinType |= entity.WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND
+	}
+	return calculateBonus(result)
 }

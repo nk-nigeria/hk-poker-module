@@ -57,9 +57,9 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	updateFinish := pb.UpdateFinish{}
 	for _, uid1 := range s.PlayingPresences.Keys() {
 		userID1 := uid1.(string)
-		result := pb.ComparisonResult{
-			UserId: userID1,
-		}
+		// result := pb.ComparisonResult{
+		// 	UserId: userID1,
+		// }
 		cards1 := s.OrganizeCards[userID1]
 		hand1, err := NewHand(cards1)
 		if err != nil {
@@ -76,14 +76,18 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 				continue
 			}
 			r := CompareHand(hand1, hand2)
-			result.FrontFactor += r.FrontFactor
-			result.MiddleFactor += r.MiddleFactor
-			result.BackFactor += r.BackFactor
-			result.FrontBonus += r.FrontBonus
-			result.MiddleBonus += r.MiddleBonus
-			result.BackBonus += r.BackBonus
+			r.UserId = userID1
+			r.UserCompetitor = userID2
+			// result.FrontFactor += r.FrontFactor
+			// result.MiddleFactor += r.MiddleFactor
+			// result.BackFactor += r.BackFactor
+			// result.FrontBonus += r.FrontBonus
+			// result.MiddleBonus += r.MiddleBonus
+			// result.BackBonus += r.BackBonus
+			updateFinish.Results = append(updateFinish.Results, r)
+
 		}
-		updateFinish.Results = append(updateFinish.Results, &result)
+		// updateFinish.Results = append(updateFinish.Results, &result)
 	}
 	return &updateFinish
 	// Check every hand

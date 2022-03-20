@@ -13,6 +13,17 @@ func NewListCard(list []*pb.Card) ListCard {
 	return newList
 }
 
+// deep copy, no shawdow
+func (lc ListCard) Clone() ListCard {
+	ml := make(ListCard, 0, len(lc))
+	ml = append(ml, lc...)
+	return ml
+}
+
+func (lc ListCard) SplitHand() (ListCard, ListCard, ListCard) {
+	return lc[:8], lc[3:8], lc[:3]
+}
+
 // GetMaxRankPointCard
 func (ls ListCard) GetMaxRankPointCard() uint8 {
 	isStraight := true

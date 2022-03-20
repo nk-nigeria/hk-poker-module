@@ -48,7 +48,7 @@ func TestGame(t *testing.T) {
 	processor.Organize(state, "user2", cardOrganize2)
 	processor.Organize(state, "user3", cardOrganize3)
 
-	processor.Finish(nil, state)
+	processor.Finish(state)
 	// check dealt cards
 	for u, cards := range state.OrganizeCards {
 		t.Logf("card organize %v, %v", u, cards)

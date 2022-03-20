@@ -8,9 +8,10 @@ const (
 	ModuleName = "chinese-poker"
 )
 
-var mapHandRankingPoint map[pb.HandRanking]int
-var mapCardRankPoint map[pb.CardRank]int
-var mapCardSuitPoint map[pb.CardSuit]int
+var (
+	mapHandRankingPoint map[pb.HandRanking]int
+	mapWinFactorBonus   map[int64]int
+)
 
 func Min(x int, y int) int {
 	if x < y {
@@ -32,27 +33,25 @@ func init() {
 	mapHandRankingPoint[pb.HandRanking_FourOfAKind] = 8
 	mapHandRankingPoint[pb.HandRanking_StraightFlush] = 9
 
-	//mapCardRankPoint = make(map[int8]int)
-	//mapCardRankPoint[Rank2] = 2
-	//mapCardRankPoint[Rank3] = 3
-	//mapCardRankPoint[pb.CardRank_RANK_4] = 4
-	//mapCardRankPoint[pb.CardRank_RANK_5] = 5
-	//mapCardRankPoint[pb.CardRank_RANK_6] = 6
-	//mapCardRankPoint[pb.CardRank_RANK_7] = 7
-	//mapCardRankPoint[pb.CardRank_RANK_8] = 8
-	//mapCardRankPoint[pb.CardRank_RANK_9] = 9
-	//mapCardRankPoint[pb.CardRank_RANK_10] = 10
-	//mapCardRankPoint[pb.CardRank_RANK_J] = 11
-	//mapCardRankPoint[pb.CardRank_RANK_Q] = 12
-	//mapCardRankPoint[pb.CardRank_RANK_K] = 13
-	//mapCardRankPoint[pb.CardRank_RANK_A] = 14
+	// clear win
+	// mapWinFactorBonus[pb.WinType_WIN_TYPE_LOSE_ALL_PLAYER] = -3
+	// mapWinFactorBonus[pb.WinType_WIN_TYPE_LOSE_ALL_PLAYER] = -3
+	mapWinFactorBonus = make(map[int64]int)
+	mapWinFactorBonus[WIN_TYPE_WIN_CLEAN_DRAGON] = 24
+	mapWinFactorBonus[WIN_TYPE_WIN_DRAGON] = 12
+	mapWinFactorBonus[WIN_TYPE_WIN_FIVE_PAIR_THREE_OF_A_KIND] = 6
+	mapWinFactorBonus[WIN_TYPE_WIN_SIX_AND_A_HALF_PAIRS] = 6
+	mapWinFactorBonus[WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH] = 6
+	mapWinFactorBonus[WIN_TYPE_WIN_THREE_FLUSH] = 3
+	mapWinFactorBonus[WIN_TYPE_WIN_THREE_STRAIGHT] = 3
 
-	//mapCardSuitPoint = make(map[pb.CardSuit]int)
-	//mapCardSuitPoint[pb.CardSuit_SUIT_UNSPECIFIED] = 0
-	//mapCardSuitPoint[pb.CardSuit_SUIT_SPADES] = 1
-	//mapCardSuitPoint[pb.CardSuit_SUIT_CLUBS] = 2
-	//mapCardSuitPoint[pb.CardSuit_SUIT_DIAMONDS] = 3
-	//mapCardSuitPoint[pb.CardSuit_SUIT_HEARTS] = 4
+	// bonus win
+	mapWinFactorBonus[WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND] = 3
+	mapWinFactorBonus[WIN_TYPE_WIN_MID_FULL_HOUSE] = 2
+	mapWinFactorBonus[WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND] = 4
+	mapWinFactorBonus[WIN_TYPE_WIN_MID_FOUR_OF_A_KIND] = 8
+	mapWinFactorBonus[WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH] = 5
+	mapWinFactorBonus[WIN_TYPE_WIN_MID_STRAIGHT_FLUSH] = 10
 
 }
 
@@ -60,10 +59,12 @@ func GetHandRankingPoint(handRanking pb.HandRanking) int {
 	return mapHandRankingPoint[handRanking]
 }
 
-func GetCardRankPoint(cardRank pb.CardRank) int {
-	return mapCardRankPoint[cardRank]
+func GetWinFactorBonus(winType int64) int {
+	return mapWinFactorBonus[winType]
 }
-
-func GetCardSuitPoint(cardSuit pb.CardSuit) int {
-	return mapCardSuitPoint[cardSuit]
+func Max(a, b int) int {
+	if a < b {
+		return b
+	}
+	return a
 }
