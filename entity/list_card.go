@@ -21,7 +21,7 @@ func (lc ListCard) Clone() ListCard {
 }
 
 func (lc ListCard) SplitHand() (ListCard, ListCard, ListCard) {
-	return lc[:8], lc[3:8], lc[:3]
+	return lc[8:], lc[3:8], lc[:3]
 }
 
 // GetMaxRankPointCard

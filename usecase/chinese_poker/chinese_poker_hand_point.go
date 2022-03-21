@@ -510,7 +510,7 @@ func IsFullColored2(listCard entity.ListCard) (*HandCards, bool) {
 	}
 	mapSuit := ToMapSuit(listCard)
 	// check all card same suit
-	if len(mapSuit.Keys()) != 2 {
+	if len(mapSuit.Keys()) > 2 {
 		return nil, false
 	}
 	for _, v := range mapSuit.Values() {
@@ -539,16 +539,20 @@ func IsFivePairThreeOfAKind(listCard entity.ListCard) (*HandCards, bool) {
 	for _, v := range mapRank.Values() {
 		list := *(v.(*entity.ListCard))
 		size := len(list)
-		if size > 3 {
-			return nil, false
+		if size == 3 {
+			if hasThreeOfAKind {
+				return nil, false
+			}
+			h.MapCardType[pb.HandRanking_ThreeOfAKind] = list
+			hasThreeOfAKind = true
+			continue
 		}
 		if size%2 == 0 {
 			numPair += size / 2
+			continue
 		}
-		if size == 3 {
-			h.MapCardType[pb.HandRanking_ThreeOfAKind] = list
-			hasThreeOfAKind = true
-		}
+		return nil, false
+
 	}
 	if numPair == 5 && hasThreeOfAKind {
 		h.ListCard = listCard
@@ -577,6 +581,8 @@ func IsSixAndAHalfPairs(listCard entity.ListCard) (*HandCards, bool) {
 			l = append(l, list...)
 			h.MapCardType[pb.HandRanking_TwoPairs] = l
 			continue
+		} else if size > 1 {
+			return nil, false
 		}
 		numCardNotPair++
 		if numCardNotPair > 1 {
@@ -668,7 +674,7 @@ func IsThreeStraight(listCard entity.ListCard) (*HandCards, bool) {
 	}
 	h := NewHandCards()
 	h.ListCard = listCard
-	h.MapCardType[pb.HandRanking_Flush] = newListCard
+	h.MapCardType[pb.HandRanking_Straight] = newListCard
 	return h, true
 }
 
@@ -691,6 +697,6 @@ func IsThreeStraightFlush(listCard entity.ListCard) (*HandCards, bool) {
 	}
 	h := NewHandCards()
 	h.ListCard = listCard
-	h.MapCardType[pb.HandRanking_Flush] = newListCard
+	h.MapCardType[pb.HandRanking_StraightFlush] = newListCard
 	return h, true
 }

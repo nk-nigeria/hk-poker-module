@@ -12,12 +12,13 @@ var cleanWinChecker map[int64]func(entity.ListCard) (*HandCards, bool)
 func init() {
 	cleanWinChecker = make(map[int64]func(entity.ListCard) (*HandCards, bool))
 	cleanWinChecker[entity.WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
-	cleanWinChecker[entity.WIN_TYPE_WIN_CLEAN_DRAGON] = IsDragon
+	cleanWinChecker[entity.WIN_TYPE_WIN_DRAGON] = IsDragon
 	cleanWinChecker[entity.WIN_TYPE_WIN_FIVE_PAIR_THREE_OF_A_KIND] = IsFivePairThreeOfAKind
 	cleanWinChecker[entity.WIN_TYPE_WIN_SIX_AND_A_HALF_PAIRS] = IsSixAndAHalfPairs
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH] = IsThreeStraightFlush
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT] = IsThreeStraight
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_FLUSH] = IsThreeFlushes
+	cleanWinChecker[entity.WIN_TYPE_WIN_FULL_COLORED] = IsFullColored
 	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
 	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
 }
@@ -139,13 +140,14 @@ func (h *Hand) CompareHand(h2 *Hand) *pb.ComparisonResult {
 		if isHand1CleanWin {
 			if k == entity.WIN_TYPE_WIN_CLEAN_DRAGON ||
 				k == entity.WIN_TYPE_WIN_DRAGON ||
-				k == entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH {
+				k == entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH ||
+				k == entity.WIN_TYPE_WIN_FULL_COLORED {
 				result.WinType = k
 				result.CleanWinBonus = int64(entity.GetWinFactorBonus(result.WinType))
 				return &result
 			}
 		}
-		l2, isHand2CleanWin := checkerFn(h.GetCards())
+		l2, isHand2CleanWin := checkerFn(h2.GetCards())
 		if !isHand1CleanWin && !isHand2CleanWin {
 			continue
 		}
@@ -250,7 +252,7 @@ func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
 	//  chi dau
 	result.BackFactor = int64(h1.backHand.CompareHand(h2.backHand))
 	if result.BackFactor > 0 {
-		r := h1.middleHand.Point.rankingType
+		r := h1.backHand.Point.rankingType
 		switch r {
 		case pb.HandRanking_FourOfAKind:
 			result.WinType |= entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND

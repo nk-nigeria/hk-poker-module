@@ -37,13 +37,14 @@ func init() {
 	// mapWinFactorBonus[pb.WinType_WIN_TYPE_LOSE_ALL_PLAYER] = -3
 	// mapWinFactorBonus[pb.WinType_WIN_TYPE_LOSE_ALL_PLAYER] = -3
 	mapWinFactorBonus = make(map[int64]int)
-	mapWinFactorBonus[WIN_TYPE_WIN_CLEAN_DRAGON] = 24
-	mapWinFactorBonus[WIN_TYPE_WIN_DRAGON] = 12
-	mapWinFactorBonus[WIN_TYPE_WIN_FIVE_PAIR_THREE_OF_A_KIND] = 6
-	mapWinFactorBonus[WIN_TYPE_WIN_SIX_AND_A_HALF_PAIRS] = 6
-	mapWinFactorBonus[WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH] = 6
-	mapWinFactorBonus[WIN_TYPE_WIN_THREE_FLUSH] = 3
-	mapWinFactorBonus[WIN_TYPE_WIN_THREE_STRAIGHT] = 3
+	mapWinFactorBonus[WIN_TYPE_WIN_CLEAN_DRAGON] = 108
+	mapWinFactorBonus[WIN_TYPE_WIN_DRAGON] = 36
+	mapWinFactorBonus[WIN_TYPE_WIN_FULL_COLORED] = 30
+	mapWinFactorBonus[WIN_TYPE_WIN_FIVE_PAIR_THREE_OF_A_KIND] = 20
+	mapWinFactorBonus[WIN_TYPE_WIN_SIX_AND_A_HALF_PAIRS] = 20
+	mapWinFactorBonus[WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH] = 20
+	mapWinFactorBonus[WIN_TYPE_WIN_THREE_FLUSH] = 18
+	mapWinFactorBonus[WIN_TYPE_WIN_THREE_STRAIGHT] = 16
 
 	// bonus win
 	mapWinFactorBonus[WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND] = 3
