@@ -18,6 +18,7 @@ func init() {
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH] = IsThreeStraightFlush
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT] = IsThreeStraight
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_FLUSH] = IsThreeFlushes
+	cleanWinChecker[entity.WIN_TYPE_WIN_FULL_COLORED] = IsFullColored
 	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
 	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
 }
@@ -139,7 +140,8 @@ func (h *Hand) CompareHand(h2 *Hand) *pb.ComparisonResult {
 		if isHand1CleanWin {
 			if k == entity.WIN_TYPE_WIN_CLEAN_DRAGON ||
 				k == entity.WIN_TYPE_WIN_DRAGON ||
-				k == entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH {
+				k == entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH ||
+				k == entity.WIN_TYPE_WIN_FULL_COLORED {
 				result.WinType = k
 				result.CleanWinBonus = int64(entity.GetWinFactorBonus(result.WinType))
 				return &result
