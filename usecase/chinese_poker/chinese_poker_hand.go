@@ -252,7 +252,7 @@ func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
 	//  chi dau
 	result.BackFactor = int64(h1.backHand.CompareHand(h2.backHand))
 	if result.BackFactor > 0 {
-		r := h1.middleHand.Point.rankingType
+		r := h1.backHand.Point.rankingType
 		switch r {
 		case pb.HandRanking_FourOfAKind:
 			result.WinType |= entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND
