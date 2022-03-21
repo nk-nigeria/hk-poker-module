@@ -54,6 +54,7 @@ func init() {
 	mapWinFactorBonus[WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH] = 5
 	mapWinFactorBonus[WIN_TYPE_WIN_MID_STRAIGHT_FLUSH] = 10
 
+	mapWinFactorBonus[WIN_TYPE_WIN_SCOOP] = 3
 }
 
 func GetHandRankingPoint(handRanking pb.HandRanking) int {

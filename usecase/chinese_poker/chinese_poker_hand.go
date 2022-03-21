@@ -19,8 +19,22 @@ func init() {
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT] = IsThreeStraight
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_FLUSH] = IsThreeFlushes
 	cleanWinChecker[entity.WIN_TYPE_WIN_FULL_COLORED] = IsFullColored
-	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
-	// cleanWinChecker[pb.WinType_WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
+}
+
+// ComparisonResult
+type ComparisonResult struct {
+	UserId            string
+	FrontFactor       int64
+	MiddleFactor      int64
+	BackFactor        int64
+	FrontBonusFactor  int64
+	MiddleBonusFactor int64
+	BackBonusFactor   int64
+	ScoopFactor       int64
+
+	WinType       int64
+	CleanWinBonus int64
+	ScoopBonus    int64
 }
 
 // Hand
@@ -107,31 +121,39 @@ func (h *Hand) calculatePointBackHand() {
 	h.backHand.Cards = handCard
 }
 
-func calculateBonus(result *pb.ComparisonResult) *pb.ComparisonResult {
+func calculateBonus(result *ComparisonResult) *ComparisonResult {
 	t := result.WinType
 	if t&entity.WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND != 0 {
-		result.FrontBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND))
+		result.FrontBonusFactor += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND))
 	}
 	if t&entity.WIN_TYPE_WIN_MID_FULL_HOUSE != 0 {
-		result.MiddleBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_FULL_HOUSE))
+		result.MiddleBonusFactor += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_FULL_HOUSE))
 	}
 	if t&entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND != 0 {
-		result.BackBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND))
+		result.BackBonusFactor += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_BACK_FOUR_OF_A_KIND))
 	}
 	if t&entity.WIN_TYPE_WIN_MID_FOUR_OF_A_KIND != 0 {
-		result.MiddleBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_FOUR_OF_A_KIND))
+		result.MiddleBonusFactor += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_FOUR_OF_A_KIND))
 	}
 	if t&entity.WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH != 0 {
-		result.BackBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH))
+		result.BackBonusFactor += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_BACK_STRAIGHT_FLUSH))
 	}
 	if t&entity.WIN_TYPE_WIN_MID_STRAIGHT_FLUSH != 0 {
-		result.MiddleBonus += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_STRAIGHT_FLUSH))
+		result.MiddleBonusFactor += int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_MID_STRAIGHT_FLUSH))
 	}
+
+	// Scoop check
+	if result.FrontFactor > 0 && result.MiddleFactor > 0 && result.BackFactor > 0 {
+		result.ScoopFactor = 1
+
+		result.ScoopBonus = int64(entity.GetWinFactorBonus(entity.WIN_TYPE_WIN_SCOOP))
+	}
+
 	return result
 }
 
-func (h *Hand) CompareHand(h2 *Hand) *pb.ComparisonResult {
-	result := pb.ComparisonResult{
+func (h *Hand) CompareHand(h2 *Hand) *ComparisonResult {
+	result := ComparisonResult{
 		WinType: entity.WinType_WIN_TYPE_UNSPECIFIED,
 	}
 	// check clean win
@@ -243,7 +265,7 @@ func (h *Hand) CompareHand(h2 *Hand) *pb.ComparisonResult {
 	return &result
 }
 
-func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
+func CompareHand(h1, h2 *Hand) *ComparisonResult {
 	result := h1.CompareHand(h2)
 	if result.WinType != 0 {
 		return result
@@ -280,7 +302,7 @@ func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
 	}
 	// chi cuoi
 	result.FrontFactor = int64(h1.frontHand.CompareHand(h2.frontHand))
-	if result.FrontBonus > 0 && h1.frontHand.Point.rankingType == pb.HandRanking_ThreeOfAKind {
+	if result.FrontBonusFactor > 0 && h1.frontHand.Point.rankingType == pb.HandRanking_ThreeOfAKind {
 		result.WinType |= entity.WIN_TYPE_WIN_FRONT_THREE_OF_A_KIND
 	}
 	return calculateBonus(result)

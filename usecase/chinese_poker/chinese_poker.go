@@ -57,14 +57,15 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	updateFinish := pb.UpdateFinish{}
 	for _, uid1 := range s.PlayingPresences.Keys() {
 		userID1 := uid1.(string)
-		// result := pb.ComparisonResult{
-		// 	UserId: userID1,
-		// }
 		cards1 := s.OrganizeCards[userID1]
 		hand1, err := NewHand(cards1)
 		if err != nil {
 			continue
 		}
+		result := &pb.ComparisonResult{
+			UserId: userID1,
+		}
+
 		for _, uid2 := range s.PlayingPresences.Keys() {
 			userID2 := uid2.(string)
 			if userID1 == userID2 {
@@ -76,20 +77,22 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 				continue
 			}
 			r := CompareHand(hand1, hand2)
-			r.UserId = userID1
-			r.UserCompetitor = userID2
-			// result.FrontFactor += r.FrontFactor
-			// result.MiddleFactor += r.MiddleFactor
-			// result.BackFactor += r.BackFactor
-			// result.FrontBonus += r.FrontBonus
-			// result.MiddleBonus += r.MiddleBonus
-			// result.BackBonus += r.BackBonus
-			updateFinish.Results = append(updateFinish.Results, r)
-
+			result.FrontFactor += r.FrontFactor
+			result.MiddleFactor += r.MiddleFactor
+			result.BackFactor += r.BackFactor
+			result.FrontBonusFactor += r.FrontBonusFactor
+			result.MiddleBonusFactor += r.MiddleBonusFactor
+			result.BackBonusFactor += r.BackBonusFactor
+			result.ScoopFactor += r.ScoopFactor
+			result.Bonuses = append(result.Bonuses, &pb.Bonus{
+				UserIdCompetitor: userID2,
+				BonusFactor:      r.CleanWinBonus + r.ScoopFactor,
+			})
 		}
-		// updateFinish.Results = append(updateFinish.Results, &result)
+		// TODO: scoop all
+
+		updateFinish.Results = append(updateFinish.Results, result)
 	}
+
 	return &updateFinish
-	// Check every hand
-	// Calculate hand to point
 }

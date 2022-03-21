@@ -85,14 +85,13 @@ enum OpCodeUpdate {
   OPCODE_UPDATE_UNSPECIFIED = 0;
   OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
   OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
-  OPCODE_UPDATE_ORGANIZE_ACK = 3; //TODO: remove
-  OPCODE_UPDATE_FINISH = 4; //message UpdateFinish
+  OPCODE_UPDATE_FINISH = 3; //message UpdateFinish
   // Request was rejected.
-  OPCODE_UPDATE_REJECTED = 5;
+  OPCODE_UPDATE_REJECTED = 4;
   // Update game state
-  OPCODE_UPDATE_GAME_STATE = 6;
-  // update card state/combibne, show, delare
-  OPCODE_UPDATE_CARD_STATE = 7;
+  OPCODE_UPDATE_GAME_STATE = 5;
+  // update card state/combine, show, declare
+  OPCODE_UPDATE_CARD_STATE = 6;
 }
 
 enum GameState {
@@ -131,23 +130,6 @@ message UpdateDeal {
   PresenceCards presence_card = 1;
 }
 
-message PairResult {
-  string presence1 = 1;
-  string presence2 = 2;
-  int32 first = 3;
-  int32 second = 4;
-  int32 third = 5;
-  int32 special1 = 6;
-  int32 special2 = 7;
-}
-
-// Complete game round with winner announcement.
-message UpdateResult {
-  // The final state of the board.
-  map<string, PresenceCards> presence_organizes = 1;
-  repeated PairResult results = 2;
-}
-
 message UpdateGameState {
   GameState state = 1;
   int64 count_down = 2;
@@ -182,15 +164,19 @@ message UpdateFinish {
   repeated ComparisonResult results = 1;
 }
 
+message Bonus {
+  string user_id_competitor = 1;
+  int64 bonus_factor = 8;
+}
+
 message ComparisonResult {
   string user_id = 1;
-  string user_competitor = 2;
-  int64 front_factor = 3;
-  int64 middle_factor = 4;
-  int64 back_factor = 5;
-  int64 front_bonus = 6;
-  int64 middle_bonus = 7;
-  int64 back_bonus = 8;
-  int64 clean_win_bonus = 10;
-  int64 win_type = 11;
+  int64 front_factor = 2;
+  int64 middle_factor = 3;
+  int64 back_factor = 4;
+  int64 front_bonus_factor = 5;
+  int64 middle_bonus_factor = 6;
+  int64 back_bonus_factor = 7;
+  repeated Bonus bonuses = 8;
+  int64 scoop_factor = 9;
 }
