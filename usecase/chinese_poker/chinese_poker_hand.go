@@ -12,7 +12,7 @@ var cleanWinChecker map[int64]func(entity.ListCard) (*HandCards, bool)
 func init() {
 	cleanWinChecker = make(map[int64]func(entity.ListCard) (*HandCards, bool))
 	cleanWinChecker[entity.WIN_TYPE_WIN_CLEAN_DRAGON] = IsCleanDragon
-	cleanWinChecker[entity.WIN_TYPE_WIN_CLEAN_DRAGON] = IsDragon
+	cleanWinChecker[entity.WIN_TYPE_WIN_DRAGON] = IsDragon
 	cleanWinChecker[entity.WIN_TYPE_WIN_FIVE_PAIR_THREE_OF_A_KIND] = IsFivePairThreeOfAKind
 	cleanWinChecker[entity.WIN_TYPE_WIN_SIX_AND_A_HALF_PAIRS] = IsSixAndAHalfPairs
 	cleanWinChecker[entity.WIN_TYPE_WIN_THREE_STRAIGHT_FLUSH] = IsThreeStraightFlush
@@ -147,7 +147,7 @@ func (h *Hand) CompareHand(h2 *Hand) *pb.ComparisonResult {
 				return &result
 			}
 		}
-		l2, isHand2CleanWin := checkerFn(h.GetCards())
+		l2, isHand2CleanWin := checkerFn(h2.GetCards())
 		if !isHand1CleanWin && !isHand2CleanWin {
 			continue
 		}
