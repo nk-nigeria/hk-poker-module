@@ -1,6 +1,7 @@
 package chinese_poker
 
 import (
+	"context"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
@@ -76,18 +77,23 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 			if err != nil {
 				continue
 			}
-			r := CompareHand(hand1, hand2)
-			result.FrontFactor += r.FrontFactor
-			result.MiddleFactor += r.MiddleFactor
-			result.BackFactor += r.BackFactor
-			result.FrontBonusFactor += r.FrontBonusFactor
-			result.MiddleBonusFactor += r.MiddleBonusFactor
-			result.BackBonusFactor += r.BackBonusFactor
-			result.ScoopFactor += r.ScoopFactor
-			result.Bonuses = append(result.Bonuses, &pb.Bonus{
-				UserIdCompetitor: userID2,
-				BonusFactor:      r.CleanWinBonus + r.ScoopFactor,
-			})
+
+			// calculate natural point, normal point, hand bonus case
+			CompareHand(context.WithValue(context.TODO(), kPc, s.PlayingPresences.Size()), hand1, hand2, nil)
+
+			//result.FrontFactor += r.FrontFactor
+			//result.MiddleFactor += r.MiddleFactor
+			//result.BackFactor += r.BackFactor
+			//
+			//result.FrontBonusFactor += r.FrontBonusFactor
+			//result.MiddleBonusFactor += r.MiddleBonusFactor
+			//result.BackBonusFactor += r.BackBonusFactor
+			//
+			//result.ScoopFactor += r.ScoopFactor
+			//result.Bonuses = append(result.Bonuses, &pb.Bonus{
+			//	UserIdCompetitor: userID2,
+			//	BonusFactor:      r.CleanWinBonus + r.ScoopFactor,
+			//})
 		}
 		// TODO: scoop all
 

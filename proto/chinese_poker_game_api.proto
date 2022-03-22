@@ -137,6 +137,12 @@ message UpdateGameState {
   repeated PresenceCards presenceCards = 4;
 }
 
+enum CardEvent {
+  COMBINE = 0;
+  SHOW = 1;
+  DECLARE = 2;
+}
+
 message ArrangeCard {
   string Presence = 1;
   CardEvent card_event = 2;
@@ -154,29 +160,78 @@ enum HandRanking {
   HighCard = 8;
 }
 
-enum CardEvent {
-  COMBINE = 0;
-  SHOW = 1;
-  DECLARE = 2;
+enum NaturalRanking {
+  None = 0;
+  ThreeStraights = 1;
+  ThreeOfFlushes = 2;
+  SixPairs = 3;
+  FullColors = 4;
+  Dragon = 5;
+  CleanDragon = 6;
 }
 
-message UpdateFinish {
-  repeated ComparisonResult results = 1;
+enum HandBonusType {
+  HandBonus_None = 0;
+  HandBonus_Scoop = 1;
+
+  HandBonus_FullHouseMidHand = 100;
+  HandBonus_ThreeOfAKindFrontHand = 101;
+  HandBonus_FourOfAKindBackHand = 102;
+  HandBonus_StraightFlushBackHand = 103;
+  HandBonus_FourOfAKindMidHand = 104;
+  HandBonus_StraightFlushMidHand = 105;
 }
 
-message Bonus {
-  string user_id_competitor = 1;
-  int64 bonus_factor = 8;
+message HandBonus {
+  string win = 1;
+  string lose = 2;
+  HandBonusType type = 3;
 }
 
-message ComparisonResult {
-  string user_id = 1;
+enum PointType {
+  Point_Normal = 0;
+  Point_Mis_Set = -1;
+
+  Point_NaturalMin = 100;
+  Point_NaturalThreeStraights = 101;
+  Point_NaturalThreeOfFlushes = 102;
+  Point_NaturalSixPairs = 103;
+  Point_NaturalFullColors = 104;
+  Point_NaturalDragon = 105;
+  Point_NaturalCleanDragon = 106;
+
+  Point_NaturalMax = 200;
+}
+
+message HandResult {
+  HandRanking ranking = 1;
+  uint64 point = 2;
+}
+
+message PointResult {
+  HandResult front = 1;
+  HandResult middle = 2;
+  HandResult back = 3;
+  PointType type = 4;
+}
+
+message ScoreResult {
   int64 front_factor = 2;
   int64 middle_factor = 3;
   int64 back_factor = 4;
   int64 front_bonus_factor = 5;
   int64 middle_bonus_factor = 6;
   int64 back_bonus_factor = 7;
-  repeated Bonus bonuses = 8;
   int64 scoop_factor = 9;
+}
+
+message ComparisonResult {
+  string user_id = 1;
+  ScoreResult score_result = 2;
+  PointResult point_result = 3;
+}
+
+message UpdateFinish {
+  repeated ComparisonResult results = 1;
+  repeated HandBonus bonuses = 2;
 }

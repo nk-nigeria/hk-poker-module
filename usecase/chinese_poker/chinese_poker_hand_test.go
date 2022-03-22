@@ -1,6 +1,7 @@
 package chinese_poker
 
 import (
+	"context"
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
@@ -146,9 +147,9 @@ func TestHand(t *testing.T) {
 
 	// test calculate
 	h1.calculatePoint()
-	t.Logf("caculate front %v", h1.frontHand.Point)
-	t.Logf("caculate middle %v", h1.middleHand.Point)
-	t.Logf("caculate back %v", h1.backHand.Point)
+	t.Logf("caculate front %s", h1.frontHand.Point)
+	t.Logf("caculate middle %s", h1.middleHand.Point)
+	t.Logf("caculate back %s", h1.backHand.Point)
 
 	// test compare
 	h2, err := mockHand2()
@@ -166,7 +167,7 @@ func TestHand(t *testing.T) {
 	t.Logf("caculate middle %v", h2.middleHand.Point)
 	t.Logf("caculate back %v", h2.backHand.Point)
 
-	comp := CompareHand(h1, h2)
+	comp := CompareHand(context.WithValue(context.TODO(), kPc, 2), h1, h2)
 
 	t.Logf("compare result: %v", comp)
 }
