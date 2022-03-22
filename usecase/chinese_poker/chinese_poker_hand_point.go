@@ -46,6 +46,15 @@ const (
 	//					t1		m1		m2		m3		m4		m5
 	//	0xFF 	0xFF 	0xFF 	0xFF 	0xFF 	0xFF 	0xFF 	0xFF
 	ScorePointStraightFlush = uint8(0x09)
+
+	//			n1				m1		m2		m3		m4		m5
+	//	0xFF 	0xFF 	0xFF 	0xFF 	0xFF 	0xFF 	0xFF 	0xFF
+	ScorePointNaturalThreeStraights = uint8(0x01)
+	ScorePointNaturalThreeOfFlushes = uint8(0x02)
+	ScorePointNaturalSixPairs       = uint8(0x03)
+	ScorePointNaturalFullColors     = uint8(0x04)
+	ScorePointNaturalDragon         = uint8(0x05)
+	ScorePointNaturalCleanDragon    = uint8(0x06)
 )
 
 func createPoint(t, p1, p2, p3, p4, p5 uint8) uint64 {
@@ -60,9 +69,33 @@ func createPoint(t, p1, p2, p3, p4, p5 uint8) uint64 {
 	return point
 }
 
+func createPointNaturalCard(t uint8, cards entity.ListCard) (uint64, uint64) {
+	var hpoint uint64 = 0
+	var lpoint uint64 = 0
+
+	hpoint |= uint64(t) << (6 * 8)
+	hpoint |= uint64(cards[0].GetRank()) << (4 * 8)
+	hpoint |= uint64(cards[1].GetRank()) << (3 * 8)
+	hpoint |= uint64(cards[2].GetRank()) << (2 * 8)
+	hpoint |= uint64(cards[3].GetRank()) << (1 * 8)
+	hpoint |= uint64(cards[4].GetRank())
+
+	lpoint |= uint64(cards[5].GetRank()) << (7 * 8)
+	lpoint |= uint64(cards[6].GetRank()) << (6 * 8)
+	lpoint |= uint64(cards[7].GetRank()) << (5 * 8)
+	lpoint |= uint64(cards[8].GetRank()) << (4 * 8)
+	lpoint |= uint64(cards[9].GetRank()) << (3 * 8)
+	lpoint |= uint64(cards[10].GetRank()) << (2 * 8)
+	lpoint |= uint64(cards[11].GetRank()) << (1 * 8)
+	lpoint |= uint64(cards[12].GetRank())
+
+	return hpoint, lpoint
+}
+
 type HandPoint struct {
 	rankingType pb.HandRanking
 	point       uint64
+	lpoint      uint64
 }
 
 func (h HandPoint) String() string {
@@ -165,20 +198,20 @@ func CheckStraightFlush(listCard entity.ListCard) (*HandPoint, bool) {
 	if !valid {
 		return nil, false
 	}
-	handPoint, valid := CheckStraight(listCard)
+	_, valid = CheckStraight(listCard)
 	if !valid {
 		return nil, false
 	}
 
-	//handPoint := &HandPoint{
-	//	rankingType: pb.HandRanking_StraightFlush,
-	//	point: createPoint(ScorePointStraightFlush,
-	//		listCard[0].GetRank(),
-	//		listCard[1].GetRank(),
-	//		listCard[2].GetRank() ,
-	//		listCard[3].GetRank() ,
-	//		listCard[4].GetRank()),
-	//}
+	handPoint := &HandPoint{
+		rankingType: pb.HandRanking_StraightFlush,
+		point: createPoint(ScorePointStraightFlush,
+			listCard[0].GetRank(),
+			listCard[1].GetRank(),
+			listCard[2].GetRank(),
+			listCard[3].GetRank(),
+			listCard[4].GetRank()),
+	}
 
 	return handPoint, true
 }

@@ -158,28 +158,33 @@ enum HandRanking {
   TwoPairs = 6;
   Pair = 7;
   HighCard = 8;
-}
 
-enum NaturalRanking {
-  None = 0;
-  ThreeStraights = 1;
-  ThreeOfFlushes = 2;
-  SixPairs = 3;
-  FullColors = 4;
-  Dragon = 5;
-  CleanDragon = 6;
+  NaturalThreeStraights = 101;
+  NaturalThreeOfFlushes = 102;
+  NaturalSixPairs = 103;
+  NaturalFullColors = 104;
+  NaturalDragon = 105;
+  NaturalCleanDragon = 106;
 }
 
 enum HandBonusType {
   HandBonus_None = 0;
   HandBonus_Scoop = 1;
+  HandBonus_ScoopAll = 2;
 
-  HandBonus_FullHouseMidHand = 100;
-  HandBonus_ThreeOfAKindFrontHand = 101;
-  HandBonus_FourOfAKindBackHand = 102;
-  HandBonus_StraightFlushBackHand = 103;
-  HandBonus_FourOfAKindMidHand = 104;
-  HandBonus_StraightFlushMidHand = 105;
+  HandBonus_FullHouseMidHand = 101;
+  HandBonus_ThreeOfAKindFrontHand = 102;
+  HandBonus_FourOfAKindBackHand = 103;
+  HandBonus_StraightFlushBackHand = 104;
+  HandBonus_FourOfAKindMidHand = 105;
+  HandBonus_StraightFlushMidHand = 106;
+
+  HandBonus_NaturalThreeStraights = 201;
+  HandBonus_NaturalThreeOfFlushes = 202;
+  HandBonus_NaturalSixPairs = 203;
+  HandBonus_NaturalFullColors = 204;
+  HandBonus_NaturalDragon = 205;
+  HandBonus_NaturalCleanDragon = 206;
 }
 
 message HandBonus {
@@ -191,16 +196,7 @@ message HandBonus {
 enum PointType {
   Point_Normal = 0;
   Point_Mis_Set = -1;
-
-  Point_NaturalMin = 100;
-  Point_NaturalThreeStraights = 101;
-  Point_NaturalThreeOfFlushes = 102;
-  Point_NaturalSixPairs = 103;
-  Point_NaturalFullColors = 104;
-  Point_NaturalDragon = 105;
-  Point_NaturalCleanDragon = 106;
-
-  Point_NaturalMax = 200;
+  Point_Natural = 1;
 }
 
 message HandResult {
@@ -212,7 +208,8 @@ message PointResult {
   HandResult front = 1;
   HandResult middle = 2;
   HandResult back = 3;
-  PointType type = 4;
+  HandResult natural = 4;
+  PointType type = 5;
 }
 
 message ScoreResult {
@@ -222,6 +219,7 @@ message ScoreResult {
   int64 front_bonus_factor = 5;
   int64 middle_bonus_factor = 6;
   int64 back_bonus_factor = 7;
+  int64 natural_factor = 8;
   int64 scoop_factor = 9;
 }
 

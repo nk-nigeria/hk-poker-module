@@ -29,7 +29,8 @@ type Hand struct {
 	middleHand *ChildHand
 	backHand   *ChildHand
 
-	pointType pb.PointType
+	naturalPoint *HandPoint
+	pointType    pb.PointType
 }
 
 func NewHand(cards *pb.ListCard) (*Hand, error) {
@@ -58,7 +59,7 @@ func (h Hand) GetCards() entity.ListCard {
 }
 
 func (h Hand) IsNatural() bool {
-	return h.pointType > pb.PointType_Point_NaturalMin && h.pointType < pb.PointType_Point_NaturalMax
+	return h.pointType == pb.PointType_Point_Natural
 }
 
 func (h Hand) IsMisSet() bool {
@@ -78,30 +79,12 @@ func (h *Hand) parse() error {
 	return nil
 }
 
-func naturalTypeToPointType(ntype pb.NaturalRanking) pb.PointType {
-	switch ntype {
-	case pb.NaturalRanking_Dragon:
-		return pb.PointType_Point_NaturalDragon
-	case pb.NaturalRanking_CleanDragon:
-		return pb.PointType_Point_NaturalCleanDragon
-	case pb.NaturalRanking_SixPairs:
-		return pb.PointType_Point_NaturalSixPairs
-	case pb.NaturalRanking_FullColors:
-		return pb.PointType_Point_NaturalFullColors
-	case pb.NaturalRanking_ThreeStraights:
-		return pb.PointType_Point_NaturalThreeStraights
-	case pb.NaturalRanking_ThreeOfFlushes:
-		return pb.PointType_Point_NaturalThreeOfFlushes
-	}
-
-	return pb.PointType_Point_Normal
-}
-
 func (h *Hand) calculatePoint() error {
 	// check cards naturals
-	natural, naturalType := CheckNaturalCards(h)
+	handPoint, natural := CheckNaturalCards(h)
 	if natural {
-		h.pointType = naturalTypeToPointType(naturalType)
+		h.pointType = pb.PointType_Point_Natural
+		h.naturalPoint = handPoint
 		return nil
 	}
 
@@ -117,9 +100,10 @@ func (h *Hand) calculatePoint() error {
 	}
 
 	// check hand naturals
-	natural, naturalType = CheckNaturalHands(h)
+	handPoint, natural = CheckNaturalHands(h)
 	if natural {
-		h.pointType = naturalTypeToPointType(naturalType)
+		h.pointType = pb.PointType_Point_Natural
+		h.naturalPoint = handPoint
 		return nil
 	}
 

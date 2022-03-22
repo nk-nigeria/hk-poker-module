@@ -6,63 +6,70 @@ import (
 	"log"
 )
 
-var naturalCardChecker map[pb.NaturalRanking]func(entity.ListCard) bool
-var naturalHandChecker map[pb.NaturalRanking]func(*Hand) bool
+var naturalCardChecker map[uint8]func(entity.ListCard) (*HandPoint, bool)
+var naturalHandChecker map[uint8]func(*Hand) (*HandPoint, bool)
 
 func init() {
-	naturalCardChecker = make(map[pb.NaturalRanking]func(entity.ListCard) bool)
-	naturalCardChecker[pb.NaturalRanking_CleanDragon] = CheckCleanDragon
-	naturalCardChecker[pb.NaturalRanking_Dragon] = CheckDragon
-	naturalCardChecker[pb.NaturalRanking_SixPairs] = CheckSixPairs
-	naturalCardChecker[pb.NaturalRanking_FullColors] = CheckFullColor
+	naturalCardChecker = make(map[uint8]func(entity.ListCard) (*HandPoint, bool))
+	naturalCardChecker[ScorePointNaturalCleanDragon] = CheckCleanDragon
+	naturalCardChecker[ScorePointNaturalDragon] = CheckDragon
+	naturalCardChecker[ScorePointNaturalSixPairs] = CheckSixPairs
+	naturalCardChecker[ScorePointNaturalFullColors] = CheckFullColor
 
-	naturalHandChecker = make(map[pb.NaturalRanking]func(*Hand) bool)
-	naturalHandChecker[pb.NaturalRanking_ThreeOfFlushes] = CheckThreeFlushes
-	naturalHandChecker[pb.NaturalRanking_ThreeStraights] = CheckThreeStraights
+	naturalHandChecker = make(map[uint8]func(*Hand) (*HandPoint, bool))
+	naturalHandChecker[ScorePointNaturalThreeOfFlushes] = CheckThreeFlushes
+	naturalHandChecker[ScorePointNaturalThreeStraights] = CheckThreeStraights
 }
 
-func CheckNaturalCards(h *Hand) (bool, pb.NaturalRanking) {
+func CheckNaturalCards(h *Hand) (*HandPoint, bool) {
 	// check natural win
-	for k, checkerFn := range naturalCardChecker {
-		valid := checkerFn(h.GetCards())
+	for _, checkerFn := range naturalCardChecker {
+		handPoint, valid := checkerFn(h.GetCards())
 		if valid {
-			return valid, k
+			return handPoint, valid
 		}
 	}
 
-	return false, pb.NaturalRanking_None
+	return nil, false
 }
 
-func CheckNaturalHands(hand *Hand) (bool, pb.NaturalRanking) {
+func CheckNaturalHands(hand *Hand) (*HandPoint, bool) {
 	// check natural win
-	for k, checkerFn := range naturalHandChecker {
-		valid := checkerFn(hand)
+	for _, checkerFn := range naturalHandChecker {
+		handPoint, valid := checkerFn(hand)
 		if valid {
-			return valid, k
+			return handPoint, valid
 		}
 	}
 
-	return false, pb.NaturalRanking_None
+	return nil, false
 }
 
 // CheckCleanDragon
 // Sảnh rồng đồng màu
-func CheckCleanDragon(listCard entity.ListCard) bool {
+func CheckCleanDragon(listCard entity.ListCard) (*HandPoint, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	log.Printf("key %v", len(mapCardSuit.Keys()))
 	for _, k := range mapCardSuit.Keys() {
 		log.Printf("key %v", k)
 	}
 	if len(mapCardSuit.Keys()) > 1 {
-		return false
+		return nil, false
 	}
 
-	return true
+	listCard = SortCard(listCard)
+	hpoint, lpoint := createPointNaturalCard(ScorePointNaturalCleanDragon, listCard)
+
+	return &HandPoint{
+		rankingType: pb.HandRanking_NaturalCleanDragon,
+		point:       hpoint,
+		lpoint:      lpoint,
+	}, true
 }
 
 // CheckFullColor
 // Đồng màu 12 lá
-func CheckFullColor(listCard entity.ListCard) bool {
+func CheckFullColor(listCard entity.ListCard) (*HandPoint, bool) {
 	mapCardSuit := ToMapSuit(listCard)
 	redCount := 0
 	blackCount := 0
@@ -86,28 +93,42 @@ func CheckFullColor(listCard entity.ListCard) bool {
 	}
 
 	if redCount >= 12 || blackCount >= 12 {
-		return true
+		listCard = SortCard(listCard)
+		hpoint, lpoint := createPointNaturalCard(ScorePointNaturalFullColors, listCard)
+
+		return &HandPoint{
+			rankingType: pb.HandRanking_NaturalFullColors,
+			point:       hpoint,
+			lpoint:      lpoint,
+		}, true
 	}
 
-	return false
+	return nil, false
 }
 
 // CheckDragon
 // Sảnh rồng
-func CheckDragon(listCard entity.ListCard) bool {
+func CheckDragon(listCard entity.ListCard) (*HandPoint, bool) {
 	_, ok := CheckStraight(listCard)
 	if ok {
-		return true
+		listCard = SortCard(listCard)
+		hpoint, lpoint := createPointNaturalCard(ScorePointNaturalDragon, listCard)
+
+		return &HandPoint{
+			rankingType: pb.HandRanking_NaturalDragon,
+			point:       hpoint,
+			lpoint:      lpoint,
+		}, true
 	}
-	return false
+	return nil, false
 }
 
 // CheckSixPairs
 // 6 đôi
-func CheckSixPairs(listCard entity.ListCard) bool {
+func CheckSixPairs(listCard entity.ListCard) (*HandPoint, bool) {
 	mapRank := ToMapRank(listCard)
 	if len(mapRank.Keys()) < 6 {
-		return false
+		return nil, false
 	}
 
 	var list entity.ListCard
@@ -120,30 +141,59 @@ func CheckSixPairs(listCard entity.ListCard) bool {
 	}
 
 	if numPairs == 6 {
-		return true
+		listCard = SortCard(listCard)
+		hpoint, lpoint := createPointNaturalCard(ScorePointNaturalSixPairs, listCard)
+
+		return &HandPoint{
+			rankingType: pb.HandRanking_NaturalSixPairs,
+			point:       hpoint,
+			lpoint:      lpoint,
+		}, true
 	}
 
-	return false
+	return nil, false
 }
 
 // CheckThreeStraight
 // 3 sảnh
-func CheckThreeStraights(hand *Hand) bool {
+func CheckThreeStraights(hand *Hand) (*HandPoint, bool) {
 	threeStraight := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
 	if threeStraight {
-		return true
+		var listCard entity.ListCard
+		listCard = append(listCard, SortCard(hand.backHand.Cards)...)
+		listCard = append(listCard, SortCard(hand.middleHand.Cards)...)
+		listCard = append(listCard, SortCard(hand.frontHand.Cards)...)
+
+		hpoint, lpoint := createPointNaturalCard(ScorePointNaturalThreeStraights, listCard)
+
+		return &HandPoint{
+			rankingType: pb.HandRanking_NaturalThreeStraights,
+			point:       hpoint,
+			lpoint:      lpoint,
+		}, true
 	}
 
-	return false
+	return nil, false
 }
 
 // CheckThreeFlushes
 // 3 cái thùng
-func CheckThreeFlushes(hand *Hand) bool {
+func CheckThreeFlushes(hand *Hand) (*HandPoint, bool) {
 	threeFlush := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
 	if threeFlush {
-		return true
+		var listCard entity.ListCard
+		listCard = append(listCard, SortCard(hand.backHand.Cards)...)
+		listCard = append(listCard, SortCard(hand.middleHand.Cards)...)
+		listCard = append(listCard, SortCard(hand.frontHand.Cards)...)
+
+		hpoint, lpoint := createPointNaturalCard(ScorePointNaturalThreeOfFlushes, listCard)
+
+		return &HandPoint{
+			rankingType: pb.HandRanking_NaturalThreeOfFlushes,
+			point:       hpoint,
+			lpoint:      lpoint,
+		}, true
 	}
 
-	return false
+	return nil, false
 }
