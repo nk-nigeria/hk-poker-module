@@ -167,9 +167,9 @@ func TestHand(t *testing.T) {
 	t.Logf("caculate middle %v", h2.middleHand.Point)
 	t.Logf("caculate back %v", h2.backHand.Point)
 
-	comp := CompareHand(context.WithValue(context.TODO(), kPc, 2), h1, h2)
+	CompareHand(context.WithValue(context.TODO(), kPc, 2), h1, h2, nil)
 
-	t.Logf("compare result: %v", comp)
+	//t.Logf("compare result: %v", comp)
 }
 
 func TestCheck(t *testing.T) {

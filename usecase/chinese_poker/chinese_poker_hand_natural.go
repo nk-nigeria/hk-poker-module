@@ -3,7 +3,6 @@ package chinese_poker
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"log"
 )
 
 var naturalCardChecker map[uint8]func(entity.ListCard) (*HandPoint, bool)
@@ -49,10 +48,6 @@ func CheckNaturalHands(hand *Hand) (*HandPoint, bool) {
 // Sảnh rồng đồng màu
 func CheckCleanDragon(listCard entity.ListCard) (*HandPoint, bool) {
 	mapCardSuit := ToMapSuit(listCard)
-	log.Printf("key %v", len(mapCardSuit.Keys()))
-	for _, k := range mapCardSuit.Keys() {
-		log.Printf("key %v", k)
-	}
 	if len(mapCardSuit.Keys()) > 1 {
 		return nil, false
 	}

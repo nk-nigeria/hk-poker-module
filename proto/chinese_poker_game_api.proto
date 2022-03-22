@@ -202,6 +202,7 @@ enum PointType {
 message HandResult {
   HandRanking ranking = 1;
   uint64 point = 2;
+  uint64 lpoint = 3;
 }
 
 message PointResult {
