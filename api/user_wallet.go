@@ -39,8 +39,10 @@ func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger 
 	walletUpdates := make([]*runtime.WalletUpdate, len(resultGame.Results))
 	for _, result := range resultGame.Results {
 		amountChip := int64(0)
-		amountChip = 200*(result.FrontFactor+result.MiddleFactor+result.BackFactor) +
-			(result.FrontBonus + result.MiddleBonus + result.BackBonus)
+
+		amountChip = 200*(result.ScoreResult.FrontFactor+result.ScoreResult.MiddleFactor+result.ScoreResult.BackFactor) +
+			(result.ScoreResult.FrontBonusFactor + result.ScoreResult.MiddleBonusFactor + result.ScoreResult.BackBonusFactor)
+
 		changeset := map[string]int64{
 			"chips": amountChip, // Substract amountChip coins to the user's wallet.
 		}

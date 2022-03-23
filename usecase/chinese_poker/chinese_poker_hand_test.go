@@ -146,9 +146,9 @@ func TestHand(t *testing.T) {
 
 	// test calculate
 	h1.calculatePoint()
-	t.Logf("caculate front %v", h1.frontHand.Point)
-	t.Logf("caculate middle %v", h1.middleHand.Point)
-	t.Logf("caculate back %v", h1.backHand.Point)
+	t.Logf("caculate front %s", h1.frontHand.Point)
+	t.Logf("caculate middle %s", h1.middleHand.Point)
+	t.Logf("caculate back %s", h1.backHand.Point)
 
 	// test compare
 	h2, err := mockHand2()
@@ -166,9 +166,7 @@ func TestHand(t *testing.T) {
 	t.Logf("caculate middle %v", h2.middleHand.Point)
 	t.Logf("caculate back %v", h2.backHand.Point)
 
-	comp := CompareHand(h1, h2)
-
-	t.Logf("compare result: %v", comp)
+	//t.Logf("compare result: %v", comp)
 }
 
 func TestCheck(t *testing.T) {
@@ -410,7 +408,7 @@ func TestCompareBasicStraightFlushVsStraightFlushDraw(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_K,
@@ -433,8 +431,8 @@ func TestCompareBasicStraightFlushVsStraightFlushDraw(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(0), point)
 }
 
@@ -463,7 +461,7 @@ func TestCompareBasicStraightFlushHigherStraightFlush(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_Q,
@@ -486,8 +484,8 @@ func TestCompareBasicStraightFlushHigherStraightFlush(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -516,7 +514,7 @@ func TestCompareBasicStraightFlushLowerStraightFlushLower(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_K,
@@ -539,8 +537,8 @@ func TestCompareBasicStraightFlushLowerStraightFlushLower(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(-1), point)
 }
 
@@ -568,7 +566,7 @@ func TestCompareBasicStraightFlushVsFourOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -591,8 +589,8 @@ func TestCompareBasicStraightFlushVsFourOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -620,7 +618,7 @@ func TestCompareBasicStraightFlushVsFullhouse(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -643,8 +641,8 @@ func TestCompareBasicStraightFlushVsFullhouse(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -672,7 +670,7 @@ func TestCompareBasicStraightFlushVsFlush(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_7,
@@ -695,8 +693,8 @@ func TestCompareBasicStraightFlushVsFlush(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -724,7 +722,7 @@ func TestCompareBasicStraightFlushVsStraight(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_J,
@@ -747,8 +745,8 @@ func TestCompareBasicStraightFlushVsStraight(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -776,7 +774,7 @@ func TestCompareBasicStraightFlushVsThreeOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_J,
@@ -799,8 +797,8 @@ func TestCompareBasicStraightFlushVsThreeOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -828,7 +826,7 @@ func TestCompareBasicStraightFlushVsTwoPair(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_J,
@@ -851,8 +849,8 @@ func TestCompareBasicStraightFlushVsTwoPair(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -880,7 +878,7 @@ func TestCompareBasicStraightFlushVsPair(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_J,
@@ -903,8 +901,8 @@ func TestCompareBasicStraightFlushVsPair(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -932,7 +930,7 @@ func TestCompareBasicStraightFlushVsHighCard(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_J,
@@ -955,8 +953,8 @@ func TestCompareBasicStraightFlushVsHighCard(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -985,7 +983,7 @@ func TestCompareFourOfAKindVsFourOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_Q,
@@ -1008,8 +1006,8 @@ func TestCompareFourOfAKindVsFourOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1037,7 +1035,7 @@ func TestCompareFourOfAKindVsFullHouse(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_Q,
@@ -1060,8 +1058,8 @@ func TestCompareFourOfAKindVsFullHouse(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1089,7 +1087,7 @@ func TestCompareFlushVsFlushHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_Q,
@@ -1112,8 +1110,8 @@ func TestCompareFlushVsFlushHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1142,7 +1140,7 @@ func TestCompareStraightVsStraightNoACardEqual(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_K,
@@ -1165,8 +1163,8 @@ func TestCompareStraightVsStraightNoACardEqual(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_HEARTS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(0), point)
 }
 
@@ -1193,7 +1191,7 @@ func TestCompareStraightVsStraightNoACardHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_Q,
@@ -1216,8 +1214,8 @@ func TestCompareStraightVsStraightNoACardHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_DIAMONDS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1246,7 +1244,7 @@ func TestCompareStraightVsStraightContainACardEqual(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1269,8 +1267,8 @@ func TestCompareStraightVsStraightContainACardEqual(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(0), point)
 }
 
@@ -1299,7 +1297,7 @@ func TestCompareStraightVsStraightContainACardNotCardKLower(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_2,
@@ -1322,8 +1320,8 @@ func TestCompareStraightVsStraightContainACardNotCardKLower(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(-1), point)
 }
 
@@ -1352,7 +1350,7 @@ func TestCompareStraightVsStraightContainACardKCard(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_K,
@@ -1375,8 +1373,8 @@ func TestCompareStraightVsStraightContainACardKCard(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1404,7 +1402,7 @@ func TestCompareThreeOfAKindVsThreeOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_K,
@@ -1427,8 +1425,8 @@ func TestCompareThreeOfAKindVsThreeOfAKind(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1456,7 +1454,7 @@ func TestCompareTwoPairVsTwoPairDraw(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1479,8 +1477,8 @@ func TestCompareTwoPairVsTwoPairDraw(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(0), point)
 }
 
@@ -1508,7 +1506,7 @@ func TestCompareTwoPairVsTwoPairHigher1(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_K,
@@ -1531,8 +1529,8 @@ func TestCompareTwoPairVsTwoPairHigher1(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1560,7 +1558,7 @@ func TestCompareTwoPairVsTwoPairHigher2(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1583,8 +1581,8 @@ func TestCompareTwoPairVsTwoPairHigher2(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1612,7 +1610,7 @@ func TestCompareTwoPairVsTwoPairHigher3(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1635,8 +1633,8 @@ func TestCompareTwoPairVsTwoPairHigher3(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1664,7 +1662,7 @@ func TestComparePairVsPair(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1687,8 +1685,8 @@ func TestComparePairVsPair(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_HEARTS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(0), point)
 }
 
@@ -1716,7 +1714,7 @@ func TestComparePairVsPairHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1739,8 +1737,8 @@ func TestComparePairVsPairHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_HEARTS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
 
@@ -1768,7 +1766,7 @@ func TestCompareHighCardVsHighCard(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1791,8 +1789,8 @@ func TestCompareHighCardVsHighCard(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_HEARTS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(0), point)
 }
 
@@ -1819,7 +1817,7 @@ func TestCompareHighCardVsHighCardHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
-	strainghtFlush1 := NewChildHand(entity.NewListCard(cards))
+	strainghtFlush1 := NewChildHand(entity.NewListCard(cards), kBackHand)
 	cards = []*pb.Card{
 		{
 			Rank: pb.CardRank_RANK_A,
@@ -1842,7 +1840,9 @@ func TestCompareHighCardVsHighCardHigher(t *testing.T) {
 			Suit: pb.CardSuit_SUIT_HEARTS,
 		},
 	}
-	strainghtFlush2 := NewChildHand(entity.NewListCard(cards))
-	point := strainghtFlush1.CompareHand(strainghtFlush2)
+	strainghtFlush2 := NewChildHand(entity.NewListCard(cards), kBackHand)
+	point := strainghtFlush1.Compare(strainghtFlush2)
 	assert.Equal(t, int(1), point)
 }
+
+//

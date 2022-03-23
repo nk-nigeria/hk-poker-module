@@ -7,6 +7,29 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
+type Result struct {
+	FrontFactor       int `json:"front_factor"`
+	MiddleFactor      int `json:"middle_factor"`
+	BackFactor        int `json:"back_factor"`
+	FrontBonusFactor  int `json:"front_bonus_factor"`
+	MiddleBonusFactor int `json:"middle_bonus_factor"`
+	BackBonusFactor   int `json:"back_bonus_factor"`
+	NaturalFactor     int `json:"natural_factor"`
+	ScoopFactor       int `json:"scoop_factor"`
+}
+
+// ComparisonResult
+type ComparisonResult struct {
+	r1 Result `json:"r1"`
+	r2 Result `json:"r1"`
+}
+
+func (r *ComparisonResult) swap() {
+	tmp := r.r1
+	r.r1 = r.r2
+	r.r2 = tmp
+}
+
 // Hand
 // Contain all presence card
 type Hand struct {
@@ -17,13 +40,16 @@ type Hand struct {
 	middleHand *ChildHand
 	backHand   *ChildHand
 
-	burned    bool
-	royalties bool
+	naturalPoint *HandPoint
+	pointType    pb.PointType
+	calculated   bool
 }
 
 func NewHand(cards *pb.ListCard) (*Hand, error) {
 	if cards == nil {
-		h := &Hand{}
+		h := &Hand{
+			calculated: false,
+		}
 		return h, nil
 	}
 	listCard := make(entity.ListCard, 0, len(cards.Cards))
@@ -42,8 +68,20 @@ func NewHand(cards *pb.ListCard) (*Hand, error) {
 	return hand, nil
 }
 
-func (h *Hand) GetCards() entity.ListCard {
+func (h Hand) GetCards() entity.ListCard {
 	return h.cards
+}
+
+func (h Hand) IsNatural() bool {
+	return h.pointType == pb.PointType_Point_Natural
+}
+
+func (h Hand) IsMisSet() bool {
+	return h.pointType == pb.PointType_Point_Mis_Set
+}
+
+func (h Hand) IsNormal() bool {
+	return h.pointType == pb.PointType_Point_Normal
 }
 
 func (h *Hand) parse() error {
@@ -52,49 +90,84 @@ func (h *Hand) parse() error {
 		return errors.New("hand.parse.error.invalid-len")
 	}
 
-	h.frontHand = NewChildHand(cards[:3])
-	h.middleHand = NewChildHand(cards[3:8])
-	h.backHand = NewChildHand(cards[8:])
+	h.frontHand = NewChildHand(cards[:3], kFronHand)
+	h.middleHand = NewChildHand(cards[3:8], kMidHand)
+	h.backHand = NewChildHand(cards[8:], kBackHand)
 
 	return nil
 }
 
-func (h *Hand) calculatePoint() int {
-	// Check royalties
+func (h *Hand) calculatePoint() error {
+	if h.calculated {
+		return errors.New("hand.calculate.already")
+	}
+	defer func() {
+		// mark as already calculated
+		h.calculated = true
+	}()
 
+	// check cards naturals
+	handPoint, natural := CheckNaturalCards(h)
+	if natural {
+		h.pointType = pb.PointType_Point_Natural
+		h.naturalPoint = handPoint
+		return nil
+	}
+
+	// calculate hand by hand
 	h.frontHand.calculatePoint()
 	h.middleHand.calculatePoint()
 	h.backHand.calculatePoint()
 
-	// Check 3 flush
-	// Check 3 straight
+	// check mis set
+	if IsMisSets(h) {
+		h.pointType = pb.PointType_Point_Mis_Set
+		return nil
+	}
 
-	return 0
+	// check hand naturals
+	handPoint, natural = CheckNaturalHands(h)
+	if natural {
+		h.pointType = pb.PointType_Point_Natural
+		h.naturalPoint = handPoint
+		return nil
+	}
+
+	return nil
 }
 
-func (h *Hand) calculatePointFrontHand() {
-	var handCard *HandCards
-	h.frontHand.Point, handCard = CaculatorPoint(h.frontHand.Cards.ListCard)
-	// copy(h.backHand.Child[:], sortedCard[:3])
-	h.frontHand.Cards = handCard
-}
+func (h Hand) GetPointResult() *pb.PointResult {
+	result := &pb.PointResult{
+		Type: h.pointType,
+	}
 
-func (h *Hand) calculatePointMiddleHand() {
-	var handCard *HandCards
-	h.middleHand.Point, handCard = CaculatorPoint(h.middleHand.Cards.ListCard)
-	h.middleHand.Cards = handCard
-}
+	switch h.pointType {
+	case pb.PointType_Point_Normal:
+		result = &pb.PointResult{
+			Front:  h.frontHand.Point.ToHandResultPB(),
+			Middle: h.middleHand.Point.ToHandResultPB(),
+			Back:   h.backHand.Point.ToHandResultPB(),
+		}
+	case pb.PointType_Point_Natural:
+		result = &pb.PointResult{
+			Natural: h.naturalPoint.ToHandResultPB(),
+		}
+	case pb.PointType_Point_Mis_Set:
 
-func (h *Hand) calculatePointBackHand() {
-	var handCard *HandCards
-	h.backHand.Point, handCard = CaculatorPoint(h.middleHand.Cards.ListCard)
-	h.backHand.Cards = handCard
-}
+	}
 
-func CompareHand(h1, h2 *Hand) *pb.ComparisonResult {
-	result := &pb.ComparisonResult{}
-	result.FrontFactor = int64(h1.frontHand.CompareHand(h2.frontHand))
-	result.MiddleFactor = int64(h1.middleHand.CompareHand(h2.middleHand))
-	result.BackFactor = int64(h1.backHand.CompareHand(h2.backHand))
 	return result
+}
+
+func FillCompareResult(result *pb.ScoreResult, cresult *ComparisonResult) {
+	result.FrontFactor += int64(cresult.r1.FrontFactor)
+	result.MiddleFactor += int64(cresult.r1.MiddleFactor)
+	result.BackFactor += int64(cresult.r1.BackFactor)
+
+	result.FrontBonusFactor += int64(cresult.r1.FrontBonusFactor)
+	result.MiddleBonusFactor += int64(cresult.r1.MiddleBonusFactor)
+	result.BackBonusFactor += int64(cresult.r1.BackBonusFactor)
+
+	result.NaturalFactor += int64(cresult.r1.NaturalFactor)
+	result.ScoopFactor += int64(cresult.r1.ScoopFactor)
 }

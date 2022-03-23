@@ -1,6 +1,7 @@
 package chinese_poker
 
 import (
+	"context"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
@@ -57,14 +58,20 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	updateFinish := pb.UpdateFinish{}
 	for _, uid1 := range s.PlayingPresences.Keys() {
 		userID1 := uid1.(string)
-		result := pb.ComparisonResult{
-			UserId: userID1,
-		}
 		cards1 := s.OrganizeCards[userID1]
 		hand1, err := NewHand(cards1)
 		if err != nil {
 			continue
 		}
+
+		hand1.calculatePoint()
+
+		result := &pb.ComparisonResult{
+			UserId:      userID1,
+			PointResult: hand1.GetPointResult(),
+			ScoreResult: &pb.ScoreResult{},
+		}
+
 		for _, uid2 := range s.PlayingPresences.Keys() {
 			userID2 := uid2.(string)
 			if userID1 == userID2 {
@@ -75,17 +82,15 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 			if err != nil {
 				continue
 			}
-			r := CompareHand(hand1, hand2)
-			result.FrontFactor += r.FrontFactor
-			result.MiddleFactor += r.MiddleFactor
-			result.BackFactor += r.BackFactor
-			result.FrontBonus += r.FrontBonus
-			result.MiddleBonus += r.MiddleBonus
-			result.BackBonus += r.BackBonus
+
+			// calculate natural point, normal point, hand bonus case
+			rc := CompareHand(context.WithValue(context.TODO(), kPc, s.PlayingPresences.Size()), hand1, hand2)
+			FillCompareResult(result.ScoreResult, rc)
 		}
-		updateFinish.Results = append(updateFinish.Results, &result)
+		// TODO: scoop all
+
+		updateFinish.Results = append(updateFinish.Results, result)
 	}
+
 	return &updateFinish
-	// Check every hand
-	// Calculate hand to point
 }

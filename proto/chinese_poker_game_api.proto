@@ -20,183 +20,217 @@ package api;
 option go_package = "github.com/ciaolink-game-platform/cgp-bing-module/api";
 
 enum CardStatus {
-    STATUS_HOLD = 0;
-    STATUS_UNHOLD = 1;
+  STATUS_HOLD = 0;
+  STATUS_UNHOLD = 1;
 }
 
 enum CardSuit {
-    SUIT_UNSPECIFIED = 0;
-    SUIT_CLUBS = 1;
-    SUIT_DIAMONDS = 2;
-    SUIT_HEARTS = 3;
-    SUIT_SPADES = 4;
+  SUIT_UNSPECIFIED = 0;
+  SUIT_CLUBS = 1;
+  SUIT_DIAMONDS = 2;
+  SUIT_HEARTS = 3;
+  SUIT_SPADES = 4;
 }
 
 enum CardRank {
-    RANK_UNSPECIFIED = 0;
-    RANK_A = 1;
-    RANK_2 = 2;
-    RANK_3 = 3;
-    RANK_4 = 4;
-    RANK_5 = 5;
-    RANK_6 = 6;
-    RANK_7 = 7;
-    RANK_8 = 8;
-    RANK_9 = 9;
-    RANK_10 = 10;
-    RANK_J = 11;
-    RANK_Q = 12;
-    RANK_K = 13;
+  RANK_UNSPECIFIED = 0;
+  RANK_A = 1;
+  RANK_2 = 2;
+  RANK_3 = 3;
+  RANK_4 = 4;
+  RANK_5 = 5;
+  RANK_6 = 6;
+  RANK_7 = 7;
+  RANK_8 = 8;
+  RANK_9 = 9;
+  RANK_10 = 10;
+  RANK_J = 11;
+  RANK_Q = 12;
+  RANK_K = 13;
 }
 
 // The card
 message Card {
-    CardRank rank = 1;
-    CardSuit suit = 2;
-    CardStatus status = 3;
+  CardRank rank = 1;
+  CardSuit suit = 2;
+  CardStatus status = 3;
 }
 
 message ListCard {
-    repeated Card cards = 1;
+  repeated Card cards = 1;
 }
 
 enum ChoiceCode {
-    // No choice specified. Unused.
-    CHOICE_UNSPECIFIED = 0;
-    CHOICE_STAND = 1;
-    CHOICE_HIT = 2;
+  // No choice specified. Unused.
+  CHOICE_UNSPECIFIED = 0;
+  CHOICE_STAND = 1;
+  CHOICE_HIT = 2;
 }
 
 // The complete set of opcodes used for communication between clients and server.
 enum OpCodeRequest {
-    // No opcode specified. Unused.
-    OPCODE_UNSPECIFIED = 0;
-    // New game round starting.
-    OPCODE_REQUEST_NEW_GAME = 1; //message NewGame
-    // Request leave game
-    OPCODE_REQUEST_LEAVE_GAME = 3;
-    
-    OPCODE_REQUEST_COMBINE_CARDS = 4;
-
-    OPCODE_REQUEST_SHOW_CARDS = 5; //message Organize
-    
-    OPCODE_REQUEST_DECLARE_CARDS = 6; //message Organize
+  // No opcode specified. Unused.
+  OPCODE_UNSPECIFIED = 0;
+  // New game round starting.
+  OPCODE_REQUEST_NEW_GAME = 1; //message NewGame
+  // Request leave game
+  OPCODE_REQUEST_LEAVE_GAME = 3;
+  OPCODE_REQUEST_COMBINE_CARDS = 4;
+  OPCODE_REQUEST_SHOW_CARDS = 5; //message Organize
+  OPCODE_REQUEST_DECLARE_CARDS = 6; //message Organize
 }
 
 // The complete set of opcodes used for communication between clients and server.
 enum OpCodeUpdate {
-    OPCODE_UPDATE_UNSPECIFIED = 0;
-    OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
-    OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
-    OPCODE_UPDATE_ORGANIZE_ACK = 3; //TODO: remove
-    OPCODE_UPDATE_FINISH = 4; //message UpdateFinish
-    // Request was rejected.
-    OPCODE_UPDATE_REJECTED = 5;
-    // Update game state
-    OPCODE_UPDATE_GAME_STATE = 6;
-    // update card state/combibne, show, delare
-    OPCODE_UPDATE_CARD_STATE = 7;
+  OPCODE_UPDATE_UNSPECIFIED = 0;
+  OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
+  OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
+  OPCODE_UPDATE_FINISH = 3; //message UpdateFinish
+  // Request was rejected.
+  OPCODE_UPDATE_REJECTED = 4;
+  // Update game state
+  OPCODE_UPDATE_GAME_STATE = 5;
+  // update card state/combine, show, declare
+  OPCODE_UPDATE_CARD_STATE = 6;
 }
 
 enum GameState {
-    GameStateUnknown = 0;
-    GameStateIdle = 1;
-    GameStateMatching = 2;
-    GameStatePreparing = 3;
-    GameStatePlay = 4;
-    GameStateReward = 5;
-    GameStateFinish = 6;
+  GameStateUnknown = 0;
+  GameStateIdle = 1;
+  GameStateMatching = 2;
+  GameStatePreparing = 3;
+  GameStatePlay = 4;
+  GameStateReward = 5;
+  GameStateFinish = 6;
 }
 
 // Message data sent by client to server representing the cards was organize.
-message NewGame {
-}
+message NewGame {}
 
 // Message data sent by client to server representing the cards was organize.
 message Organize {
-    // The current state of the cards.
-    ListCard cards = 1;
+  // The current state of the cards.
+  ListCard cards = 1;
 }
 
 // Message data sent by server to clients representing the joining or leaving of presence
 message UpdatePresence {
-    repeated string presences = 1;
-    string join_presence = 2;
-    string leave_presence = 3;
+  repeated string presences = 1;
+  string join_presence = 2;
+  string leave_presence = 3;
 }
 
 message PresenceCards {
-    string presence = 1;
-    repeated Card cards = 2;
+  string presence = 1;
+  repeated Card cards = 2;
 }
 
 // Complete game round with winner announcement.
 message UpdateDeal {
-    PresenceCards presence_card = 1;
-}
-
-message PairResult {
-    string presence1 = 1;
-    string presence2 = 2;
-
-    int32  first = 3;
-    int32  second = 4;
-    int32  third = 5;
-
-    int32  special1 = 6;
-    int32  special2 = 7;
-}
-
-// Complete game round with winner announcement.
-message UpdateResult {
-    // The final state of the board.
-    map<string, PresenceCards> presence_organizes = 1;
-
-    repeated PairResult results = 2;
+  PresenceCards presence_card = 1;
 }
 
 message UpdateGameState {
-    GameState state = 1;
-    int64 count_down = 2;
-    ArrangeCard arrange_card = 3;
-    repeated PresenceCards presenceCards = 4;
-}
-
-message ArrangeCard {
-    string Presence = 1;
-    CardEvent card_event = 2;
-}
-
-enum HandRanking {
-    StraightFlush = 0;
-    FourOfAKind = 1;
-    FullHouse = 2;
-    Flush = 3;
-    Straight = 4;
-    ThreeOfAKind = 5;
-    TwoPairs = 6;
-    Pair = 7;
-    HighCard = 8;
+  GameState state = 1;
+  int64 count_down = 2;
+  ArrangeCard arrange_card = 3;
+  repeated PresenceCards presenceCards = 4;
 }
 
 enum CardEvent {
-    COMBINE = 0;
-    SHOW = 1;
-    DECLARE = 2;
+  COMBINE = 0;
+  SHOW = 1;
+  DECLARE = 2;
 }
 
-message UpdateFinish {
-    repeated ComparisonResult results = 1;
+message ArrangeCard {
+  string Presence = 1;
+  CardEvent card_event = 2;
+}
+
+enum HandRanking {
+  StraightFlush = 0;
+  FourOfAKind = 1;
+  FullHouse = 2;
+  Flush = 3;
+  Straight = 4;
+  ThreeOfAKind = 5;
+  TwoPairs = 6;
+  Pair = 7;
+  HighCard = 8;
+
+  NaturalThreeStraights = 101;
+  NaturalThreeOfFlushes = 102;
+  NaturalSixPairs = 103;
+  NaturalFullColors = 104;
+  NaturalDragon = 105;
+  NaturalCleanDragon = 106;
+}
+
+enum HandBonusType {
+  None = 0;
+  Scoop = 1;
+  ScoopAll = 2;
+
+  BonusFullHouseMidHand = 101;
+  BonusThreeOfAKindFrontHand = 102;
+  BonusFourOfAKindBackHand = 103;
+  BonusStraightFlushBackHand = 104;
+  BonusFourOfAKindMidHand = 105;
+  BonusStraightFlushMidHand = 106;
+
+  BonusNaturalThreeStraights = 201;
+  BonusNaturalThreeOfFlushes = 202;
+  BonusNaturalSixPairs = 203;
+  BonusNaturalFullColors = 204;
+  BonusNaturalDragon = 205;
+  BonusNaturalCleanDragon = 206;
+}
+
+message HandBonus {
+  string win = 1;
+  string lose = 2;
+  HandBonusType type = 3;
+}
+
+enum PointType {
+  Point_Normal = 0;
+  Point_Mis_Set = -1;
+  Point_Natural = 1;
+}
+
+message HandResult {
+  HandRanking ranking = 1;
+  uint64 point = 2;
+  uint64 lpoint = 3;
+}
+
+message PointResult {
+  HandResult front = 1;
+  HandResult middle = 2;
+  HandResult back = 3;
+  HandResult natural = 4;
+  PointType type = 5;
+}
+
+message ScoreResult {
+  int64 front_factor = 2;
+  int64 middle_factor = 3;
+  int64 back_factor = 4;
+  int64 front_bonus_factor = 5;
+  int64 middle_bonus_factor = 6;
+  int64 back_bonus_factor = 7;
+  int64 natural_factor = 8;
+  int64 scoop_factor = 9;
 }
 
 message ComparisonResult {
-    string user_id = 1;
+  string user_id = 1;
+  ScoreResult score_result = 2;
+  PointResult point_result = 3;
+}
 
-    int64 FrontFactor = 2;
-    int64 MiddleFactor = 3;
-    int64 BackFactor = 4;
-
-    int64 FrontBonus = 5;
-    int64 MiddleBonus = 6;
-    int64 BackBonus = 7;
+message UpdateFinish {
+  repeated ComparisonResult results = 1;
+  repeated HandBonus bonuses = 2;
 }
