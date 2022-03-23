@@ -104,6 +104,30 @@ func (h HandPoint) String() string {
 	return fmt.Sprintf("Rank %v, Point: %v", h.rankingType, h.point)
 }
 
+func (h HandPoint) ToHandResultPB() *pb.HandResult {
+	return &pb.HandResult{
+		Ranking: h.rankingType,
+		Point:   h.point,
+		Lpoint:  h.lpoint,
+	}
+}
+
+func CompareHandPoint(p1, p2 *HandPoint) int {
+	if p1.point > p2.point {
+		return 1
+	} else if p1.point < p2.point {
+		return -1
+	} else {
+		if p1.lpoint > p2.lpoint {
+			return 1
+		} else if p1.lpoint < p2.lpoint {
+			return -1
+		}
+	}
+
+	return 0
+}
+
 func (h *HandPoint) IsStraight() bool {
 	return h.rankingType == pb.HandRanking_Straight
 }

@@ -64,7 +64,8 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 			continue
 		}
 		result := &pb.ComparisonResult{
-			UserId: userID1,
+			UserId:      userID1,
+			PointResult: hand1.GetPointResult(),
 		}
 
 		for _, uid2 := range s.PlayingPresences.Keys() {
@@ -79,21 +80,7 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 			}
 
 			// calculate natural point, normal point, hand bonus case
-			CompareHand(context.WithValue(context.TODO(), kPc, s.PlayingPresences.Size()), hand1, hand2, nil)
-
-			//result.FrontFactor += r.FrontFactor
-			//result.MiddleFactor += r.MiddleFactor
-			//result.BackFactor += r.BackFactor
-			//
-			//result.FrontBonusFactor += r.FrontBonusFactor
-			//result.MiddleBonusFactor += r.MiddleBonusFactor
-			//result.BackBonusFactor += r.BackBonusFactor
-			//
-			//result.ScoopFactor += r.ScoopFactor
-			//result.Bonuses = append(result.Bonuses, &pb.Bonus{
-			//	UserIdCompetitor: userID2,
-			//	BonusFactor:      r.CleanWinBonus + r.ScoopFactor,
-			//})
+			CompareHand(context.WithValue(context.TODO(), kPc, s.PlayingPresences.Size()), hand1, hand2)
 		}
 		// TODO: scoop all
 

@@ -3,11 +3,23 @@ package chinese_poker
 import (
 	"fmt"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+)
+
+var (
+	kFronHand = 0
+	kMidHand  = 1
+	kBackHand = 2
 )
 
 type ChildHand struct {
-	Cards entity.ListCard
-	Point *HandPoint
+	Cards    entity.ListCard
+	Point    *HandPoint
+	handType int
+}
+
+func (h1 ChildHand) Compare(h2 *ChildHand) int {
+	return CompareHandPoint(h1.Point, h2.Point)
 }
 
 func (ch ChildHand) String() string {
@@ -21,19 +33,39 @@ func (ch *ChildHand) calculatePoint() {
 	ch.Point = CalculatePoint(ch.Cards)
 }
 
-func NewChildHand(cards entity.ListCard) *ChildHand {
+func NewChildHand(cards entity.ListCard, handType int) *ChildHand {
 	child := ChildHand{
-		Cards: cards[:],
+		Cards:    cards[:],
+		handType: handType,
 	}
 
 	return &child
 }
 
-func (h1 *ChildHand) CompareHand(h2 *ChildHand) int {
-	h1.calculatePoint()
-	h2.calculatePoint()
+func (ch *ChildHand) GetBonus() (pb.HandBonusType, int) {
+	switch ch.handType {
+	case kFronHand:
+		if ch.Point.rankingType == pb.HandRanking_ThreeOfAKind {
+			return pb.HandBonusType_BonusThreeOfAKindFrontHand, mapBonusPoint[pb.HandBonusType_BonusThreeOfAKindFrontHand]
+		}
+	case kMidHand:
+		if ch.Point.rankingType == pb.HandRanking_FullHouse {
+			return pb.HandBonusType_BonusFullHouseMidHand, mapBonusPoint[pb.HandBonusType_BonusFullHouseMidHand]
+		}
+		if ch.Point.rankingType == pb.HandRanking_FourOfAKind {
+			return pb.HandBonusType_BonusFourOfAKindMidHand, mapBonusPoint[pb.HandBonusType_BonusFourOfAKindMidHand]
+		}
+		if ch.Point.rankingType == pb.HandRanking_StraightFlush {
+			return pb.HandBonusType_BonusStraightFlushMidHand, mapBonusPoint[pb.HandBonusType_BonusStraightFlushMidHand]
+		}
+	case kBackHand:
+		if ch.Point.rankingType == pb.HandRanking_FourOfAKind {
+			return pb.HandBonusType_BonusFourOfAKindBackHand, mapBonusPoint[pb.HandBonusType_BonusFourOfAKindBackHand]
+		}
+		if ch.Point.rankingType == pb.HandRanking_StraightFlush {
+			return pb.HandBonusType_BonusStraightFlushBackHand, mapBonusPoint[pb.HandBonusType_BonusStraightFlushBackHand]
+		}
+	}
 
-	resultPoint := 0
-
-	return resultPoint
+	return pb.HandBonusType_None, 0
 }

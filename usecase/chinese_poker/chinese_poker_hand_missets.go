@@ -1,11 +1,11 @@
 package chinese_poker
 
 func IsMisSets(hand *Hand) bool {
-	if hand.backHand.CompareHand(hand.middleHand) < 0 {
+	if hand.backHand.Compare(hand.middleHand) < 0 {
 		return true
 	}
 
-	if hand.middleHand.CompareHand(hand.frontHand) < 0 {
+	if hand.middleHand.Compare(hand.frontHand) < 0 {
 		return true
 	}
 

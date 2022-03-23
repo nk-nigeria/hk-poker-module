@@ -7,16 +7,21 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
+type Result struct {
+	FrontFactor       int `json:"front_factor"`
+	MiddleFactor      int `json:"middle_factor"`
+	BackFactor        int `json:"back_factor"`
+	FrontBonusFactor  int `json:"front_bonus_factor"`
+	MiddleBonusFactor int `json:"middle_bonus_factor"`
+	BackBonusFactor   int `json:"back_bonus_factor"`
+	NaturalFactor     int `json:"natural_factor"`
+	ScoopFactor       int `json:"scoop_factor"`
+}
+
 // ComparisonResult
 type ComparisonResult struct {
-	UserId            string
-	FrontFactor       int64
-	MiddleFactor      int64
-	BackFactor        int64
-	FrontBonusFactor  int64
-	MiddleBonusFactor int64
-	BackBonusFactor   int64
-	ScoopFactor       int64
+	r1 Result `json:"r1"`
+	r2 Result `json:"r1"`
 }
 
 // Hand
@@ -31,11 +36,14 @@ type Hand struct {
 
 	naturalPoint *HandPoint
 	pointType    pb.PointType
+	calculated   bool
 }
 
 func NewHand(cards *pb.ListCard) (*Hand, error) {
 	if cards == nil {
-		h := &Hand{}
+		h := &Hand{
+			calculated: false,
+		}
 		return h, nil
 	}
 	listCard := make(entity.ListCard, 0, len(cards.Cards))
@@ -66,20 +74,32 @@ func (h Hand) IsMisSet() bool {
 	return h.pointType == pb.PointType_Point_Mis_Set
 }
 
+func (h Hand) IsNormal() bool {
+	return h.pointType == pb.PointType_Point_Normal
+}
+
 func (h *Hand) parse() error {
 	cards := h.cards
 	if len(cards) != MaxPresenceCard {
 		return errors.New("hand.parse.error.invalid-len")
 	}
 
-	h.frontHand = NewChildHand(cards[:3])
-	h.middleHand = NewChildHand(cards[3:8])
-	h.backHand = NewChildHand(cards[8:])
+	h.frontHand = NewChildHand(cards[:3], kFronHand)
+	h.middleHand = NewChildHand(cards[3:8], kMidHand)
+	h.backHand = NewChildHand(cards[8:], kBackHand)
 
 	return nil
 }
 
 func (h *Hand) calculatePoint() error {
+	if h.calculated {
+		return errors.New("hand.calculate.already")
+	}
+	defer func() {
+		// mark as already calculated
+		h.calculated = true
+	}()
+
 	// check cards naturals
 	handPoint, natural := CheckNaturalCards(h)
 	if natural {
@@ -108,4 +128,27 @@ func (h *Hand) calculatePoint() error {
 	}
 
 	return nil
+}
+
+func (h Hand) GetPointResult() *pb.PointResult {
+	result := &pb.PointResult{
+		Type: h.pointType,
+	}
+
+	switch h.pointType {
+	case pb.PointType_Point_Normal:
+		result = &pb.PointResult{
+			Front:  h.frontHand.Point.ToHandResultPB(),
+			Middle: h.middleHand.Point.ToHandResultPB(),
+			Back:   h.backHand.Point.ToHandResultPB(),
+		}
+	case pb.PointType_Point_Natural:
+		result = &pb.PointResult{
+			Natural: h.naturalPoint.ToHandResultPB(),
+		}
+	case pb.PointType_Point_Mis_Set:
+
+	}
+
+	return result
 }

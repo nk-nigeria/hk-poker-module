@@ -168,23 +168,23 @@ enum HandRanking {
 }
 
 enum HandBonusType {
-  HandBonus_None = 0;
-  HandBonus_Scoop = 1;
-  HandBonus_ScoopAll = 2;
+  None = 0;
+  Scoop = 1;
+  ScoopAll = 2;
 
-  HandBonus_FullHouseMidHand = 101;
-  HandBonus_ThreeOfAKindFrontHand = 102;
-  HandBonus_FourOfAKindBackHand = 103;
-  HandBonus_StraightFlushBackHand = 104;
-  HandBonus_FourOfAKindMidHand = 105;
-  HandBonus_StraightFlushMidHand = 106;
+  BonusFullHouseMidHand = 101;
+  BonusThreeOfAKindFrontHand = 102;
+  BonusFourOfAKindBackHand = 103;
+  BonusStraightFlushBackHand = 104;
+  BonusFourOfAKindMidHand = 105;
+  BonusStraightFlushMidHand = 106;
 
-  HandBonus_NaturalThreeStraights = 201;
-  HandBonus_NaturalThreeOfFlushes = 202;
-  HandBonus_NaturalSixPairs = 203;
-  HandBonus_NaturalFullColors = 204;
-  HandBonus_NaturalDragon = 205;
-  HandBonus_NaturalCleanDragon = 206;
+  BonusNaturalThreeStraights = 201;
+  BonusNaturalThreeOfFlushes = 202;
+  BonusNaturalSixPairs = 203;
+  BonusNaturalFullColors = 204;
+  BonusNaturalDragon = 205;
+  BonusNaturalCleanDragon = 206;
 }
 
 message HandBonus {
