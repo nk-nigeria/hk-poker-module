@@ -24,6 +24,12 @@ type ComparisonResult struct {
 	r2 Result `json:"r1"`
 }
 
+func (r *ComparisonResult) swap() {
+	tmp := r.r1
+	r.r1 = r.r2
+	r.r2 = tmp
+}
+
 // Hand
 // Contain all presence card
 type Hand struct {
@@ -151,4 +157,17 @@ func (h Hand) GetPointResult() *pb.PointResult {
 	}
 
 	return result
+}
+
+func FillCompareResult(result *pb.ScoreResult, cresult *ComparisonResult) {
+	result.FrontFactor += int64(cresult.r1.FrontFactor)
+	result.MiddleFactor += int64(cresult.r1.MiddleFactor)
+	result.BackFactor += int64(cresult.r1.BackFactor)
+
+	result.FrontBonusFactor += int64(cresult.r1.FrontBonusFactor)
+	result.MiddleBonusFactor += int64(cresult.r1.MiddleBonusFactor)
+	result.BackBonusFactor += int64(cresult.r1.BackBonusFactor)
+
+	result.NaturalFactor += int64(cresult.r1.NaturalFactor)
+	result.ScoopFactor += int64(cresult.r1.ScoopFactor)
 }

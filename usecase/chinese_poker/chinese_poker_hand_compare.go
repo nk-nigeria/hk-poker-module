@@ -22,6 +22,8 @@ var (
 		pb.HandBonusType_BonusStraightFlushMidHand:  10,
 		pb.HandBonusType_BonusFourOfAKindBackHand:   4,
 		pb.HandBonusType_BonusStraightFlushBackHand: 5,
+
+		pb.HandBonusType_Scoop: 6,
 	}
 )
 
@@ -87,6 +89,7 @@ func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
 
 	if h2.IsNatural() && h1.IsMisSet() {
 		compareNaturalWithMisset(h2, h1, result)
+		result.swap()
 		return result
 	}
 
@@ -98,12 +101,13 @@ func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
 
 	if h2.IsNatural() && h1.IsNormal() {
 		compareNaturalWithNormal(h2, h1, result)
+		result.swap()
 		return result
 	}
 
 	// case 4
 	if h1.IsMisSet() && h2.IsMisSet() {
-		compareMissetWithMisset(h2, h1, result)
+		compareMissetWithMisset(h1, h2, result)
 		return result
 	}
 
@@ -115,6 +119,7 @@ func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
 
 	if h2.IsNormal() && h1.IsMisSet() {
 		compareNormalWithMisset(h2, h1, result)
+		result.swap()
 		return result
 	}
 
@@ -129,7 +134,7 @@ func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
 
 //compareNaturalWithNatural
 //case 1
-func compareNaturalWithNatural(h1, h2 *Hand, result *ComparisonResult) *ComparisonResult {
+func compareNaturalWithNatural(h1, h2 *Hand, result *ComparisonResult) {
 	var score = 0
 	if cmp := CompareHandPoint(h1.naturalPoint, h2.naturalPoint); cmp > 0 {
 		score = mapNaturalPoint[rankingTypeToBonusType(h1.naturalPoint.rankingType)]
@@ -139,38 +144,36 @@ func compareNaturalWithNatural(h1, h2 *Hand, result *ComparisonResult) *Comparis
 
 	result.r1.NaturalFactor = score
 	result.r2.NaturalFactor = -score
-
-	return nil
 }
 
 //compareNaturalWithMisset
 //case2
-func compareNaturalWithMisset(h1, h2 *Hand, result *ComparisonResult) *ComparisonResult {
+func compareNaturalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	score := mapNaturalPoint[rankingTypeToBonusType(h1.naturalPoint.rankingType)]
 	result.r1.NaturalFactor = score
 	result.r2.NaturalFactor = -score
-
-	return nil
 }
 
 //compareNaturalWithNormal
 //case3
-func compareNaturalWithNormal(h1, h2 *Hand, result *ComparisonResult) *ComparisonResult {
+func compareNaturalWithNormal(h1, h2 *Hand, result *ComparisonResult) {
 	score := mapNaturalPoint[rankingTypeToBonusType(h1.naturalPoint.rankingType)]
 	result.r1.NaturalFactor = score
 	result.r2.NaturalFactor = -score
-	return nil
 }
 
 //compareMissetWithMisset
 //case4
-func compareMissetWithMisset(h1, h2 *Hand, result *ComparisonResult) *ComparisonResult {
+func compareMissetWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	// Don't need to do anything
-	return nil
 }
 
 //compareNormalWithMisset
-func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) *ComparisonResult {
+func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
+	bonusScoop := mapBonusPoint[pb.HandBonusType_Scoop]
+	result.r1.ScoopFactor = bonusScoop
+	result.r2.ScoopFactor = -bonusScoop
+
 	// check special case bonus only
 	if bonus, bonusScore := h1.frontHand.GetBonus(); bonus != pb.HandBonusType_None {
 		result.r1.FrontFactor += bonusScore
@@ -186,12 +189,10 @@ func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) *Comparison
 		result.r1.BackFactor += bonusScore
 		result.r2.BackFactor += -bonusScore
 	}
-
-	return nil
 }
 
 //compareNormalWithNormal
-func compareNormalWithNormal(h1, h2 *Hand, result *ComparisonResult) *ComparisonResult {
+func compareNormalWithNormal(h1, h2 *Hand, result *ComparisonResult) {
 	// front hand
 	if cmp := CompareHandPoint(h1.frontHand.Point, h2.frontHand.Point); cmp > 0 {
 		if bonus, bonusScore := h1.frontHand.GetBonus(); bonus != pb.HandBonusType_None {
@@ -248,6 +249,4 @@ func compareNormalWithNormal(h1, h2 *Hand, result *ComparisonResult) *Comparison
 		result.r2.BackFactor = 1
 		result.r1.BackFactor = -1
 	}
-
-	return result
 }
