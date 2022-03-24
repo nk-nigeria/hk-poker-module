@@ -23,8 +23,12 @@ var (
 		pb.HandBonusType_BonusFourOfAKindBackHand:   4,
 		pb.HandBonusType_BonusStraightFlushBackHand: 5,
 
-		pb.HandBonusType_Scoop: 6,
+		pb.HandBonusType_MisSet:   5,
+		pb.HandBonusType_Scoop:    3,
+		pb.HandBonusType_ScoopAll: 6,
 	}
+
+	baseHandPoint = 1
 )
 
 func rankingTypeToBonusType(ranking pb.HandRanking) pb.HandBonusType {
@@ -54,24 +58,41 @@ func (h *Hand) CompareHand(h2 *Hand) *ComparisonResult {
 	return &result
 }
 
-var kPc = "pc"
+var kCmp = "cmp"
+
+type CompareContext struct {
+	PresenceCount  int
+	ScoopAllUser   string
+	ScoopAllResult *pb.ComparisonResult
+	Bonuses        []*pb.HandBonus
+}
+
+func NewCompareContext(pc int) context.Context {
+	return context.WithValue(context.TODO(), kCmp, &CompareContext{
+		PresenceCount: pc,
+	})
+}
+
+func GetCompareContext(ctx context.Context) *CompareContext {
+	return ctx.Value(kCmp).(*CompareContext)
+}
 
 func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
-	// A (MB) vs
-	//			B(MB) => case 1
-	//			B(BL) => case 2
-	//			B(BT) => case 3
-	// A (BL) vs
-	//			B(MB) => case 2
-	//			B(BL) => case 4
-	//			B(BT) => case 5
-	// A (BT) vs
-	//			B(MB) => case 3
-	//			B(BL) => case 5
-	//			B(BT) => case 6
+	// A (NA) vs
+	//			B(Na) => case 1
+	//			B(MS) => case 2
+	//			B(NM) => case 3
+	// A (MS) vs
+	//			B(NA) => case 2
+	//			B(MS) => case 4
+	//			B(NM) => case 5
+	// A (NM) vs
+	//			B(NA) => case 3
+	//			B(MS) => case 5
+	//			B(NM) => case 6
 
+	// validate scoop all user
 	result := &ComparisonResult{}
-	//count := ctx.Value(kPc).(int)
 	h1.calculatePoint()
 	h2.calculatePoint()
 
@@ -170,10 +191,6 @@ func compareMissetWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 
 //compareNormalWithMisset
 func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
-	bonusScoop := mapBonusPoint[pb.HandBonusType_Scoop]
-	result.r1.ScoopFactor = bonusScoop
-	result.r2.ScoopFactor = -bonusScoop
-
 	// check special case bonus only
 	if bonus, bonusScore := h1.frontHand.GetBonus(); bonus != pb.HandBonusType_None {
 		result.r1.FrontFactor += bonusScore
@@ -189,64 +206,138 @@ func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 		result.r1.BackFactor += bonusScore
 		result.r2.BackFactor += -bonusScore
 	}
+
+	bonusMisset := mapBonusPoint[pb.HandBonusType_MisSet]
+	result.r1.BonusFactor = bonusMisset
+	result.r2.BonusFactor = -bonusMisset
+
+	result.r1.Scoop = kWinScoop
+	result.r2.Scoop = kLoseScoop
 }
 
 //compareNormalWithNormal
 func compareNormalWithNormal(h1, h2 *Hand, result *ComparisonResult) {
+	winHand := 0
+	cmpHand := 0
 	// front hand
+	cmpHand++
 	if cmp := CompareHandPoint(h1.frontHand.Point, h2.frontHand.Point); cmp > 0 {
 		if bonus, bonusScore := h1.frontHand.GetBonus(); bonus != pb.HandBonusType_None {
 			result.r1.FrontBonusFactor = bonusScore
 			result.r2.FrontBonusFactor = -bonusScore
 		}
 
-		result.r1.FrontFactor = 1
-		result.r2.FrontFactor = -1
+		result.r1.FrontFactor = baseHandPoint
+		result.r2.FrontFactor = -baseHandPoint
+
+		winHand++
 	} else if cmp < 0 {
 		if bonus, bonusScore := h2.frontHand.GetBonus(); bonus != pb.HandBonusType_None {
 			result.r2.FrontBonusFactor = bonusScore
 			result.r1.FrontBonusFactor = -bonusScore
 		}
 
-		result.r2.FrontFactor = 1
-		result.r1.FrontFactor = -1
+		result.r2.FrontFactor = baseHandPoint
+		result.r1.FrontFactor = -baseHandPoint
+
+		winHand--
 	}
 
 	// middle hand
+	cmpHand++
 	if cmp := CompareHandPoint(h1.middleHand.Point, h2.middleHand.Point); cmp > 0 {
 		if bonus, bonusScore := h1.middleHand.GetBonus(); bonus != pb.HandBonusType_None {
 			result.r1.MiddleBonusFactor = bonusScore
 			result.r2.MiddleBonusFactor = -bonusScore
 		}
 
-		result.r1.MiddleFactor = 1
-		result.r2.MiddleFactor = -1
+		result.r1.MiddleFactor = baseHandPoint
+		result.r2.MiddleFactor = -baseHandPoint
+
+		winHand++
 	} else if cmp < 0 {
 		if bonus, bonusScore := h2.middleHand.GetBonus(); bonus != pb.HandBonusType_None {
 			result.r2.MiddleBonusFactor = bonusScore
 			result.r1.MiddleBonusFactor = -bonusScore
 		}
 
-		result.r2.MiddleFactor = 1
-		result.r1.MiddleFactor = -1
+		result.r2.MiddleFactor = baseHandPoint
+		result.r1.MiddleFactor = -baseHandPoint
+
+		winHand--
 	}
 
 	// backhand
+	cmpHand++
 	if cmp := CompareHandPoint(h1.backHand.Point, h2.backHand.Point); cmp > 0 {
 		if bonus, bonusScore := h1.backHand.GetBonus(); bonus != pb.HandBonusType_None {
 			result.r1.BackBonusFactor = bonusScore
 			result.r2.BackBonusFactor = -bonusScore
 		}
 
-		result.r1.BackFactor = 1
-		result.r2.BackFactor = -1
+		result.r1.BackFactor = baseHandPoint
+		result.r2.BackFactor = -baseHandPoint
+
+		winHand++
 	} else if cmp < 0 {
 		if bonus, bonusScore := h2.backHand.GetBonus(); bonus != pb.HandBonusType_None {
 			result.r2.BackBonusFactor = bonusScore
 			result.r1.MiddleBonusFactor = -bonusScore
 		}
 
-		result.r2.BackFactor = 1
-		result.r1.BackFactor = -1
+		result.r2.BackFactor = baseHandPoint
+		result.r1.BackFactor = -baseHandPoint
+
+		winHand--
+	}
+
+	if winHand == cmpHand {
+		result.r1.Scoop = kWinScoop
+		result.r2.Scoop = kLoseScoop
+	} else if -winHand == cmpHand {
+		result.r2.Scoop = kWinScoop
+		result.r1.Scoop = kLoseScoop
+	}
+}
+
+func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, cresult *ComparisonResult) {
+	result := cmpResult.ScoreResult
+	result.FrontFactor += int64(cresult.r1.FrontFactor)
+	result.MiddleFactor += int64(cresult.r1.MiddleFactor)
+	result.BackFactor += int64(cresult.r1.BackFactor)
+
+	result.FrontBonusFactor += int64(cresult.r1.FrontBonusFactor)
+	result.MiddleBonusFactor += int64(cresult.r1.MiddleBonusFactor)
+	result.BackBonusFactor += int64(cresult.r1.BackBonusFactor)
+
+	scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
+	if cresult.r1.Scoop == kWinScoop {
+		result.Scoop++
+		result.BonusFactor += int64(scoopScore)
+	} else if cresult.r1.Scoop == kLoseScoop {
+		result.Scoop--
+		result.BonusFactor -= int64(scoopScore)
+	}
+
+	result.NaturalFactor += int64(cresult.r1.NaturalFactor)
+
+	cmpCtx := GetCompareContext(ctx)
+	if result.Scoop >= int64(cmpCtx.PresenceCount)-1 {
+		cmpCtx.ScoopAllUser = cmpResult.UserId
+		cmpCtx.ScoopAllResult = cmpResult
+	}
+}
+
+func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonResult) {
+	cmpCtx := GetCompareContext(ctx)
+	if cmpCtx.ScoopAllUser != "" {
+		resultScoopAll := cmpCtx.ScoopAllResult
+		bonus := int64(mapBonusPoint[pb.HandBonusType_ScoopAll])
+		for _, result := range cmpResult {
+			if result.UserId != cmpCtx.ScoopAllUser {
+				resultScoopAll.ScoreResult.BonusFactor += bonus
+				result.ScoreResult.BonusFactor -= bonus
+			}
+		}
 	}
 }

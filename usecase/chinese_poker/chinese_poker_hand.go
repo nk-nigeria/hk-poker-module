@@ -7,6 +7,11 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
+var (
+	kWinScoop  = 1
+	kLoseScoop = -1
+)
+
 type Result struct {
 	FrontFactor       int `json:"front_factor"`
 	MiddleFactor      int `json:"middle_factor"`
@@ -15,19 +20,28 @@ type Result struct {
 	MiddleBonusFactor int `json:"middle_bonus_factor"`
 	BackBonusFactor   int `json:"back_bonus_factor"`
 	NaturalFactor     int `json:"natural_factor"`
-	ScoopFactor       int `json:"scoop_factor"`
+	BonusFactor       int `json:"bonus_factor"`
+	Scoop             int `json:"scoop"`
 }
 
-// ComparisonResult
 type ComparisonResult struct {
-	r1 Result `json:"r1"`
-	r2 Result `json:"r1"`
+	r1      Result `json:"r1"`
+	r2      Result `json:"r2"`
+	bonuses []*pb.HandBonus
 }
 
 func (r *ComparisonResult) swap() {
 	tmp := r.r1
 	r.r1 = r.r2
 	r.r2 = tmp
+}
+
+func (r *ComparisonResult) addHandBonus(win, lose string, bonusType pb.HandBonusType) {
+	r.bonuses = append(r.bonuses, &pb.HandBonus{
+		Win:  win,
+		Lose: lose,
+		Type: bonusType,
+	})
 }
 
 // Hand
@@ -157,17 +171,4 @@ func (h Hand) GetPointResult() *pb.PointResult {
 	}
 
 	return result
-}
-
-func FillCompareResult(result *pb.ScoreResult, cresult *ComparisonResult) {
-	result.FrontFactor += int64(cresult.r1.FrontFactor)
-	result.MiddleFactor += int64(cresult.r1.MiddleFactor)
-	result.BackFactor += int64(cresult.r1.BackFactor)
-
-	result.FrontBonusFactor += int64(cresult.r1.FrontBonusFactor)
-	result.MiddleBonusFactor += int64(cresult.r1.MiddleBonusFactor)
-	result.BackBonusFactor += int64(cresult.r1.BackBonusFactor)
-
-	result.NaturalFactor += int64(cresult.r1.NaturalFactor)
-	result.ScoopFactor += int64(cresult.r1.ScoopFactor)
 }
