@@ -1,7 +1,6 @@
 package chinese_poker
 
 import (
-	"context"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
@@ -56,6 +55,8 @@ func (c *Engine) Combine(s *entity.MatchState, presence string) error {
 func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	// Check every user
 	updateFinish := pb.UpdateFinish{}
+	ctx := NewCompareContext(s.PlayingPresences.Size())
+
 	for _, uid1 := range s.PlayingPresences.Keys() {
 		userID1 := uid1.(string)
 		cards1 := s.OrganizeCards[userID1]
@@ -84,13 +85,14 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 			}
 
 			// calculate natural point, normal point, hand bonus case
-			rc := CompareHand(context.WithValue(context.TODO(), kPc, s.PlayingPresences.Size()), hand1, hand2)
-			FillCompareResult(result.ScoreResult, rc)
+			rc := CompareHand(ctx, hand1, hand2)
+			ProcessCompareResult(ctx, result, rc)
 		}
-		// TODO: scoop all
 
 		updateFinish.Results = append(updateFinish.Results, result)
 	}
+
+	ProcessCompareBonusResult(ctx, updateFinish.Results)
 
 	return &updateFinish
 }

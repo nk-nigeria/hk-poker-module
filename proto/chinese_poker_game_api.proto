@@ -169,8 +169,9 @@ enum HandRanking {
 
 enum HandBonusType {
   None = 0;
-  Scoop = 1;
-  ScoopAll = 2;
+  MisSet = 1;
+  Scoop = 2;
+  ScoopAll = 3;
 
   BonusFullHouseMidHand = 101;
   BonusThreeOfAKindFrontHand = 102;
@@ -214,14 +215,15 @@ message PointResult {
 }
 
 message ScoreResult {
-  int64 front_factor = 2;
-  int64 middle_factor = 3;
-  int64 back_factor = 4;
-  int64 front_bonus_factor = 5;
-  int64 middle_bonus_factor = 6;
-  int64 back_bonus_factor = 7;
-  int64 natural_factor = 8;
-  int64 scoop_factor = 9;
+  int64 front_factor = 1;
+  int64 middle_factor = 2;
+  int64 back_factor = 3;
+  int64 front_bonus_factor = 4;
+  int64 middle_bonus_factor = 5;
+  int64 back_bonus_factor = 6;
+  int64 natural_factor = 7;
+  int64 bonus_factor = 8; // mis set, scoop, scoop all
+  int64 scoop = 9;
 }
 
 message ComparisonResult {
