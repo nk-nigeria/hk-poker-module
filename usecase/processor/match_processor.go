@@ -1,6 +1,9 @@
 package processor
 
 import (
+	"context"
+	"strings"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker"
@@ -49,7 +52,7 @@ func (m *processor) ProcessNewGame(logger runtime.Logger, dispatcher runtime.Mat
 	}
 }
 
-func (m *processor) ProcessFinishGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
 	pbGameState := pb.UpdateGameState{
@@ -82,6 +85,7 @@ func (m *processor) ProcessFinishGame(logger runtime.Logger, dispatcher runtime.
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
 		updateFinish, nil, nil, true)
 
+	m.updateWallet(ctx, nk, logger, dispatcher, s, updateFinish)
 	logger.Info("process finish game done %v", updateFinish)
 }
 
@@ -175,4 +179,82 @@ func (m *processor) NotifyUpdatePresences(s *entity.MatchState, logger runtime.L
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE),
 		updateState, nil, nil, true)
+}
+
+func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) {
+	listUserId := make([]string, 0, len(updateFinish.Results))
+	for _, uf := range updateFinish.Results {
+		listUserId = append(listUserId, uf.UserId)
+	}
+	wallets, err := m.readWalletUsers(ctx, nk, logger, listUserId...)
+	if err != nil {
+		return
+	}
+	mapUserWallet := make(map[string]entity.Wallet)
+	for _, w := range wallets {
+		mapUserWallet[w.UserId] = w
+	}
+
+	balanceResult := pb.BalanceResult{}
+	for _, uf := range updateFinish.Results {
+		balance := pb.Balance{
+			UserId:           uf.UserId,
+			PercentFee:       0.05,
+			AmountChipBefore: mapUserWallet[uf.UserId].Chips,
+		}
+		balance.AmountChipFee = balance.AmountChipFee * int64(uf.ScoreResult.NumHandWin) * int64(s.Label.Bet)
+		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
+		balance.AmountChipCurrent = balance.AmountChipCurrent + balance.AmountChipAdd - balance.AmountChipFee
+		balanceResult.Balances = append(balanceResult.Balances, &balance)
+	}
+	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult)
+	m.broadcastMessage(
+		logger,
+		dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET),
+		&balanceResult,
+		nil,
+		nil,
+		true,
+	)
+}
+func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, userIds ...string) ([]entity.Wallet, error) {
+	accounts, err := nk.AccountsGetId(ctx, userIds)
+	if err != nil {
+		logger.Error("Error when read list account, error: %s, list userId %s",
+			strings.Join(userIds, ","), err.Error())
+	}
+	wallets := make([]entity.Wallet, 0)
+	for _, ac := range accounts {
+		w, e := entity.ParseWallet(ac.Wallet)
+		if e != nil {
+			logger.Error("Error when parse wallet user %s, error: %s", ac.User.Id, e.Error())
+			continue
+		}
+		w.UserId = ac.User.Id
+		wallets = append(wallets, w)
+	}
+	return wallets, nil
+}
+
+func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
+	walletUpdates := make([]*runtime.WalletUpdate, len(balanceResult.Balances))
+	for _, result := range balanceResult.Balances {
+		changeset := map[string]int64{
+			"chips": result.AmountChipAdd, // Substract amountChip coins to the user's wallet.
+		}
+		metadata := map[string]interface{}{
+			"game_topup": "topup",
+		}
+		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
+			UserID:    result.UserId,
+			Changeset: changeset,
+			Metadata:  metadata,
+		})
+	}
+
+	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
+	if err != nil {
+		logger.WithField("err", err).Error("Wallets update error.")
+	}
 }

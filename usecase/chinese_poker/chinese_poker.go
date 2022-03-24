@@ -93,6 +93,7 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	}
 
 	ProcessCompareBonusResult(ctx, updateFinish.Results)
+	CalcTotalFactor(updateFinish.Results)
 
 	return &updateFinish
 }

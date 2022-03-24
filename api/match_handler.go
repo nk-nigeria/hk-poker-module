@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
@@ -90,9 +91,8 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	logger.Info("match init label=", string(labelJSON))
 
 	matchState := entity.NewMathState(label)
-
 	// fire idle event
-	procPkg := packager.NewProcessorPackage(&matchState, m.processor, logger, nil, nil)
+	procPkg := packager.NewProcessorPackage(&matchState, m.processor, logger, nil, nil, nil, nil)
 	m.machine.TriggerIdle(packager.GetContextWithProcessorPackager(procPkg))
 
 	return &matchState, tickRate, string(labelJSON)
@@ -101,9 +101,10 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*entity.MatchState)
 
-	err := m.machine.FireProcessEvent(packager.GetContextWithProcessorPackager(packager.NewProcessorPackage(s, m.processor, logger, dispatcher, messages)))
+	err := m.machine.FireProcessEvent(packager.GetContextWithProcessorPackager(packager.NewProcessorPackage(s, m.processor, logger, nk, dispatcher, messages, ctx)))
 	if err == presenter.ErrGameFinish {
 		logger.Info("match need finish")
+
 		return nil
 	}
 

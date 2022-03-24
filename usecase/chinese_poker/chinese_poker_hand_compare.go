@@ -2,6 +2,7 @@ package chinese_poker
 
 import (
 	"context"
+
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -326,6 +327,19 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 		cmpCtx.ScoopAllUser = cmpResult.UserId
 		cmpCtx.ScoopAllResult = cmpResult
 	}
+
+	if cresult.r1.NaturalFactor > 0 {
+		result.NumHandWin += 3
+	}
+	if cresult.r1.FrontFactor > 0 {
+		result.NumHandWin++
+	}
+	if cresult.r1.MiddleFactor > 0 {
+		result.NumHandWin++
+	}
+	if cresult.r1.BackFactor > 0 {
+		result.NumHandWin++
+	}
 }
 
 func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonResult) {
@@ -339,5 +353,15 @@ func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonRe
 				result.ScoreResult.BonusFactor -= bonus
 			}
 		}
+	}
+}
+
+func CalcTotalFactor(cmpResult []*pb.ComparisonResult) {
+	for _, result := range cmpResult {
+		result.ScoreResult.TotalFactor = result.ScoreResult.BackBonusFactor +
+			result.ScoreResult.BackFactor + result.ScoreResult.BonusFactor +
+			result.ScoreResult.FrontBonusFactor + result.ScoreResult.FrontFactor +
+			result.ScoreResult.MiddleBonusFactor + result.ScoreResult.MiddleFactor +
+			result.ScoreResult.NaturalFactor + result.ScoreResult.Scoop
 	}
 }
