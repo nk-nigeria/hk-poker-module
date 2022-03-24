@@ -57,6 +57,8 @@ type Hand struct {
 	naturalPoint *HandPoint
 	pointType    pb.PointType
 	calculated   bool
+
+	owner string
 }
 
 func NewHand(cards *pb.ListCard) (*Hand, error) {
@@ -80,6 +82,10 @@ func NewHand(cards *pb.ListCard) (*Hand, error) {
 	}
 
 	return hand, nil
+}
+
+func (h *Hand) SetOwner(owner string) {
+	h.owner = owner
 }
 
 func (h Hand) GetCards() entity.ListCard {
