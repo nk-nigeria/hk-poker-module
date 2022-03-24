@@ -244,7 +244,7 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 			"chips": result.AmountChipAdd, // Substract amountChip coins to the user's wallet.
 		}
 		metadata := map[string]interface{}{
-			"game_topup": "topup",
+			"game_reward": entity.ModuleName,
 		}
 		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
 			UserID:    result.UserId,
