@@ -197,15 +197,16 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 
 	balanceResult := pb.BalanceResult{}
 	for _, uf := range updateFinish.Results {
-		balance := pb.Balance{
+		balance := pb.BalanceUpdate{
 			UserId:           uf.UserId,
-			PercentFee:       0.05,
 			AmountChipBefore: mapUserWallet[uf.UserId].Chips,
 		}
-		balance.AmountChipFee = balance.AmountChipFee * int64(uf.ScoreResult.NumHandWin) * int64(s.Label.Bet)
+
+		percentFee := 0.05
+		fee := int64(percentFee*10*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
 		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
-		balance.AmountChipCurrent = balance.AmountChipCurrent + balance.AmountChipAdd - balance.AmountChipFee
-		balanceResult.Balances = append(balanceResult.Balances, &balance)
+		balance.AmountChipCurrent = balance.AmountChipCurrent + balance.AmountChipAdd - fee
+		balanceResult.Updates = append(balanceResult.Updates, &balance)
 	}
 	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult)
 	m.broadcastMessage(
@@ -239,8 +240,8 @@ func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule
 }
 
 func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
-	walletUpdates := make([]*runtime.WalletUpdate, len(balanceResult.Balances))
-	for _, result := range balanceResult.Balances {
+	walletUpdates := make([]*runtime.WalletUpdate, 0)
+	for _, result := range balanceResult.Updates {
 		changeset := map[string]int64{
 			"chips": result.AmountChipAdd, // Substract amountChip coins to the user's wallet.
 		}
@@ -253,6 +254,8 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 			Metadata:  metadata,
 		})
 	}
+
+	logger.Info("wallet update ctx %v, walletUpdates %v", ctx, walletUpdates)
 
 	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
 	if err != nil {
