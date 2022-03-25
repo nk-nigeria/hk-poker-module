@@ -6,12 +6,6 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
-var (
-	kFronHand = 0
-	kMidHand  = 1
-	kBackHand = 2
-)
-
 type ChildHand struct {
 	Cards    entity.ListCard
 	Point    *HandPoint
@@ -30,7 +24,7 @@ func (ch *ChildHand) calculatePoint() {
 	if ch.Point != nil {
 		return
 	}
-	ch.Point = CalculatePoint(ch.Cards)
+	ch.Point = CalculatePoint(ch)
 }
 
 func NewChildHand(cards entity.ListCard, handType int) *ChildHand {

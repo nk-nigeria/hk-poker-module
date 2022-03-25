@@ -13,6 +13,12 @@ var (
 	kLoseScoop = -1
 )
 
+var (
+	kFronHand = 0
+	kMidHand  = 1
+	kBackHand = 2
+)
+
 type Result struct {
 	FrontFactor       int `json:"front_factor"`
 	MiddleFactor      int `json:"middle_factor"`

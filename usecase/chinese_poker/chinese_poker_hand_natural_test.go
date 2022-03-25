@@ -63,7 +63,7 @@ func TestCheckCleanDragon(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckCleanDragon(entity.NewListCard(cards)); ok {
+	if _, ok := CheckCleanDragon(entity.NewBinListCards(entity.NewListCard(cards))); ok {
 		t.Logf("check clean dragon ok")
 	} else {
 		t.Logf("check clean dragon failed")
@@ -126,7 +126,7 @@ func TestCheckFullColor(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFullColor(entity.NewListCard(cards)); ok {
+	if _, ok := CheckFullColor(entity.NewBinListCards(entity.NewListCard(cards))); ok {
 		t.Logf("check full color ok")
 	} else {
 		t.Logf("check full color failed")
@@ -189,7 +189,7 @@ func TestCheckDragon(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckDragon(entity.NewListCard(cards)); ok {
+	if _, ok := CheckDragon(entity.NewBinListCards(entity.NewListCard(cards))); ok {
 		t.Logf("check dragon ok")
 	} else {
 		t.Logf("check dragon failed")
@@ -252,7 +252,7 @@ func TestCheckSixPairs(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckSixPairs(entity.NewListCard(cards)); ok {
+	if _, ok := CheckSixPairs(entity.NewBinListCards(entity.NewListCard(cards))); ok {
 		t.Logf("check six pairs ok")
 	} else {
 		t.Logf("check six pairs failed")

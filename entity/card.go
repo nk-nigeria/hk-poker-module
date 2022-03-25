@@ -9,6 +9,8 @@ import (
 type Card uint8
 
 const (
+	RankStep uint8 = 0x10
+
 	Rank2  uint8 = 0x20
 	Rank3  uint8 = 0x30
 	Rank4  uint8 = 0x40
@@ -23,6 +25,7 @@ const (
 	RankK  uint8 = 0xD0
 	RankA  uint8 = 0xE0
 
+	SuitNone     uint8 = 0x00
 	SuitClubs    uint8 = 0x01
 	SuitSpides   uint8 = 0x02
 	SuitDiamonds uint8 = 0x03
@@ -103,6 +106,10 @@ func NewCardFromPb(rank pb.CardRank, suit pb.CardSuit) Card {
 	card |= mapRanks[rank]
 	card |= mapSuits[suit]
 	return Card(card)
+}
+
+func NewCardFromUint(c uint) Card {
+	return Card(c)
 }
 
 func NewCard(rank uint8, suit uint8) Card {

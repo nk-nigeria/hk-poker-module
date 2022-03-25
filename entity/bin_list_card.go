@@ -6,13 +6,25 @@ import (
 )
 
 var (
-	BitSetRankMap map[uint8]*bitset.BitSet
+	kRed   = uint8(0)
+	kBlack = uint8(1)
 )
 
 var (
-	kCombinePair  = 1
-	kCombineThree = 2
-	kCombineFour  = 3
+	BitSetRankMap map[uint8]*bitset.BitSet
+	BitSetSuitMap map[uint8]*bitset.BitSet
+	BitSetColor   map[uint8]*bitset.BitSet
+)
+
+var (
+	CombinePair      = 1
+	CombineThree     = 2
+	CombineFour      = 3
+	CombineStraight  = 4
+	CombineFullHouse = 5
+	CombineFlush     = 6
+
+	CombineFullColor = 7
 )
 
 func init() {
@@ -25,6 +37,19 @@ func init() {
 
 		BitSetRankMap[rank] = BitSet
 	}
+
+	BitSetSuitMap = make(map[uint8]*bitset.BitSet)
+	for _, suit := range suits {
+		BitSet := bitset.New(16)
+		for _, rank := range ranks {
+			BitSet.Set(uint(NewCard(rank, suit)))
+		}
+		BitSetSuitMap[suit] = BitSet
+	}
+
+	BitSetColor = make(map[uint8]*bitset.BitSet)
+	BitSetColor[kRed] = BitSetSuitMap[SuitHearts].Union(BitSetSuitMap[SuitDiamonds])
+	BitSetColor[kBlack] = BitSetSuitMap[SuitSpides].Union(BitSetSuitMap[SuitClubs])
 }
 
 type BinListCard struct {
@@ -35,7 +60,6 @@ func NewBinListCards(cards ListCard) *BinListCard {
 	b := bitset.New(MaxCard)
 	for _, card := range cards {
 		b.Set(uint(card))
-
 	}
 	return &BinListCard{
 		b: b,
@@ -53,30 +77,35 @@ func (b BinListCard) String() string {
 	return str
 }
 
-func (b BinListCard) GetChain(comb int) (bool, ListCard) {
+func (b BinListCard) ToList() ListCard {
+	return BitSetToListCard(b.b)
+}
+
+func (b BinListCard) GetChain(comb int) (uint, ListCard) {
 	switch comb {
-	case kCombineFour:
-		for _, rank := range ranks {
-			if b.b.IntersectionCardinality(BitSetRankMap[rank]) == 4 {
-				//return true, NewCard(rank, 0)
-			}
-		}
-	case kCombineThree:
-		for _, rank := range ranks {
-			if b.b.IntersectionCardinality(BitSetRankMap[rank]) == 3 {
-				//return true, NewCard(rank, 0)
-			}
-		}
-	case kCombinePair:
-		for _, rank := range ranks {
-			if b.b.IntersectionCardinality(BitSetRankMap[rank]) == 2 {
-				//return true, NewCard(rank, 0)
-			}
-			if b.b.IntersectionCardinality(BitSetRankMap[rank]) == 4 {
-				//return true, NewCard(rank, 0)
-			}
-		}
+	case CombineFour:
+		return b.lookupFour()
+	case CombineThree:
+		return b.lookupThree()
+	case CombinePair:
+		return b.lookupTwo()
+	case CombineStraight:
+		return b.lookupStraight()
+	case CombineFullHouse:
+		return b.lookupFullHouse()
+	case CombineFlush:
+		return b.lookupFlush()
+	case CombineFullColor:
+		return b.lookupFullColor()
 	}
 
-	return false, ListCard{}
+	return 0, nil
+}
+
+func BitSetToListCard(b *bitset.BitSet) ListCard {
+	cards := ListCard{}
+	for i, e := b.NextSet(0); e; i, e = b.NextSet(i + 1) {
+		cards = append(cards, NewCardFromUint(i))
+	}
+	return cards
 }
