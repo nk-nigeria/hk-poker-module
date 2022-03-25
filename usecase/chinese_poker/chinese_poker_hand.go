@@ -72,7 +72,7 @@ func NewHand(cards *pb.ListCard) (*Hand, error) {
 	listCard := make(entity.ListCard, 0, len(cards.Cards))
 	// deep copy card
 	for _, c := range cards.GetCards() {
-		listCard = append(listCard, entity.NewCard(c.GetRank(), c.GetSuit()))
+		listCard = append(listCard, entity.NewCardFromPb(c.GetRank(), c.GetSuit()))
 	}
 	hand := &Hand{
 		cards: listCard,

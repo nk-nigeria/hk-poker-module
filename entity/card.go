@@ -9,25 +9,48 @@ import (
 type Card uint8
 
 const (
-	Rank2  uint8 = 0x02
-	Rank3  uint8 = 0x03
-	Rank4  uint8 = 0x04
-	Rank5  uint8 = 0x05
-	Rank6  uint8 = 0x06
-	Rank7  uint8 = 0x07
-	Rank8  uint8 = 0x08
-	Rank9  uint8 = 0x09
-	Rank10 uint8 = 0x0A
-	RankJ  uint8 = 0x0B
-	RankQ  uint8 = 0x0C
-	RankK  uint8 = 0x0D
-	RankA  uint8 = 0x0E
+	Rank2  uint8 = 0x20
+	Rank3  uint8 = 0x30
+	Rank4  uint8 = 0x40
+	Rank5  uint8 = 0x50
+	Rank6  uint8 = 0x60
+	Rank7  uint8 = 0x70
+	Rank8  uint8 = 0x80
+	Rank9  uint8 = 0x90
+	Rank10 uint8 = 0xA0
+	RankJ  uint8 = 0xB0
+	RankQ  uint8 = 0xC0
+	RankK  uint8 = 0xD0
+	RankA  uint8 = 0xE0
 
-	SuitClubs    uint8 = 0x10
-	SuitSpides   uint8 = 0x20
-	SuitDiamonds uint8 = 0x30
-	SuitHearts   uint8 = 0x40
+	SuitClubs    uint8 = 0x01
+	SuitSpides   uint8 = 0x02
+	SuitDiamonds uint8 = 0x03
+	SuitHearts   uint8 = 0x04
 )
+
+var ranks = []uint8{
+	Rank2,
+	Rank3,
+	Rank4,
+	Rank5,
+	Rank6,
+	Rank7,
+	Rank8,
+	Rank9,
+	Rank10,
+	RankJ,
+	RankQ,
+	RankK,
+	RankA,
+}
+
+var suits = []uint8{
+	SuitClubs,
+	SuitSpides,
+	SuitDiamonds,
+	SuitHearts,
+}
 
 var mapRanks = map[pb.CardRank]uint8{
 	pb.CardRank_RANK_2:  Rank2,
@@ -75,10 +98,17 @@ var mapStringSuits = map[uint8]string{
 	SuitHearts:   "Hearts",
 }
 
-func NewCard(rank pb.CardRank, suit pb.CardSuit) Card {
+func NewCardFromPb(rank pb.CardRank, suit pb.CardSuit) Card {
 	card := uint8(0)
 	card |= mapRanks[rank]
 	card |= mapSuits[suit]
+	return Card(card)
+}
+
+func NewCard(rank uint8, suit uint8) Card {
+	card := uint8(0)
+	card |= rank
+	card |= suit
 	return Card(card)
 }
 
@@ -87,21 +117,21 @@ func (c Card) String() string {
 }
 
 func (c Card) GetRank() uint8 {
-	return uint8(c & 0x0F)
-}
-
-func (c Card) GetSuit() uint8 {
 	return uint8(c & 0xF0)
 }
 
+func (c Card) GetSuit() uint8 {
+	return uint8(c & 0x0F)
+}
+
 func IsSameCards(cardsA []*pb.Card, cardsB []*pb.Card) bool {
-	mapCardsA := make(map[int]bool)
+	mapCardsA := make(map[Card]bool)
 	for _, c := range cardsA {
-		key := int(c.GetRank())<<8 + int(c.GetSuit())
+		key := NewCardFromPb(c.GetRank(), c.GetSuit())
 		mapCardsA[key] = false
 	}
 	for _, c := range cardsB {
-		key := int(c.GetRank())<<8 + int(c.GetSuit())
+		key := NewCardFromPb(c.GetRank(), c.GetSuit())
 		_, exist := mapCardsA[key]
 		if !exist {
 			return false
