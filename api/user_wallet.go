@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -36,7 +37,7 @@ func (m *MatchHandler) subtractChip(ctx context.Context, logger runtime.Logger, 
 }
 
 func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, resultGame *pb.UpdateFinish) {
-	walletUpdates := make([]*runtime.WalletUpdate, len(resultGame.Results))
+	walletUpdates := make([]*runtime.WalletUpdate, 0, len(resultGame.Results))
 	for _, result := range resultGame.Results {
 		amountChip := int64(0)
 

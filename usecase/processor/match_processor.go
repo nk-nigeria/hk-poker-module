@@ -238,7 +238,7 @@ func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule
 }
 
 func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
-	walletUpdates := make([]*runtime.WalletUpdate, len(balanceResult.Balances))
+	walletUpdates := make([]*runtime.WalletUpdate, 0, len(balanceResult.Balances))
 	for _, result := range balanceResult.Balances {
 		changeset := map[string]int64{
 			"chips": result.AmountChipAdd, // Substract amountChip coins to the user's wallet.
