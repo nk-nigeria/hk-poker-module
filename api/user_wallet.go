@@ -37,7 +37,7 @@ func (m *MatchHandler) subtractChip(ctx context.Context, logger runtime.Logger, 
 
 func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, resultGame *pb.UpdateFinish) {
 	logger.Info("update chip result %v, size %v", resultGame, len(resultGame.Results))
-	walletUpdates := make([]*runtime.WalletUpdate, 0)
+	walletUpdates := make([]*runtime.WalletUpdate, 0, len(resultGame.Results))
 	for _, result := range resultGame.Results {
 		amountChip := int64(0)
 

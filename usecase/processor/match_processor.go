@@ -58,7 +58,7 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 	pbGameState := pb.UpdateGameState{
 		State: pb.GameState_GameStateReward,
 	}
-	pbGameState.PresenceCards = make([]*pb.PresenceCards, len(s.Cards))
+	pbGameState.PresenceCards = make([]*pb.PresenceCards, 0, len(s.Cards))
 	for k, v := range s.Cards {
 		organizeCards := s.OrganizeCards[k]
 		if organizeCards == nil {
@@ -240,7 +240,7 @@ func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule
 }
 
 func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
-	walletUpdates := make([]*runtime.WalletUpdate, 0)
+	walletUpdates := make([]*runtime.WalletUpdate, 0, len(balanceResult.Updates))
 	for _, result := range balanceResult.Updates {
 		changeset := map[string]int64{
 			"chips": result.AmountChipAdd, // Substract amountChip coins to the user's wallet.
