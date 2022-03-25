@@ -7,7 +7,7 @@ type ListCard []Card
 func NewListCard(list []*pb.Card) ListCard {
 	newList := ListCard{}
 	for _, card := range list {
-		newList = append(newList, NewCard(card.GetRank(), card.GetSuit()))
+		newList = append(newList, NewCardFromPb(card.GetRank(), card.GetSuit()))
 	}
 
 	return newList

@@ -2,6 +2,7 @@ package chinese_poker
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -10,6 +11,12 @@ import (
 var (
 	kWinScoop  = 1
 	kLoseScoop = -1
+)
+
+var (
+	kFronHand = 0
+	kMidHand  = 1
+	kBackHand = 2
 )
 
 type Result struct {
@@ -62,6 +69,15 @@ type Hand struct {
 	owner string
 }
 
+func (h Hand) String() string {
+	var str string
+	str += fmt.Sprintf("front: %s\n", h.frontHand)
+	str += fmt.Sprintf("middle: %s\n", h.middleHand)
+	str += fmt.Sprintf("back: %s\n", h.backHand)
+
+	return str
+}
+
 func NewHand(cards *pb.ListCard) (*Hand, error) {
 	if cards == nil {
 		h := &Hand{
@@ -72,7 +88,7 @@ func NewHand(cards *pb.ListCard) (*Hand, error) {
 	listCard := make(entity.ListCard, 0, len(cards.Cards))
 	// deep copy card
 	for _, c := range cards.GetCards() {
-		listCard = append(listCard, entity.NewCard(c.GetRank(), c.GetSuit()))
+		listCard = append(listCard, entity.NewCardFromPb(c.GetRank(), c.GetSuit()))
 	}
 	hand := &Hand{
 		cards: listCard,

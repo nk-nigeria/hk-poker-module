@@ -144,6 +144,8 @@ func (m *processor) saveCard(logger runtime.Logger, s *entity.MatchState, messag
 		return
 	}
 
+	logger.Info("update save card %v, %v", message.GetUserId(), cardsByClient)
+
 	m.engine.Organize(s, message.GetUserId(), cardsByClient)
 }
 

@@ -213,19 +213,19 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFlush(entity.NewListCard(cards)); !ok {
+	if _, ok := CheckFlush(entity.NewBinListCards(entity.NewListCard(cards))); !ok {
 		t.Errorf("wrong check flush")
 	} else {
 		t.Logf("check flush ok")
 	}
 
-	if _, ok := CheckStraight(entity.NewListCard(cards)); !ok {
+	if _, ok := CheckStraight(entity.NewBinListCards(entity.NewListCard(cards))); !ok {
 		t.Errorf("wrong check straight")
 	} else {
 		t.Logf("check straight ok")
 	}
 
-	if _, ok := CheckStraightFlush(entity.NewListCard(cards)); !ok {
+	if _, ok := CheckStraightFlush(entity.NewBinListCards(entity.NewListCard(cards))); !ok {
 		t.Errorf("wrong check straight flush")
 	} else {
 		t.Logf("check straight flush ok")
@@ -254,7 +254,7 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFourOfAKind(entity.NewListCard(fourOfAKindCards)); !ok {
+	if _, ok := CheckFourOfAKind(entity.NewBinListCards(entity.NewListCard(fourOfAKindCards))); !ok {
 		t.Errorf("wrong check four of a kind")
 	} else {
 		t.Logf("check four of a kind ok")
@@ -283,7 +283,7 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckFullHouse(entity.NewListCard(fullHouseCards)); !ok {
+	if _, ok := CheckFullHouse(entity.NewBinListCards(entity.NewListCard(fullHouseCards))); !ok {
 		t.Errorf("wrong check full house card")
 	} else {
 		t.Logf("check full house ok")
@@ -314,7 +314,7 @@ func TestThreeOfAKind(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckThreeOfAKind(entity.NewListCard(threeOfAKindCards)); !ok {
+	if _, ok := CheckThreeOfAKind(entity.NewBinListCards(entity.NewListCard(threeOfAKindCards))); !ok {
 		t.Errorf("wrong check three of a kind card")
 	} else {
 		t.Logf("check three of a kind ok")
@@ -345,7 +345,7 @@ func TestTwoPair(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckTwoPairs(entity.NewListCard(cards)); !ok {
+	if _, ok := CheckTwoPairs(entity.NewBinListCards(entity.NewListCard(cards))); !ok {
 		t.Errorf("wrong check two pairs")
 	} else {
 		t.Logf("check two pairs ok")
@@ -376,7 +376,7 @@ func TestPair(t *testing.T) {
 		},
 	}
 
-	if _, ok := CheckPair(entity.NewListCard(cards)); !ok {
+	if _, ok := CheckPair(entity.NewBinListCards(entity.NewListCard(cards))); !ok {
 		t.Errorf("wrong check pairs")
 	} else {
 		t.Logf("check pairs ok")
