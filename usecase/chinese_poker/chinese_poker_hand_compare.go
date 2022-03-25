@@ -352,16 +352,16 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 		cmpCtx.ScoopAllResult = cmpResult
 	}
 
-	if cresult.r1.NaturalFactor > 0 {
+	if cresult.NaturalFactor > 0 {
 		result.NumHandWin += 3
 	}
-	if cresult.r1.FrontFactor > 0 {
+	if cresult.FrontFactor > 0 {
 		result.NumHandWin++
 	}
-	if cresult.r1.MiddleFactor > 0 {
+	if cresult.MiddleFactor > 0 {
 		result.NumHandWin++
 	}
-	if cresult.r1.BackFactor > 0 {
+	if cresult.BackFactor > 0 {
 		result.NumHandWin++
 	}
 }
