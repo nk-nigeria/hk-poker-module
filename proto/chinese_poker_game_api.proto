@@ -194,6 +194,7 @@ message HandBonus {
   string win = 1;
   string lose = 2;
   HandBonusType type = 3;
+  int64 factor = 4;
 }
 
 enum PointType {

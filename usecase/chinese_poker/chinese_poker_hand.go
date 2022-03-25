@@ -36,11 +36,12 @@ func (r *ComparisonResult) swap() {
 	r.r2 = tmp
 }
 
-func (r *ComparisonResult) addHandBonus(win, lose string, bonusType pb.HandBonusType) {
+func (r *ComparisonResult) addHandBonus(win, lose string, bonusType pb.HandBonusType, factor int64) {
 	r.bonuses = append(r.bonuses, &pb.HandBonus{
-		Win:  win,
-		Lose: lose,
-		Type: bonusType,
+		Win:    win,
+		Lose:   lose,
+		Type:   bonusType,
+		Factor: factor,
 	})
 }
 
