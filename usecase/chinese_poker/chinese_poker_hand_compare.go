@@ -80,7 +80,7 @@ func GetCompareContext(ctx context.Context) *CompareContext {
 
 func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
 	// A (NA) vs
-	//			B(Na) => case 1
+	//			B(NA) => case 1
 	//			B(MS) => case 2
 	//			B(NM) => case 3
 	// A (MS) vs

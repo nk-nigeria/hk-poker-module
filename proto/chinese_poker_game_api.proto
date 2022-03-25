@@ -241,15 +241,13 @@ message UpdateFinish {
   repeated HandBonus bonuses = 2;
 }
 
-message Balance {
+message BalanceUpdate {
   string user_id = 1;
   int64 amount_chip_before = 2;
   int64 amount_chip_current = 3;
-  float percent_fee = 4;
-  int64 amount_chip_fee = 5;
-  int64 amount_chip_add = 6;
+  int64 amount_chip_add = 4;
 }
 
 message BalanceResult {
-  repeated Balance balances = 1;
+  repeated BalanceUpdate updates = 1;
 }
