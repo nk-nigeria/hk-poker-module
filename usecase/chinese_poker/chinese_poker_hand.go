@@ -2,6 +2,7 @@ package chinese_poker
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -60,6 +61,15 @@ type Hand struct {
 	calculated   bool
 
 	owner string
+}
+
+func (h Hand) String() string {
+	var str string
+	str += fmt.Sprintf("front: %s\n", h.frontHand)
+	str += fmt.Sprintf("middle: %s\n", h.middleHand)
+	str += fmt.Sprintf("back: %s\n", h.backHand)
+
+	return str
 }
 
 func NewHand(cards *pb.ListCard) (*Hand, error) {

@@ -23,7 +23,7 @@ func init() {
 func CheckNaturalCards(h *Hand) (*HandPoint, bool) {
 	// check natural win
 	for _, checkerFn := range naturalCardChecker {
-		handPoint, valid := checkerFn(h.GetCards())
+		handPoint, valid := checkerFn(h.GetCards().Clone())
 		if valid {
 			return handPoint, valid
 		}

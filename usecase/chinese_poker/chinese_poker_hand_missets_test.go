@@ -256,18 +256,25 @@ func TestIsMisSets(t *testing.T) {
 	t.Logf("test is mis sets")
 	var h1 *Hand
 	h1, _ = mockHandMissets1()
+	h1.calculatePoint()
+	t.Logf("front %s", h1.frontHand.Point)
+	t.Logf("middle %s", h1.middleHand.Point)
+	t.Logf("back %s", h1.backHand.Point)
 
 	var mis bool
 	mis = IsMisSets(h1)
 	assert.Equal(t, true, mis)
 
 	h1, _ = mockHandMissets2()
+	h1.calculatePoint()
 	assert.Equal(t, true, mis)
 
 	h1, _ = mockHandMissets3()
+	h1.calculatePoint()
 	assert.Equal(t, true, mis)
 
 	h1, _ = mockHandDontMissets()
+	h1.calculatePoint()
 	mis = IsMisSets(h1)
 	assert.Equal(t, false, mis)
 }
