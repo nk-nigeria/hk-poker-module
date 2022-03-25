@@ -4,6 +4,7 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/heroiclabs/nakama-common/runtime"
+	combinations "github.com/mxschmitt/golang-combinations"
 	"google.golang.org/protobuf/encoding/protojson"
 	"testing"
 	"time"
@@ -11,6 +12,13 @@ import (
 
 func TestMatch(t *testing.T) {
 	t.Logf("test match")
+
+	userIds := []string{"user1", "user2", "user3"}
+	pairs := combinations.Combinations(userIds, 2)
+	log.GetLogger().Info("combination %v", pairs)
+	for _, pair := range pairs {
+		t.Logf("compare %v with %v", pair[0], pair[1])
+	}
 
 	marshaler := &protojson.MarshalOptions{
 		UseEnumNumbers: true,
@@ -46,8 +54,7 @@ func TestMatch(t *testing.T) {
 
 	go func() {
 		t.Logf("start mock join leave")
-		var presences []runtime.Presence
-		presences = make([]runtime.Presence, 1)
+		presences := make([]runtime.Presence, 1)
 		presences[0] = &mock.MockPresence{
 			UserId: "user1",
 		}
@@ -55,6 +62,7 @@ func TestMatch(t *testing.T) {
 		m.MatchJoin(nil, logger, nil, nil, dispatcher, 0, s, presences)
 
 		time.Sleep(time.Second * 2)
+		presences = make([]runtime.Presence, 1)
 		presences[0] = &mock.MockPresence{
 			UserId: "user2",
 		}
