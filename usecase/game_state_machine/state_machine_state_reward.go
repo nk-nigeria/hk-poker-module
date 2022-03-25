@@ -2,6 +2,7 @@ package game_state_machine
 
 import (
 	"context"
+
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 )
@@ -26,7 +27,12 @@ func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
 	state.SetUpCountDown(rewardTimeout)
 
 	// process finish
-	procPkg.GetProcessor().ProcessFinishGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
+	procPkg.GetProcessor().ProcessFinishGame(
+		procPkg.GetContext(),
+		procPkg.GetLogger(),
+		procPkg.GetNK(),
+		procPkg.GetDispatcher(),
+		state)
 
 	return nil
 }

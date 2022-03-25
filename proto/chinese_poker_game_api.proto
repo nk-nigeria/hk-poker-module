@@ -92,6 +92,8 @@ enum OpCodeUpdate {
   OPCODE_UPDATE_GAME_STATE = 5;
   // update card state/combine, show, declare
   OPCODE_UPDATE_CARD_STATE = 6;
+
+  OPCODE_UPDATE_WALLET = 7;
 }
 
 enum GameState {
@@ -224,15 +226,30 @@ message ScoreResult {
   int64 natural_factor = 7;
   int64 bonus_factor = 8; // mis set, scoop, scoop all
   int64 scoop = 9;
+  int32 num_hand_win = 10;  
+  int64 total_factor = 11;
 }
 
 message ComparisonResult {
   string user_id = 1;
   ScoreResult score_result = 2;
-  PointResult point_result = 3;
+  PointResult point_result = 3; 
 }
 
 message UpdateFinish {
   repeated ComparisonResult results = 1;
   repeated HandBonus bonuses = 2;
+}
+
+message Balance {
+  string user_id = 1;
+  int64 amount_chip_before = 2;
+  int64 amount_chip_current = 3;
+  float percent_fee = 4;
+  int64 amount_chip_fee = 5;
+  int64 amount_chip_add = 6;
+}
+
+message BalanceResult {
+  repeated Balance balances = 1;
 }
