@@ -144,6 +144,8 @@ func (m *processor) saveCard(logger runtime.Logger, s *entity.MatchState, messag
 		return
 	}
 
+	logger.Info("update save card %v, %v", message.GetUserId(), cardsByClient)
+
 	m.engine.Organize(s, message.GetUserId(), cardsByClient)
 }
 
@@ -203,7 +205,7 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		}
 
 		percentFee := 0.05
-		fee := int64(percentFee*10*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
+		fee := int64(percentFee*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
 		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
 		balance.AmountChipCurrent = balance.AmountChipCurrent + balance.AmountChipAdd - fee
 		balanceResult.Updates = append(balanceResult.Updates, &balance)
@@ -224,14 +226,15 @@ func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule
 	accounts, err := nk.AccountsGetId(ctx, userIds)
 	if err != nil {
 		logger.Error("Error when read list account, error: %s, list userId %s",
-			strings.Join(userIds, ","), err.Error())
+			err.Error(), strings.Join(userIds, ","))
+		return nil, err
 	}
 	wallets := make([]entity.Wallet, 0)
 	for _, ac := range accounts {
 		w, e := entity.ParseWallet(ac.Wallet)
 		if e != nil {
 			logger.Error("Error when parse wallet user %s, error: %s", ac.User.Id, e.Error())
-			continue
+			return wallets, err
 		}
 		w.UserId = ac.User.Id
 		wallets = append(wallets, w)
@@ -242,8 +245,9 @@ func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule
 func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
 	walletUpdates := make([]*runtime.WalletUpdate, 0, len(balanceResult.Updates))
 	for _, result := range balanceResult.Updates {
+		amoutChip := result.AmountChipCurrent - result.AmountChipBefore
 		changeset := map[string]int64{
-			"chips": result.AmountChipAdd, // Substract amountChip coins to the user's wallet.
+			"chips": amoutChip, // Substract amountChip coins to the user's wallet.
 		}
 		metadata := map[string]interface{}{
 			"game_reward": entity.ModuleName,
