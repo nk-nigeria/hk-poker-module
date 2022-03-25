@@ -203,7 +203,7 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		}
 
 		percentFee := 0.05
-		fee := int64(percentFee*10*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
+		fee := int64(percentFee*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
 		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
 		balance.AmountChipCurrent = balance.AmountChipCurrent + balance.AmountChipAdd - fee
 		balanceResult.Updates = append(balanceResult.Updates, &balance)
