@@ -219,6 +219,7 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 	)
 }
 func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, userIds ...string) ([]entity.Wallet, error) {
+	logger.Error("nk %v ctx %v userIds %v", nk, ctx, userIds)
 	accounts, err := nk.AccountsGetId(ctx, userIds)
 	if err != nil {
 		logger.Error("Error when read list account, error: %s, list userId %s",
