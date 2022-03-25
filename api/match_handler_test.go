@@ -1,10 +1,10 @@
 package api
 
 import (
+	"context"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/heroiclabs/nakama-common/runtime"
-	combinations "github.com/mxschmitt/golang-combinations"
 	"google.golang.org/protobuf/encoding/protojson"
 	"testing"
 	"time"
@@ -13,12 +13,12 @@ import (
 func TestMatch(t *testing.T) {
 	t.Logf("test match")
 
-	userIds := []string{"user1", "user2", "user3"}
-	pairs := combinations.Combinations(userIds, 2)
-	log.GetLogger().Info("combination %v", pairs)
-	for _, pair := range pairs {
-		t.Logf("compare %v with %v", pair[0], pair[1])
-	}
+	//userIds := []string{"user1", "user2", "user3"}
+	//pairs := combinations.Combinations(userIds, 2)
+	//log.GetLogger().Info("combination %v", pairs)
+	//for _, pair := range pairs {
+	//	t.Logf("compare %v with %v", pair[0], pair[1])
+	//}
 
 	marshaler := &protojson.MarshalOptions{
 		UseEnumNumbers: true,
@@ -35,7 +35,10 @@ func TestMatch(t *testing.T) {
 
 	logger := log.GetLogger()
 	dispatcher := mock.MockDispatcher{}
+	nk := mock.MockModule{}
 	s, _, _ := m.MatchInit(nil, logger, nil, nil, params)
+
+	ctx := context.TODO()
 
 	// mock event routine
 	var stop = make(chan bool)
@@ -44,7 +47,7 @@ func TestMatch(t *testing.T) {
 		for i := 0; i < 2*120; i++ {
 			t.Logf("log %d", i)
 			time.Sleep(time.Millisecond * 500)
-			m.MatchLoop(nil, logger, nil, nil, dispatcher, 0, s, nil)
+			m.MatchLoop(ctx, logger, nil, nk, dispatcher, 0, s, nil)
 		}
 
 		t.Logf("current state %v", m.GetState())
