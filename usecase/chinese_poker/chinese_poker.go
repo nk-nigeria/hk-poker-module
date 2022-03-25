@@ -63,7 +63,7 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	log.GetLogger().Info("Finish presence %v, size %v", s.PlayingPresences, presenceCount)
 
 	// prepare for compare data
-	userIds := make([]string, 0)
+	userIds := make([]string, 0, presenceCount)
 	hands := make(map[string]*Hand)
 	results := make(map[string]*pb.ComparisonResult)
 	for _, val := range s.PlayingPresences.Keys() {
