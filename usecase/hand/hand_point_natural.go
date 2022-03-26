@@ -3,7 +3,7 @@ package hand
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	cpbl "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/game_bin_list"
+	blc "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/bin_list_card"
 )
 
 var naturalCardChecker = []HandCheckFunc{
@@ -45,7 +45,7 @@ func CheckNaturalHands(hand *Hand) (*HandPoint, bool) {
 // CheckCleanDragon
 // Sảnh rồng đồng màu
 func CheckCleanDragon(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineFlush); count > 0 {
+	if count, sortedCard := blc.NewChinesePokerBinList().GetChain(bcards, blc.CombineFlush); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_NaturalCleanDragon, ScorePointNaturalCleanDragon, sortedCard)
 		return handPoint, true
 	}
@@ -56,7 +56,7 @@ func CheckCleanDragon(bcards *entity.BinListCard) (*HandPoint, bool) {
 // CheckFullColor
 // Đồng màu 12 lá
 func CheckFullColor(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineFullColor); count > 0 {
+	if count, sortedCard := blc.NewChinesePokerBinList().GetChain(bcards, blc.CombineFullColor); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_NaturalFullColors, ScorePointNaturalFullColors, sortedCard)
 		return handPoint, true
 	}
@@ -67,7 +67,7 @@ func CheckFullColor(bcards *entity.BinListCard) (*HandPoint, bool) {
 // CheckDragon
 // Sảnh rồng
 func CheckDragon(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineStraight); count > 0 {
+	if count, sortedCard := blc.NewChinesePokerBinList().GetChain(bcards, blc.CombineStraight); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_NaturalDragon, ScorePointNaturalDragon, sortedCard)
 		return handPoint, true
 	}
@@ -78,7 +78,7 @@ func CheckDragon(bcards *entity.BinListCard) (*HandPoint, bool) {
 // CheckSixPairs
 // 6 đôi
 func CheckSixPairs(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombinePair); count >= 6 {
+	if count, sortedCard := blc.NewChinesePokerBinList().GetChain(bcards, blc.CombinePair); count >= 6 {
 		handPoint := createPointFromList(pb.HandRanking_NaturalSixPairs, ScorePointNaturalSixPairs, sortedCard)
 		return handPoint, true
 	}

@@ -1,4 +1,4 @@
-package game_bin_list
+package bin_list_card
 
 import (
 	"github.com/bits-and-blooms/bitset"
