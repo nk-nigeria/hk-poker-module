@@ -5,6 +5,7 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	cpbl "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker_bin_list"
 )
 
 //  				t1		s1		s2		s3		s4		s5
@@ -249,7 +250,7 @@ func CheckStraightFlush(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Tứ quý (en: Four of a Kind)
 // Bốn lá đồng số
 func CheckFourOfAKind(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := bcards.GetChain(entity.CombineFour); count > 0 {
+	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineFour); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_FourOfAKind, ScorePointFourOfAKind, sortedCard)
 		return handPoint, true
 	}
@@ -262,7 +263,7 @@ func CheckFourOfAKind(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Một bộ ba và một bộ đôi
 // Bốn lá đồng số
 func CheckFullHouse(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := bcards.GetChain(entity.CombineFullHouse); count > 0 {
+	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineFullHouse); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_FullHouse, ScorePointFullHouse, sortedCard)
 		return handPoint, true
 	}
@@ -274,7 +275,7 @@ func CheckFullHouse(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Thùng (en: Flush)
 // Năm lá bài cùng màu, đồng chất (nhưng không cùng một chuỗi số)
 func CheckFlush(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := bcards.GetChain(entity.CombineFlush); count > 0 {
+	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineFlush); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_Flush, ScorePointFlush, sortedCard)
 		return handPoint, true
 	}
@@ -286,7 +287,7 @@ func CheckFlush(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Sảnh (en: Straight)
 // Năm lá bài trong một chuỗi số (nhưng không đồng chất)
 func CheckStraight(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := bcards.GetChain(entity.CombineStraight); count > 0 {
+	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineStraight); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_Straight, ScorePointStraight, sortedCard)
 		return handPoint, true
 	}
@@ -298,7 +299,7 @@ func CheckStraight(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Xám chi/Xám cô (en: Three of a Kind)
 // Ba lá bài đồng số
 func CheckThreeOfAKind(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := bcards.GetChain(entity.CombineThree); count > 0 {
+	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombineThree); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_ThreeOfAKind, ScorePointThreeOfAKind, sortedCard)
 		return handPoint, true
 	}
@@ -309,7 +310,7 @@ func CheckThreeOfAKind(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Thú (en: Two Pairs)
 // Hai đôi
 func CheckTwoPairs(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := bcards.GetChain(entity.CombinePair); count == 2 {
+	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombinePair); count == 2 {
 		handPoint := createPointFromList(pb.HandRanking_TwoPairs, ScorePointTwoPairs, sortedCard)
 		return handPoint, true
 	}
@@ -321,7 +322,7 @@ func CheckTwoPairs(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Đôi (en: Pair)
 // Hai lá bài đồng số
 func CheckPair(bcards *entity.BinListCard) (*HandPoint, bool) {
-	if count, sortedCard := bcards.GetChain(entity.CombinePair); count == 1 {
+	if count, sortedCard := cpbl.NewChinesePokerBinList().GetChain(bcards, cpbl.CombinePair); count == 1 {
 		handPoint := createPointFromList(pb.HandRanking_Pair, ScorePointPair, sortedCard)
 		return handPoint, true
 	}

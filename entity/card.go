@@ -32,7 +32,7 @@ const (
 	SuitHearts   uint8 = 0x04
 )
 
-var ranks = []uint8{
+var Ranks = []uint8{
 	Rank2,
 	Rank3,
 	Rank4,
@@ -48,7 +48,7 @@ var ranks = []uint8{
 	RankA,
 }
 
-var suits = []uint8{
+var Suits = []uint8{
 	SuitClubs,
 	SuitSpades,
 	SuitDiamonds,
