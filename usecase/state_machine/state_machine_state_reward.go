@@ -1,4 +1,4 @@
-package game_state_machine
+package state_machine
 
 import (
 	"context"

@@ -1,5 +1,6 @@
 package entity
 
 const (
-	ModuleName = "chinese-poker"
+	ModuleName      = "chinese-poker"
+	MaxPresenceCard = 13
 )

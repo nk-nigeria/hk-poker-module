@@ -1,4 +1,4 @@
-package chinese_poker
+package hand
 
 import (
 	"context"

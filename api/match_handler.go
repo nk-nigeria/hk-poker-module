@@ -18,13 +18,13 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/game_state_machine"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/processor"
+	gsm "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/state_machine"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/qmuntal/stateless"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -39,13 +39,13 @@ var _ runtime.Match = &MatchHandler{}
 
 type MatchHandler struct {
 	processor processor.UseCase
-	machine   game_state_machine.UseCase
+	machine   gsm.UseCase
 }
 
 func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) *MatchHandler {
 	return &MatchHandler{
-		processor: processor.NewMatchProcessor(marshaler, unmarshaler, chinese_poker.NewChinesePokerEngine()),
-		machine:   game_state_machine.NewGameStateMachine(),
+		processor: processor.NewMatchProcessor(marshaler, unmarshaler, engine.NewChinesePokerEngine()),
+		machine:   gsm.NewGameStateMachine(),
 	}
 }
 
