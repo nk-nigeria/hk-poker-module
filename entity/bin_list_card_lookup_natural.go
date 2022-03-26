@@ -10,19 +10,13 @@ func (b BinListCard) lookupFullColor() (uint, ListCard) {
 	black = b.b.Intersection(BitSetColor[kBlack])
 
 	if red.Count() >= 12 {
-		result := ListCard{}
 		remain := b.b.Difference(red)
-		result = append(result, BitSetToListCard(remain)...)
-		result = append(result, BitSetToListCard(red)...)
-		return 1, result
+		return 1, createResult(remain.Count()+red.Count(), remain, red)
 	}
 
 	if black.Count() >= 12 {
-		result := ListCard{}
 		remain := b.b.Difference(black)
-		result = append(result, BitSetToListCard(remain)...)
-		result = append(result, BitSetToListCard(black)...)
-		return 1, result
+		return 1, createResult(remain.Count()+black.Count(), remain, black)
 	}
 
 	return 0, nil
