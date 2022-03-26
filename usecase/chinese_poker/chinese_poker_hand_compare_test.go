@@ -6,7 +6,7 @@ import (
 )
 
 func mockHandNatural1() (*Hand, error) {
-	return NewHand(&pb.ListCard{
+	return NewHandFromPb(&pb.ListCard{
 		Cards: []*pb.Card{
 			{
 				Rank: pb.CardRank_RANK_2,
@@ -67,7 +67,7 @@ func mockHandNatural1() (*Hand, error) {
 }
 
 func mockHandNatural2() (*Hand, error) {
-	return NewHand(&pb.ListCard{
+	return NewHandFromPb(&pb.ListCard{
 		Cards: []*pb.Card{
 			{
 				Rank: pb.CardRank_RANK_2,

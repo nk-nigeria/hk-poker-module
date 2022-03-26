@@ -78,7 +78,7 @@ func (h Hand) String() string {
 	return str
 }
 
-func NewHand(cards *pb.ListCard) (*Hand, error) {
+func NewHandFromPb(cards *pb.ListCard) (*Hand, error) {
 	if cards == nil {
 		h := &Hand{
 			calculated: false,
@@ -92,6 +92,25 @@ func NewHand(cards *pb.ListCard) (*Hand, error) {
 	}
 	hand := &Hand{
 		cards: listCard,
+	}
+
+	if hand.parse() != nil {
+		return nil, errors.New("hand.new.error.invalid")
+	}
+
+	return hand, nil
+}
+
+func NewHand(cards entity.ListCard) (*Hand, error) {
+	if cards == nil {
+		h := &Hand{
+			calculated: false,
+		}
+		return h, nil
+	}
+
+	hand := &Hand{
+		cards: cards,
 	}
 
 	if hand.parse() != nil {

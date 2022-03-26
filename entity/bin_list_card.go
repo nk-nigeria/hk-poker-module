@@ -23,7 +23,6 @@ var (
 	CombineStraight  = 4
 	CombineFullHouse = 5
 	CombineFlush     = 6
-
 	CombineFullColor = 7
 )
 
@@ -49,7 +48,7 @@ func init() {
 
 	BitSetColor = make(map[uint8]*bitset.BitSet)
 	BitSetColor[kRed] = BitSetSuitMap[SuitHearts].Union(BitSetSuitMap[SuitDiamonds])
-	BitSetColor[kBlack] = BitSetSuitMap[SuitSpides].Union(BitSetSuitMap[SuitClubs])
+	BitSetColor[kBlack] = BitSetSuitMap[SuitSpades].Union(BitSetSuitMap[SuitClubs])
 }
 
 type BinListCard struct {

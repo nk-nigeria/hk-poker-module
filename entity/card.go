@@ -26,8 +26,8 @@ const (
 	RankA  uint8 = 0xE0
 
 	SuitNone     uint8 = 0x00
-	SuitClubs    uint8 = 0x01
-	SuitSpides   uint8 = 0x02
+	SuitSpades   uint8 = 0x01
+	SuitClubs    uint8 = 0x02
 	SuitDiamonds uint8 = 0x03
 	SuitHearts   uint8 = 0x04
 )
@@ -50,10 +50,77 @@ var ranks = []uint8{
 
 var suits = []uint8{
 	SuitClubs,
-	SuitSpides,
+	SuitSpades,
 	SuitDiamonds,
 	SuitHearts,
 }
+
+const (
+	Card2S = Card(Rank2 | SuitSpades)
+	Card2C = Card(Rank2 | SuitClubs)
+	Card2D = Card(Rank2 | SuitDiamonds)
+	Card2H = Card(Rank2 | SuitHearts)
+
+	Card3S = Card(Rank3 | SuitSpades)
+	Card3C = Card(Rank3 | SuitClubs)
+	Card3D = Card(Rank3 | SuitDiamonds)
+	Card3H = Card(Rank3 | SuitHearts)
+
+	Card4S = Card(Rank4 | SuitSpades)
+	Card4C = Card(Rank4 | SuitClubs)
+	Card4D = Card(Rank4 | SuitDiamonds)
+	Card4H = Card(Rank4 | SuitHearts)
+
+	Card5S = Card(Rank5 | SuitSpades)
+	Card5C = Card(Rank5 | SuitClubs)
+	Card5D = Card(Rank5 | SuitDiamonds)
+	Card5H = Card(Rank5 | SuitHearts)
+
+	Card6S = Card(Rank6 | SuitSpades)
+	Card6C = Card(Rank6 | SuitClubs)
+	Card6D = Card(Rank6 | SuitDiamonds)
+	Card6H = Card(Rank6 | SuitHearts)
+
+	Card7S = Card(Rank7 | SuitSpades)
+	Card7C = Card(Rank7 | SuitClubs)
+	Card7D = Card(Rank7 | SuitDiamonds)
+	Card7H = Card(Rank7 | SuitHearts)
+
+	Card8S = Card(Rank8 | SuitSpades)
+	Card8C = Card(Rank8 | SuitClubs)
+	Card8D = Card(Rank8 | SuitDiamonds)
+	Card8H = Card(Rank8 | SuitHearts)
+
+	Card9S = Card(Rank9 | SuitSpades)
+	Card9C = Card(Rank9 | SuitClubs)
+	Card9D = Card(Rank9 | SuitDiamonds)
+	Card9H = Card(Rank9 | SuitHearts)
+
+	Card10S = Card(Rank10 | SuitSpades)
+	Card10C = Card(Rank10 | SuitClubs)
+	Card10D = Card(Rank10 | SuitDiamonds)
+	Card10H = Card(Rank10 | SuitHearts)
+
+	CardJS = Card(RankJ | SuitSpades)
+	CardJC = Card(RankJ | SuitClubs)
+	CardJD = Card(RankJ | SuitDiamonds)
+	CardJH = Card(RankJ | SuitHearts)
+
+	CardQS = Card(RankQ | SuitSpades)
+	CardQC = Card(RankQ | SuitClubs)
+	CardQD = Card(RankQ | SuitDiamonds)
+	CardQH = Card(RankQ | SuitHearts)
+
+	CardKS = Card(RankK | SuitSpades)
+	CardKC = Card(RankK | SuitClubs)
+	CardKD = Card(RankK | SuitDiamonds)
+	CardKH = Card(RankK | SuitHearts)
+
+	CardAS = Card(RankA | SuitSpades)
+	CardAC = Card(RankA | SuitClubs)
+	CardAD = Card(RankA | SuitDiamonds)
+	CardAH = Card(RankA | SuitHearts)
+)
 
 var mapRanks = map[pb.CardRank]uint8{
 	pb.CardRank_RANK_2:  Rank2,
@@ -72,8 +139,8 @@ var mapRanks = map[pb.CardRank]uint8{
 }
 
 var mapSuits = map[pb.CardSuit]uint8{
+	pb.CardSuit_SUIT_SPADES:   SuitSpades,
 	pb.CardSuit_SUIT_CLUBS:    SuitClubs,
-	pb.CardSuit_SUIT_SPADES:   SuitSpides,
 	pb.CardSuit_SUIT_DIAMONDS: SuitDiamonds,
 	pb.CardSuit_SUIT_HEARTS:   SuitHearts,
 }
@@ -95,8 +162,8 @@ var mapStringRanks = map[uint8]string{
 }
 
 var mapStringSuits = map[uint8]string{
+	SuitSpades:   "Spades",
 	SuitClubs:    "Clubs",
-	SuitSpides:   "Spides",
 	SuitDiamonds: "Diamonds",
 	SuitHearts:   "Hearts",
 }

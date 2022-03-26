@@ -73,7 +73,7 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 		cards := s.OrganizeCards[uid]
 		var hand *Hand
 		var err error
-		hand, err = NewHand(cards)
+		hand, err = NewHandFromPb(cards)
 		hand.SetOwner(uid)
 		if err != nil {
 			continue
