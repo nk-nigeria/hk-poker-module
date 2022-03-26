@@ -10,7 +10,7 @@ import (
 )
 
 func mockHand1() (*Hand, error) {
-	return NewHand(&pb.ListCard{
+	return NewHandFromPb(&pb.ListCard{
 		Cards: []*pb.Card{
 			{
 				Rank: pb.CardRank_RANK_3,
@@ -71,7 +71,7 @@ func mockHand1() (*Hand, error) {
 }
 
 func mockHand2() (*Hand, error) {
-	return NewHand(&pb.ListCard{
+	return NewHandFromPb(&pb.ListCard{
 		Cards: []*pb.Card{
 			// Front
 			{
@@ -290,37 +290,6 @@ func TestCheck(t *testing.T) {
 	}
 }
 
-func TestThreeOfAKind(t *testing.T) {
-	threeOfAKindCards := []*pb.Card{
-		{
-			Rank: pb.CardRank_RANK_10,
-			Suit: pb.CardSuit_SUIT_CLUBS,
-		},
-		{
-			Rank: pb.CardRank_RANK_10,
-			Suit: pb.CardSuit_SUIT_HEARTS,
-		},
-		{
-			Rank: pb.CardRank_RANK_10,
-			Suit: pb.CardSuit_SUIT_DIAMONDS,
-		},
-		{
-			Rank: pb.CardRank_RANK_9,
-			Suit: pb.CardSuit_SUIT_SPADES,
-		},
-		{
-			Rank: pb.CardRank_RANK_9,
-			Suit: pb.CardSuit_SUIT_CLUBS,
-		},
-	}
-
-	if _, ok := CheckThreeOfAKind(entity.NewBinListCards(entity.NewListCard(threeOfAKindCards))); !ok {
-		t.Errorf("wrong check three of a kind card")
-	} else {
-		t.Logf("check three of a kind ok")
-	}
-}
-
 func TestTwoPair(t *testing.T) {
 	cards := []*pb.Card{
 		{
@@ -349,37 +318,6 @@ func TestTwoPair(t *testing.T) {
 		t.Errorf("wrong check two pairs")
 	} else {
 		t.Logf("check two pairs ok")
-	}
-}
-
-func TestPair(t *testing.T) {
-	cards := []*pb.Card{
-		{
-			Rank: pb.CardRank_RANK_10,
-			Suit: pb.CardSuit_SUIT_CLUBS,
-		},
-		{
-			Rank: pb.CardRank_RANK_10,
-			Suit: pb.CardSuit_SUIT_HEARTS,
-		},
-		{
-			Rank: pb.CardRank_RANK_J,
-			Suit: pb.CardSuit_SUIT_DIAMONDS,
-		},
-		{
-			Rank: pb.CardRank_RANK_9,
-			Suit: pb.CardSuit_SUIT_SPADES,
-		},
-		{
-			Rank: pb.CardRank_RANK_9,
-			Suit: pb.CardSuit_SUIT_CLUBS,
-		},
-	}
-
-	if _, ok := CheckPair(entity.NewBinListCards(entity.NewListCard(cards))); !ok {
-		t.Errorf("wrong check pairs")
-	} else {
-		t.Logf("check pairs ok")
 	}
 }
 

@@ -62,7 +62,6 @@ func (b BinListCard) lookupTwo() (uint, ListCard) {
 }
 
 func (b BinListCard) lookupFullHouse() (uint, ListCard) {
-	count := uint(0)
 	var pair *bitset.BitSet
 	var threes *bitset.BitSet
 	for _, rank := range ranks {
@@ -80,7 +79,7 @@ func (b BinListCard) lookupFullHouse() (uint, ListCard) {
 		result := ListCard{}
 		result = append(result, BitSetToListCard(pair)...)
 		result = append(result, BitSetToListCard(threes)...)
-		return count, result
+		return 1, result
 	}
 
 	return 0, nil

@@ -204,9 +204,12 @@ func CalculatePoint(ch *ChildHand) *HandPoint {
 	bcards := entity.NewBinListCards(ch.Cards)
 	if ch.handType == kFronHand {
 		for _, fn := range HandCheckerFronts {
+			log.GetLogger().Info("check %v, cards %v", fn, bcards)
 			if handPoint, valid := fn(bcards); valid {
+				log.GetLogger().Info("check ok")
 				return handPoint
 			}
+			log.GetLogger().Info("check not ok")
 		}
 	} else {
 		for _, fn := range HandCheckers {
@@ -230,8 +233,6 @@ func CheckHighCard(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Năm lá bài cùng màu, đồng chất, cùng một chuỗi số
 // Là Flush, có cùng chuỗi
 func CheckStraightFlush(bcards *entity.BinListCard) (*HandPoint, bool) {
-	log.GetLogger().Info("check CheckStraightFlush")
-
 	_, valid := CheckStraight(bcards)
 	if !valid {
 		return nil, false
@@ -250,8 +251,6 @@ func CheckStraightFlush(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Tứ quý (en: Four of a Kind)
 // Bốn lá đồng số
 func CheckFourOfAKind(bcards *entity.BinListCard) (*HandPoint, bool) {
-	log.GetLogger().Info("check CheckFourOfAKind")
-
 	if count, sortedCard := bcards.GetChain(entity.CombineFour); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_FourOfAKind, ScorePointFourOfAKind, sortedCard)
 		return handPoint, true
@@ -265,8 +264,6 @@ func CheckFourOfAKind(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Một bộ ba và một bộ đôi
 // Bốn lá đồng số
 func CheckFullHouse(bcards *entity.BinListCard) (*HandPoint, bool) {
-	log.GetLogger().Info("check CheckFullHouse")
-
 	if count, sortedCard := bcards.GetChain(entity.CombineFullHouse); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_FullHouse, ScorePointFullHouse, sortedCard)
 		return handPoint, true
@@ -279,8 +276,6 @@ func CheckFullHouse(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Thùng (en: Flush)
 // Năm lá bài cùng màu, đồng chất (nhưng không cùng một chuỗi số)
 func CheckFlush(bcards *entity.BinListCard) (*HandPoint, bool) {
-	log.GetLogger().Info("check CheckFlush")
-
 	if count, sortedCard := bcards.GetChain(entity.CombineFlush); count > 0 {
 		handPoint := createPointFromList(pb.HandRanking_Flush, ScorePointFlush, sortedCard)
 		return handPoint, true
@@ -316,8 +311,6 @@ func CheckThreeOfAKind(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Thú (en: Two Pairs)
 // Hai đôi
 func CheckTwoPairs(bcards *entity.BinListCard) (*HandPoint, bool) {
-	log.GetLogger().Info("check CheckTwoPairs")
-
 	if count, sortedCard := bcards.GetChain(entity.CombinePair); count == 2 {
 		handPoint := createPointFromList(pb.HandRanking_TwoPairs, ScorePointTwoPairs, sortedCard)
 		return handPoint, true
@@ -330,8 +323,6 @@ func CheckTwoPairs(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Đôi (en: Pair)
 // Hai lá bài đồng số
 func CheckPair(bcards *entity.BinListCard) (*HandPoint, bool) {
-	log.GetLogger().Info("check CheckPair")
-
 	if count, sortedCard := bcards.GetChain(entity.CombinePair); count == 1 {
 		handPoint := createPointFromList(pb.HandRanking_Pair, ScorePointPair, sortedCard)
 		return handPoint, true
