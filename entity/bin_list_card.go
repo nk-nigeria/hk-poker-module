@@ -77,7 +77,7 @@ func (b BinListCard) String() string {
 }
 
 func (b BinListCard) ToList() ListCard {
-	return BitSetToListCard(b.b)
+	return bitSetToListCard(b.b)
 }
 
 func (b BinListCard) GetChain(comb int) (uint, ListCard) {
@@ -101,10 +101,16 @@ func (b BinListCard) GetChain(comb int) (uint, ListCard) {
 	return 0, nil
 }
 
-func BitSetToListCard(b *bitset.BitSet) ListCard {
+func bitSetToListCard(b *bitset.BitSet) ListCard {
 	cards := ListCard{}
 	for i, e := b.NextSet(0); e; i, e = b.NextSet(i + 1) {
 		cards = append(cards, NewCardFromUint(i))
 	}
 	return cards
+}
+
+func IsSameListCard(cards1, cards2 ListCard) bool {
+	bl1 := NewBinListCards(cards1)
+	bl2 := NewBinListCards(cards2)
+	return bl1.b.DifferenceCardinality(bl2.b) == 0
 }

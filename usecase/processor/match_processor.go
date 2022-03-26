@@ -138,7 +138,7 @@ func (m *processor) saveCard(logger runtime.Logger, s *entity.MatchState, messag
 		return
 	}
 	// check card send by client is the same card in server
-	if !entity.IsSameCards(cards.GetCards(), cardsByClient.GetCards()) {
+	if !entity.IsSameListCard(entity.NewListCard(cards.GetCards()), entity.NewListCard(cardsByClient.GetCards())) {
 		logger.Error("cards from client not the same card in server, invalid action",
 			len(cardsByClient.GetCards()), len(cards.GetCards()))
 		return

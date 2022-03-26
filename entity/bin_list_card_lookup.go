@@ -2,16 +2,22 @@ package entity
 
 import "github.com/bits-and-blooms/bitset"
 
+func createResult(size uint, sets ...*bitset.BitSet) ListCard {
+	result := NewListCardWithSize(size)
+	for _, set := range sets {
+		result = append(result, bitSetToListCard(set)...)
+	}
+
+	return result
+}
+
 func (b BinListCard) lookupFour() (uint, ListCard) {
 	for _, rank := range ranks {
 		intersec := b.b.Intersection(BitSetRankMap[rank])
 		if intersec.Count() == 4 {
 			remain := b.b.Difference(intersec)
-			result := ListCard{}
-			result = append(result, BitSetToListCard(remain)...)
-			result = append(result, BitSetToListCard(intersec)...)
 
-			return 1, result
+			return 1, createResult(remain.Count()+intersec.Count(), remain, intersec)
 		}
 	}
 
@@ -23,11 +29,8 @@ func (b BinListCard) lookupThree() (uint, ListCard) {
 		intersec := b.b.Intersection(BitSetRankMap[rank])
 		if intersec.Count() == 3 {
 			remain := b.b.Difference(intersec)
-			result := ListCard{}
-			result = append(result, BitSetToListCard(remain)...)
-			result = append(result, BitSetToListCard(intersec)...)
 
-			return 1, result
+			return 1, createResult(remain.Count()+intersec.Count(), remain, intersec)
 		}
 	}
 
@@ -51,11 +54,8 @@ func (b BinListCard) lookupTwo() (uint, ListCard) {
 	}
 
 	if count > 0 {
-		result := ListCard{}
 		remain := b.b.Difference(&pairs)
-		result = append(result, BitSetToListCard(remain)...)
-		result = append(result, BitSetToListCard(&pairs)...)
-		return count, result
+		return count, createResult(remain.Count()+pairs.Count(), remain, &pairs)
 	}
 
 	return 0, nil
@@ -76,10 +76,7 @@ func (b BinListCard) lookupFullHouse() (uint, ListCard) {
 	}
 
 	if pair != nil && threes != nil {
-		result := ListCard{}
-		result = append(result, BitSetToListCard(pair)...)
-		result = append(result, BitSetToListCard(threes)...)
-		return 1, result
+		return 1, createResult(pair.Count()+threes.Count(), pair, threes)
 	}
 
 	return 0, nil
@@ -99,9 +96,7 @@ func (b BinListCard) lookupStraight() (uint, ListCard) {
 		}
 	}
 
-	result := ListCard{}
-	result = append(result, BitSetToListCard(b.b)...)
-	return 1, result
+	return 1, b.ToList()
 }
 
 func (b BinListCard) lookupFlush() (uint, ListCard) {

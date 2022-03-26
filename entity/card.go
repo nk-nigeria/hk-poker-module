@@ -197,25 +197,3 @@ func (c Card) GetRank() uint8 {
 func (c Card) GetSuit() uint8 {
 	return uint8(c & 0x0F)
 }
-
-func IsSameCards(cardsA []*pb.Card, cardsB []*pb.Card) bool {
-	mapCardsA := make(map[Card]bool)
-	for _, c := range cardsA {
-		key := NewCardFromPb(c.GetRank(), c.GetSuit())
-		mapCardsA[key] = false
-	}
-	for _, c := range cardsB {
-		key := NewCardFromPb(c.GetRank(), c.GetSuit())
-		_, exist := mapCardsA[key]
-		if !exist {
-			return false
-		}
-		mapCardsA[key] = true
-	}
-	for _, v := range mapCardsA {
-		if !v {
-			return false
-		}
-	}
-	return true
-}

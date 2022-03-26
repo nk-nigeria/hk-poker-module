@@ -2,10 +2,8 @@ package chinese_poker
 
 import (
 	"fmt"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
-	"sort"
-
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 )
 
@@ -333,21 +331,7 @@ func CheckPair(bcards *entity.BinListCard) (*HandPoint, bool) {
 
 // SortCard
 // sort card increase by rank, equal rank will check suit
-func SortCard(listCard entity.ListCard) entity.ListCard {
-	sort.Slice(listCard, func(a, b int) bool {
-		cardA := listCard[a]
-		cardB := listCard[b]
-		rankPointA := cardA.GetRank()
-		rankPointB := cardB.GetRank()
-		if rankPointA > rankPointB {
-			return true
-		}
-		if rankPointA < rankPointB {
-			return false
-		}
-		suitPointA := cardA.GetSuit()
-		suitPointB := cardB.GetSuit()
-		return suitPointA < suitPointB
-	})
-	return listCard
+func SortCard(cards entity.ListCard) entity.ListCard {
+	bl := entity.NewBinListCards(cards)
+	return bl.ToList()
 }
