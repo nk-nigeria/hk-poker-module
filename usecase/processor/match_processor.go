@@ -6,19 +6,19 @@ import (
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 type processor struct {
-	engine      chinese_poker.UseCase
+	engine      engine.UseCase
 	marshaler   *protojson.MarshalOptions
 	unmarshaler *protojson.UnmarshalOptions
 }
 
-func NewMatchProcessor(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions, engine chinese_poker.UseCase) UseCase {
+func NewMatchProcessor(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions, engine engine.UseCase) UseCase {
 	return &processor{
 		marshaler:   marshaler,
 		unmarshaler: unmarshaler,

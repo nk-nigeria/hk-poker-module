@@ -1,4 +1,4 @@
-package chinese_poker
+package hand
 
 import (
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"

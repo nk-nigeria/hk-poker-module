@@ -1,13 +1,12 @@
-package chinese_poker
+package engine
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/hand"
 	"github.com/mxschmitt/golang-combinations"
 )
-
-const MaxPresenceCard = 13
 
 type Engine struct {
 	deck *entity.Deck
@@ -32,7 +31,7 @@ func (c *Engine) Deal(s *entity.MatchState) error {
 	// loop on userid in match
 	for _, k := range s.PlayingPresences.Keys() {
 		userId := k.(string)
-		cards, err := c.deck.Deal(MaxPresenceCard)
+		cards, err := c.deck.Deal(entity.MaxPresenceCard)
 		if err == nil {
 			s.Cards[userId] = cards
 			s.JoinInGame[userId] = true
@@ -58,33 +57,32 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	// Check every user
 	updateFinish := pb.UpdateFinish{}
 	presenceCount := s.PlayingPresences.Size()
-	ctx := NewCompareContext(presenceCount)
+	ctx := hand.NewCompareContext(presenceCount)
 
 	log.GetLogger().Info("Finish presence %v, size %v", s.PlayingPresences, presenceCount)
 
 	// prepare for compare data
 	userIds := make([]string, 0, presenceCount)
-	hands := make(map[string]*Hand)
+	hands := make(map[string]*hand.Hand)
 	results := make(map[string]*pb.ComparisonResult)
 	for _, val := range s.PlayingPresences.Keys() {
 		uid := val.(string)
 		userIds = append(userIds, uid)
 
 		cards := s.OrganizeCards[uid]
-		var hand *Hand
+		var h *hand.Hand
 		var err error
-		hand, err = NewHandFromPb(cards)
-		hand.SetOwner(uid)
+		h, err = hand.NewHandFromPb(cards)
+		h.SetOwner(uid)
 		if err != nil {
 			continue
 		}
 
-		hand.calculatePoint()
-		hands[uid] = hand
+		hands[uid] = h
 
 		result := &pb.ComparisonResult{
 			UserId:      uid,
-			PointResult: hand.GetPointResult(),
+			PointResult: h.GetPointResult(),
 			ScoreResult: &pb.ScoreResult{},
 		}
 
@@ -92,7 +90,7 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 
 		updateFinish.Results = append(updateFinish.Results, result)
 
-		log.GetLogger().Info("prepare for %s, hand %v, result %v", uid, hand, result)
+		log.GetLogger().Info("prepare for %s, hand %v, result %v", uid, h, result)
 	}
 
 	pairs := combinations.Combinations(userIds, 2)
@@ -103,15 +101,15 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 		log.GetLogger().Info("compare %v with %v", pair[0], pair[1])
 
 		// calculate natural point, normal point, hand bonus case
-		rc := CompareHand(ctx, hands[uid1], hands[uid2])
-		ProcessCompareResult(ctx, results[uid1], rc.r1)
-		ProcessCompareResult(ctx, results[uid2], rc.r2)
+		rc := hand.CompareHand(ctx, hands[uid1], hands[uid2])
+		hand.ProcessCompareResult(ctx, results[uid1], rc.GetR1())
+		hand.ProcessCompareResult(ctx, results[uid2], rc.GetR2())
 
-		updateFinish.Bonuses = append(updateFinish.Bonuses, rc.bonuses...)
+		updateFinish.Bonuses = append(updateFinish.Bonuses, rc.GetBonuses()...)
 	}
 
-	ProcessCompareBonusResult(ctx, updateFinish.Results, &updateFinish.Bonuses)
-	CalcTotalFactor(updateFinish.Results)
+	hand.ProcessCompareBonusResult(ctx, updateFinish.Results, &updateFinish.Bonuses)
+	hand.CalcTotalFactor(updateFinish.Results)
 
 	return &updateFinish
 }

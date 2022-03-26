@@ -1,4 +1,4 @@
-package chinese_poker
+package hand
 
 import (
 	"errors"
@@ -50,6 +50,18 @@ func (r *ComparisonResult) addHandBonus(win, lose string, bonusType pb.HandBonus
 		Type:   bonusType,
 		Factor: factor,
 	})
+}
+
+func (r ComparisonResult) GetR1() Result {
+	return r.r1
+}
+
+func (r ComparisonResult) GetR2() Result {
+	return r.r2
+}
+
+func (r ComparisonResult) GetBonuses() []*pb.HandBonus {
+	return r.bonuses
 }
 
 // Hand
@@ -142,7 +154,7 @@ func (h Hand) IsNormal() bool {
 
 func (h *Hand) parse() error {
 	cards := h.cards
-	if len(cards) != MaxPresenceCard {
+	if len(cards) != entity.MaxPresenceCard {
 		return errors.New("hand.parse.error.invalid-len")
 	}
 
@@ -193,6 +205,8 @@ func (h *Hand) calculatePoint() error {
 }
 
 func (h Hand) GetPointResult() *pb.PointResult {
+	h.calculatePoint()
+
 	result := &pb.PointResult{
 		Type: h.pointType,
 	}

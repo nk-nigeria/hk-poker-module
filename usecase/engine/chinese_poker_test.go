@@ -1,4 +1,4 @@
-package chinese_poker
+package engine
 
 import (
 	"testing"

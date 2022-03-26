@@ -1,4 +1,4 @@
-package chinese_poker_bin_list
+package game_bin_list
 
 import "github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 

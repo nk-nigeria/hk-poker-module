@@ -1,11 +1,11 @@
-package chinese_poker
+package hand
 
 import (
 	"fmt"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	cpbl "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/chinese_poker_bin_list"
+	cpbl "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/game_bin_list"
 )
 
 //  				t1		s1		s2		s3		s4		s5

@@ -1,4 +1,4 @@
-package chinese_poker_bin_list
+package game_bin_list
 
 import (
 	"github.com/bits-and-blooms/bitset"
