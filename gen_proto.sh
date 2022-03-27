@@ -1,0 +1,2 @@
+docker run -it  --rm -v `pwd`:/app  -v `pwd`/src:/go/src/ -w /app  protocolbuffers-go:3.19.4   protoc -I ./ --go_out=/go/src  ./proto/chinese_poker_game_api.proto
+cp -v ./src/github.com/ciaolink-game-platform/cgp-bing-module/api/chinese_poker_game_api.pb.go ./proto

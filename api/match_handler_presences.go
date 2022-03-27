@@ -3,10 +3,10 @@ package api
 import (
 	"context"
 	"database/sql"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
-	"google.golang.org/protobuf/proto"
 )
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
@@ -44,15 +44,24 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 
 	for _, presence := range presences {
 		// Check if we must send a message to this user to update them on the current game state.
-		var msg proto.Message
+		// var msg proto.Message
 		var currentPresences []string
 		for _, p := range s.Presences.Keys() {
 			currentPresences = append(currentPresences, p.(string))
 		}
-		msg = &pb.UpdatePresence{
-			JoinPresence: presence.GetUserId(),
-			Presences:    currentPresences,
+		msg := &pb.UpdateTable{
+			Id:           s.Label.Id,
+			Vip:          0,
+			Bet:          int64(s.Label.Bet),
+			JoinPresence: entity.NewPlayer(presence),
 		}
+		listPlayerP := entity.NewListPlayer(s.GetPPresence())
+		listPlayerP.ReadWallet(ctx, nk, logger)
+		msg.PlayersP = listPlayerP
+
+		listPlayerv := entity.NewListPlayer(s.GetVPresence())
+		listPlayerv.ReadWallet(ctx, nk, logger)
+		msg.PlayersV = listPlayerv
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
 		m.processor.NotifyUpdatePresences(s, logger, dispatcher, msg)
@@ -69,7 +78,6 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 	s.RemovePresence(presences)
 
 	// Check if we must send a message to this user to update them on the current game state.
-	var msg proto.Message
 	for _, presence := range presences {
 		_, found := s.Presences.Get(presence.GetUserId())
 		if found {
@@ -77,10 +85,19 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 			for _, p := range s.Presences.Keys() {
 				currentPresences = append(currentPresences, p.(string))
 			}
-			msg = &pb.UpdatePresence{
-				LeavePresence: presence.GetUserId(),
-				Presences:     currentPresences,
+			msg := &pb.UpdateTable{
+				Id:            s.Label.Id,
+				Vip:           0,
+				Bet:           int64(s.Label.Bet),
+				LeavePresence: entity.NewPlayer(presence),
 			}
+			listPlayerP := entity.NewListPlayer(s.GetPPresence())
+			listPlayerP.ReadWallet(ctx, nk, logger)
+			msg.PlayersP = listPlayerP
+
+			listPlayerv := entity.NewListPlayer(s.GetVPresence())
+			listPlayerv.ReadWallet(ctx, nk, logger)
+			msg.PlayersV = listPlayerv
 
 			// Send a message to the user that just joined, if one is needed based on the logic above.
 			m.processor.NotifyUpdatePresences(s, logger, dispatcher, msg)

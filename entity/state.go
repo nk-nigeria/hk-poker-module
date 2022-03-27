@@ -15,6 +15,7 @@ const (
 )
 
 type MatchLabel struct {
+	Id                string `json:"id"`
 	Open              int32  `json:"open"`
 	LastOpenValueNoti int32  `json:"-"` // using for check has noti new state of open
 	Bet               int32  `json:"bet"`
@@ -122,4 +123,28 @@ func (s *MatchState) GetPlayingCount() int {
 
 func (s *MatchState) GetShowCardCount() int {
 	return len(s.OrganizeCards)
+}
+
+func (s *MatchState) GetVPresence() []runtime.Presence {
+	listVPresense := make([]runtime.Presence, 0)
+	for _, k := range s.Presences.Keys() {
+		userId := k.(string)
+		if _, exist := s.JoinInGame[userId]; !exist {
+			presense, _ := s.Presences.Get(k)
+			listVPresense = append(listVPresense, presense.(runtime.Presence))
+		}
+	}
+	return listVPresense
+}
+
+func (s *MatchState) GetPPresence() []runtime.Presence {
+	listVPresense := make([]runtime.Presence, 0)
+	for _, k := range s.Presences.Keys() {
+		userId := k.(string)
+		if _, exist := s.JoinInGame[userId]; exist {
+			presense, _ := s.Presences.Get(k)
+			listVPresense = append(listVPresense, presense.(runtime.Presence))
+		}
+	}
+	return listVPresense
 }
