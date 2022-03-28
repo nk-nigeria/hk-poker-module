@@ -110,11 +110,24 @@ func mockStraightSuccess() *entity.BinListCard {
 	})
 }
 
+func mockStraightSuccess2() *entity.BinListCard {
+	return entity.NewBinListCards(entity.ListCard{
+		entity.CardAC,
+		entity.Card2H,
+		entity.Card3S,
+		entity.Card4C,
+		entity.Card5S,
+	})
+}
+
 func TestStraight(t *testing.T) {
 	t.Logf("test TestStraight")
 
 	var ok bool
 	_, ok = CheckStraight(mockStraightSuccess())
+	assert.Equal(t, true, ok)
+
+	_, ok = CheckStraight(mockStraightSuccess2())
 	assert.Equal(t, true, ok)
 
 	_, ok = CheckStraight(mockHighCard())
