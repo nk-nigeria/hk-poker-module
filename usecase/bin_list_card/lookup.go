@@ -85,6 +85,18 @@ func (s service) lookupFullHouse(b *entity.BinListCard) (uint, entity.ListCard) 
 	return 0, nil
 }
 
+func isNextStraight(c1, c2 entity.Card) bool {
+	if c2.GetRank()-c1.GetRank() == entity.RankStep {
+		return true
+	}
+
+	if c2.GetRank() == entity.RankA && c1.GetRank() == entity.Rank5 {
+		return true
+	}
+
+	return false
+}
+
 func (s service) lookupStraight(b *entity.BinListCard) (uint, entity.ListCard) {
 	var j uint
 	for i, e := b.GetBitSet().NextSet(0); e; {
@@ -92,10 +104,11 @@ func (s service) lookupStraight(b *entity.BinListCard) (uint, entity.ListCard) {
 		if e {
 			c1 := entity.NewCardFromUint(i)
 			c2 := entity.NewCardFromUint(j)
-			if c2.GetRank()-c1.GetRank() != entity.RankStep {
+
+			i = j
+			if !isNextStraight(c1, c2) {
 				return 0, nil
 			}
-			i = j
 		}
 	}
 
