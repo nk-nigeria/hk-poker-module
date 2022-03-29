@@ -51,11 +51,12 @@ type MatchState struct {
 
 func NewMathState(label *MatchLabel) MatchState {
 	m := MatchState{
-		Random:         rand.New(rand.NewSource(time.Now().UnixNano())),
-		Label:          label,
-		MinPresences:   MinPresences,
-		Presences:      linkedhashmap.New(),
-		LeavePresences: linkedhashmap.New(),
+		Random:           rand.New(rand.NewSource(time.Now().UnixNano())),
+		Label:            label,
+		MinPresences:     MinPresences,
+		Presences:        linkedhashmap.New(),
+		PlayingPresences: linkedhashmap.New(),
+		LeavePresences:   linkedhashmap.New(),
 	}
 	m.Label.LastOpenValueNoti = m.Label.Open
 	return m
@@ -104,7 +105,7 @@ func (s *MatchState) SetupMatchPresence() {
 
 func (s *MatchState) SetUpCountDown(duration time.Duration) {
 	s.CountDownReachTime = time.Now().Add(duration)
-	s.LastCountDown = 0
+	s.LastCountDown = -1
 }
 
 func (s *MatchState) GetRemainCountDown() int {
@@ -122,7 +123,7 @@ func (s *MatchState) GetLastCountDown() int {
 }
 
 func (s *MatchState) IsNeedNotifyCountDown() bool {
-	return s.GetRemainCountDown() != s.LastCountDown
+	return s.GetRemainCountDown() != s.LastCountDown || s.LastCountDown == -1
 }
 
 func (s *MatchState) GetPresenceSize() int {
@@ -175,5 +176,16 @@ func (s *MatchState) GetPPresence() []runtime.Presence {
 		}
 	}
 
+	return presences
+}
+
+func (s *MatchState) GetLeavePresence() []runtime.Presence {
+	presences := make([]runtime.Presence, 0)
+	for _, k := range s.LeavePresences.Keys() {
+		presense, found := s.Presences.Get(k)
+		if found {
+			presences = append(presences, presense.(runtime.Presence))
+		}
+	}
 	return presences
 }

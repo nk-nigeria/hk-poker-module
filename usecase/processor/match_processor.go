@@ -248,3 +248,47 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 		logger.WithField("err", err).Error("Wallets update error.")
 	}
 }
+
+func (m *processor) ProcessPresences(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence) {
+	for _, presence := range joins {
+		_, found := s.Presences.Get(presence.GetUserId())
+		if found {
+			msg := &pb.UpdateTable{
+				Vip:           0,
+				Bet:           int64(s.Label.Bet),
+				LeavePresence: entity.NewPlayer(presence),
+			}
+			listPlayerP := entity.NewListPlayer(s.GetPPresence())
+			listPlayerP.ReadWallet(ctx, nk, logger)
+			msg.PlayersP = listPlayerP
+
+			listPlayerv := entity.NewListPlayer(s.GetVPresence())
+			listPlayerv.ReadWallet(ctx, nk, logger)
+			msg.PlayersV = listPlayerv
+
+			// Send a message to the user that just joined, if one is needed based on the logic above.
+			m.NotifyUpdateTable(s, logger, dispatcher, msg)
+		}
+	}
+
+	for _, presence := range leaves {
+		_, found := s.Presences.Get(presence.GetUserId())
+		if found {
+			msg := &pb.UpdateTable{
+				Vip:           0,
+				Bet:           int64(s.Label.Bet),
+				LeavePresence: entity.NewPlayer(presence),
+			}
+			listPlayerP := entity.NewListPlayer(s.GetPPresence())
+			listPlayerP.ReadWallet(ctx, nk, logger)
+			msg.PlayersP = listPlayerP
+
+			listPlayerv := entity.NewListPlayer(s.GetVPresence())
+			listPlayerv.ReadWallet(ctx, nk, logger)
+			msg.PlayersV = listPlayerv
+
+			// Send a message to the user that just joined, if one is needed based on the logic above.
+			m.NotifyUpdateTable(s, logger, dispatcher, msg)
+		}
+	}
+}

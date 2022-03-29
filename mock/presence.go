@@ -15,7 +15,7 @@ func (m *MockPresence) GetPersistence() bool {
 }
 
 func (m *MockPresence) GetUsername() string {
-	panic("implement me")
+	return "username1"
 }
 
 func (m *MockPresence) GetStatus() string {

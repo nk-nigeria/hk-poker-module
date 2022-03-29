@@ -5,6 +5,7 @@ import (
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/heroiclabs/nakama-common/runtime"
 )
 
 type StateMatching struct {
@@ -25,6 +26,8 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	state := procPkg.GetState()
 
 	procPkg.GetLogger().Info("apply leave presence")
+
+	procPkg.GetProcessor().ProcessPresences(procPkg.GetContext(), procPkg.GetLogger(), procPkg.GetNK(), procPkg.GetDispatcher(), state, []runtime.Presence{}, state.GetLeavePresence())
 	state.ApplyLeavePresence()
 
 	procPkg.GetProcessor().NotifyUpdateGameState(
