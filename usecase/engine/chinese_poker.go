@@ -17,7 +17,6 @@ func NewChinesePokerEngine() UseCase {
 }
 
 func (c *Engine) NewGame(s *entity.MatchState) error {
-	s.JoinInGame = make(map[string]bool)
 	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
 
@@ -34,7 +33,6 @@ func (c *Engine) Deal(s *entity.MatchState) error {
 		cards, err := c.deck.Deal(entity.MaxPresenceCard)
 		if err == nil {
 			s.Cards[userId] = cards
-			s.JoinInGame[userId] = true
 		} else {
 			return err
 		}

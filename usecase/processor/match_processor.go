@@ -176,10 +176,12 @@ func (m *processor) NotifyUpdateGameState(s *entity.MatchState, logger runtime.L
 }
 
 func (m *processor) NotifyUpdateTable(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
+	logger.Info("notify update table data %v", updateState)
 	m.broadcastMessage(
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		updateState, nil, nil, true)
+
 }
 
 func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) {
@@ -254,9 +256,9 @@ func (m *processor) ProcessPresences(ctx context.Context, logger runtime.Logger,
 		_, found := s.Presences.Get(presence.GetUserId())
 		if found {
 			msg := &pb.UpdateTable{
-				Vip:           0,
-				Bet:           int64(s.Label.Bet),
-				LeavePresence: entity.NewPlayer(presence),
+				Vip:          0,
+				Bet:          int64(s.Label.Bet),
+				JoinPresence: entity.NewPlayer(presence),
 			}
 			listPlayerP := entity.NewListPlayer(s.GetPPresence())
 			listPlayerP.ReadWallet(ctx, nk, logger)
@@ -272,23 +274,20 @@ func (m *processor) ProcessPresences(ctx context.Context, logger runtime.Logger,
 	}
 
 	for _, presence := range leaves {
-		_, found := s.Presences.Get(presence.GetUserId())
-		if found {
-			msg := &pb.UpdateTable{
-				Vip:           0,
-				Bet:           int64(s.Label.Bet),
-				LeavePresence: entity.NewPlayer(presence),
-			}
-			listPlayerP := entity.NewListPlayer(s.GetPPresence())
-			listPlayerP.ReadWallet(ctx, nk, logger)
-			msg.PlayersP = listPlayerP
-
-			listPlayerv := entity.NewListPlayer(s.GetVPresence())
-			listPlayerv.ReadWallet(ctx, nk, logger)
-			msg.PlayersV = listPlayerv
-
-			// Send a message to the user that just joined, if one is needed based on the logic above.
-			m.NotifyUpdateTable(s, logger, dispatcher, msg)
+		msg := &pb.UpdateTable{
+			Vip:           0,
+			Bet:           int64(s.Label.Bet),
+			LeavePresence: entity.NewPlayer(presence),
 		}
+		listPlayerP := entity.NewListPlayer(s.GetPPresence())
+		listPlayerP.ReadWallet(ctx, nk, logger)
+		msg.PlayersP = listPlayerP
+
+		listPlayerv := entity.NewListPlayer(s.GetVPresence())
+		listPlayerv.ReadWallet(ctx, nk, logger)
+		msg.PlayersV = listPlayerv
+
+		// Send a message to the user that just joined, if one is needed based on the logic above.
+		m.NotifyUpdateTable(s, logger, dispatcher, msg)
 	}
 }

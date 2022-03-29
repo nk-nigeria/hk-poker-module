@@ -55,10 +55,8 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 		return nil
 	}
 
-	// Check if we must send a message to this user to update them on the current game state.
-	m.processor.ProcessPresences(ctx, logger, nk, dispatcher, s, []runtime.Presence{}, presences)
-
 	s.RemovePresence(presences)
+	m.processor.ProcessPresences(ctx, logger, nk, dispatcher, s, []runtime.Presence{}, presences)
 
 	return s
 }
