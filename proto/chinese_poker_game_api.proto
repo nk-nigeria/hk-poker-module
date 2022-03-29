@@ -92,7 +92,6 @@ enum OpCodeUpdate {
   OPCODE_UPDATE_GAME_STATE = 5;
   // update card state/combine, show, declare
   OPCODE_UPDATE_CARD_STATE = 6;
-
   OPCODE_UPDATE_WALLET = 7;
 }
 
@@ -116,10 +115,16 @@ message Organize {
 }
 
 // Message data sent by server to clients representing the joining or leaving of presence
-message UpdatePresence {
-  repeated string presences = 1;
-  string join_presence = 2;
-  string leave_presence = 3;
+message UpdateTable {
+  repeated Player players_p = 1;
+  repeated Player players_v = 2;
+  Player join_presence = 3;
+  Player leave_presence = 4;
+  string id = 5; // table info
+  int64 bet = 6; // chip bet info
+  int64 vip = 7; // min level vip require join room
+  int64 time_play = 8; // timstamp play game
+  int64 remain_time = 9; // remain time to end game
 }
 
 message PresenceCards {
@@ -160,7 +165,6 @@ enum HandRanking {
   TwoPairs = 6;
   Pair = 7;
   HighCard = 8;
-
   NaturalThreeStraights = 101;
   NaturalThreeOfFlushes = 102;
   NaturalSixPairs = 103;
@@ -174,14 +178,12 @@ enum HandBonusType {
   MisSet = 1;
   Scoop = 2;
   ScoopAll = 3;
-
   BonusFullHouseMidHand = 101;
   BonusThreeOfAKindFrontHand = 102;
   BonusFourOfAKindBackHand = 103;
   BonusStraightFlushBackHand = 104;
   BonusFourOfAKindMidHand = 105;
   BonusStraightFlushMidHand = 106;
-
   BonusNaturalThreeStraights = 201;
   BonusNaturalThreeOfFlushes = 202;
   BonusNaturalSixPairs = 203;
@@ -227,14 +229,14 @@ message ScoreResult {
   int64 natural_factor = 7;
   int64 bonus_factor = 8; // mis set, scoop, scoop all
   int64 scoop = 9;
-  int32 num_hand_win = 10;  
+  int32 num_hand_win = 10;
   int64 total_factor = 11;
 }
 
 message ComparisonResult {
   string user_id = 1;
   ScoreResult score_result = 2;
-  PointResult point_result = 3; 
+  PointResult point_result = 3;
 }
 
 message UpdateFinish {
@@ -251,4 +253,10 @@ message BalanceUpdate {
 
 message BalanceResult {
   repeated BalanceUpdate updates = 1;
+}
+
+message Player {
+  string id = 1;
+  string user_name = 2;
+  string wallet = 3;
 }

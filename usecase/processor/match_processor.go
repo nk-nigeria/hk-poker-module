@@ -2,7 +2,6 @@ package processor
 
 import (
 	"context"
-	"strings"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -222,24 +221,7 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 	)
 }
 func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, userIds ...string) ([]entity.Wallet, error) {
-	logger.Error("nk %v ctx %v userIds %v", nk, ctx, userIds)
-	accounts, err := nk.AccountsGetId(ctx, userIds)
-	if err != nil {
-		logger.Error("Error when read list account, error: %s, list userId %s",
-			err.Error(), strings.Join(userIds, ","))
-		return nil, err
-	}
-	wallets := make([]entity.Wallet, 0)
-	for _, ac := range accounts {
-		w, e := entity.ParseWallet(ac.Wallet)
-		if e != nil {
-			logger.Error("Error when parse wallet user %s, error: %s", ac.User.Id, e.Error())
-			return wallets, err
-		}
-		w.UserId = ac.User.Id
-		wallets = append(wallets, w)
-	}
-	return wallets, nil
+	return entity.ReadWalletUsers(ctx, nk, logger, userIds...)
 }
 
 func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
