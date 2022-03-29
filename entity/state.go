@@ -15,7 +15,6 @@ const (
 )
 
 type MatchLabel struct {
-	Id                string `json:"id"`
 	Open              int32  `json:"open"`
 	LastOpenValueNoti int32  `json:"-"` // using for check has noti new state of open
 	Bet               int32  `json:"bet"`
@@ -34,6 +33,7 @@ type MatchState struct {
 	// Currently connected users, or reserved spaces.
 	Presences        *linkedhashmap.Map
 	PlayingPresences *linkedhashmap.Map
+	LeavePresences   *linkedhashmap.Map
 	// Number of users currently in the process of connecting to the match.
 	JoinsInProgress int
 	// Number of user currently dealt with game
@@ -45,16 +45,17 @@ type MatchState struct {
 	OrganizeCards map[string]*pb.ListCard
 	// Whose turn it currently is.
 
-	gameState          pb.GameState
 	CountDownReachTime time.Time
+	LastCountDown      int
 }
 
 func NewMathState(label *MatchLabel) MatchState {
 	m := MatchState{
-		Random:       rand.New(rand.NewSource(time.Now().UnixNano())),
-		Label:        label,
-		MinPresences: MinPresences,
-		Presences:    linkedhashmap.New(),
+		Random:         rand.New(rand.NewSource(time.Now().UnixNano())),
+		Label:          label,
+		MinPresences:   MinPresences,
+		Presences:      linkedhashmap.New(),
+		LeavePresences: linkedhashmap.New(),
 	}
 	m.Label.LastOpenValueNoti = m.Label.Open
 	return m
@@ -80,7 +81,21 @@ func (s *MatchState) RemovePresence(presences []runtime.Presence) {
 	}
 }
 
-func (s *MatchState) SetupPlayingPresence() {
+func (s *MatchState) AddLeavePresence(presences []runtime.Presence) {
+	for _, presence := range presences {
+		s.LeavePresences.Put(presence.GetUserId(), presence)
+	}
+}
+
+func (s *MatchState) ApplyLeavePresence() {
+	s.LeavePresences.Each(func(key interface{}, value interface{}) {
+		s.Presences.Remove(key)
+	})
+
+	s.LeavePresences = linkedhashmap.New()
+}
+
+func (s *MatchState) SetupMatchPresence() {
 	s.PlayingPresences = linkedhashmap.New()
 	s.Presences.Each(func(key interface{}, value interface{}) {
 		s.PlayingPresences.Put(key, value)
@@ -89,12 +104,25 @@ func (s *MatchState) SetupPlayingPresence() {
 
 func (s *MatchState) SetUpCountDown(duration time.Duration) {
 	s.CountDownReachTime = time.Now().Add(duration)
+	s.LastCountDown = 0
 }
 
 func (s *MatchState) GetRemainCountDown() int {
 	currentTime := time.Now()
 	difference := s.CountDownReachTime.Sub(currentTime)
 	return int(difference.Seconds())
+}
+
+func (s *MatchState) SetLastCountDown(countDown int) {
+	s.LastCountDown = countDown
+}
+
+func (s *MatchState) GetLastCountDown() int {
+	return s.LastCountDown
+}
+
+func (s *MatchState) IsNeedNotifyCountDown() bool {
+	return s.GetRemainCountDown() != s.LastCountDown
 }
 
 func (s *MatchState) GetPresenceSize() int {
@@ -126,25 +154,26 @@ func (s *MatchState) GetShowCardCount() int {
 }
 
 func (s *MatchState) GetVPresence() []runtime.Presence {
-	listVPresense := make([]runtime.Presence, 0)
+	presences := make([]runtime.Presence, 0)
 	for _, k := range s.Presences.Keys() {
 		userId := k.(string)
 		if _, exist := s.JoinInGame[userId]; !exist {
 			presense, _ := s.Presences.Get(k)
-			listVPresense = append(listVPresense, presense.(runtime.Presence))
+			presences = append(presences, presense.(runtime.Presence))
 		}
 	}
-	return listVPresense
+	return presences
 }
 
 func (s *MatchState) GetPPresence() []runtime.Presence {
-	listVPresense := make([]runtime.Presence, 0)
-	for _, k := range s.Presences.Keys() {
+	presences := make([]runtime.Presence, 0)
+	for _, k := range s.PlayingPresences.Keys() {
 		userId := k.(string)
 		if _, exist := s.JoinInGame[userId]; exist {
 			presense, _ := s.Presences.Get(k)
-			listVPresense = append(listVPresense, presense.(runtime.Presence))
+			presences = append(presences, presense.(runtime.Presence))
 		}
 	}
-	return listVPresense
+
+	return presences
 }

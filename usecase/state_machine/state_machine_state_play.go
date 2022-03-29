@@ -36,8 +36,8 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 		},
 	)
 
-	// Setup playing presences
-	state.SetupPlayingPresence()
+	// Setup match presences
+	state.SetupMatchPresence()
 	// New game here
 	procPkg.GetProcessor().ProcessNewGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
 

@@ -39,7 +39,6 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	s := state.(*entity.MatchState)
 	logger.Info("match join, state=%v, presences=%v", s, presences)
 
-	//s = s.ProcessEvent(entity.MatchJoin, logger, presences)
 	s.AddPresence(presences)
 
 	for _, presence := range presences {
@@ -50,7 +49,6 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 			currentPresences = append(currentPresences, p.(string))
 		}
 		msg := &pb.UpdateTable{
-			Id:           s.Label.Id,
 			Vip:          0,
 			Bet:          int64(s.Label.Bet),
 			JoinPresence: entity.NewPlayer(presence),
@@ -59,12 +57,12 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		listPlayerP.ReadWallet(ctx, nk, logger)
 		msg.PlayersP = listPlayerP
 
-		listPlayerv := entity.NewListPlayer(s.GetVPresence())
-		listPlayerv.ReadWallet(ctx, nk, logger)
-		msg.PlayersV = listPlayerv
+		listPlayerV := entity.NewListPlayer(s.GetVPresence())
+		listPlayerV.ReadWallet(ctx, nk, logger)
+		msg.PlayersV = listPlayerV
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
-		m.processor.NotifyUpdatePresences(s, logger, dispatcher, msg)
+		m.processor.NotifyUpdateTable(s, logger, dispatcher, msg)
 	}
 
 	return s
@@ -72,9 +70,14 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 
 func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences []runtime.Presence) interface{} {
 	s := state.(*entity.MatchState)
+
 	logger.Info("match leave, state=%v, presences=%v", s, presences)
 
-	//s = s.ProcessEvent(entity.MatchLeave, logger, presences)
+	if m.machine.IsPlayingState() {
+		s.AddLeavePresence(presences)
+		return nil
+	}
+
 	s.RemovePresence(presences)
 
 	// Check if we must send a message to this user to update them on the current game state.
@@ -86,7 +89,6 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 				currentPresences = append(currentPresences, p.(string))
 			}
 			msg := &pb.UpdateTable{
-				Id:            s.Label.Id,
 				Vip:           0,
 				Bet:           int64(s.Label.Bet),
 				LeavePresence: entity.NewPlayer(presence),
@@ -100,7 +102,7 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 			msg.PlayersV = listPlayerv
 
 			// Send a message to the user that just joined, if one is needed based on the logic above.
-			m.processor.NotifyUpdatePresences(s, logger, dispatcher, msg)
+			m.processor.NotifyUpdateTable(s, logger, dispatcher, msg)
 		}
 	}
 

@@ -49,15 +49,19 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
-		procPkg.GetProcessor().NotifyUpdateGameState(
-			state,
-			procPkg.GetLogger(),
-			procPkg.GetDispatcher(),
-			&pb.UpdateGameState{
-				State:     pb.GameState_GameStatePreparing,
-				CountDown: int64(state.GetRemainCountDown()),
-			},
-		)
+		if state.IsNeedNotifyCountDown() {
+			procPkg.GetProcessor().NotifyUpdateGameState(
+				state,
+				procPkg.GetLogger(),
+				procPkg.GetDispatcher(),
+				&pb.UpdateGameState{
+					State:     pb.GameState_GameStatePreparing,
+					CountDown: int64(remain),
+				},
+			)
+
+			state.SetLastCountDown(remain)
+		}
 	} else {
 		// check preparing condition
 		log.GetLogger().Info("[preparing] preparing timeout check presence count")
