@@ -62,14 +62,14 @@ func TestMatch(t *testing.T) {
 			UserId: "user1",
 		}
 
-		m.MatchJoin(nil, logger, nil, nil, dispatcher, 0, s, presences)
+		m.MatchJoin(nil, logger, nil, nk, dispatcher, 0, s, presences)
 
 		time.Sleep(time.Second * 2)
 		presences = make([]runtime.Presence, 1)
 		presences[0] = &mock.MockPresence{
 			UserId: "user2",
 		}
-		m.MatchJoin(nil, logger, nil, nil, dispatcher, 0, s, presences)
+		m.MatchJoin(nil, logger, nil, nk, dispatcher, 0, s, presences)
 	}()
 
 	t.Logf("wait for finish")

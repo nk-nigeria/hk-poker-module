@@ -176,10 +176,12 @@ func (m *processor) NotifyUpdateGameState(s *entity.MatchState, logger runtime.L
 }
 
 func (m *processor) NotifyUpdateTable(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
+	logger.Info("notify update table data %v", updateState)
 	m.broadcastMessage(
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		updateState, nil, nil, true)
+
 }
 
 func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) {
@@ -247,4 +249,76 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	if err != nil {
 		logger.WithField("err", err).Error("Wallets update error.")
 	}
+}
+
+func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence) {
+	players := entity.NewListPlayer(s.GetPresences())
+	players.ReadWallet(ctx, nk, logger)
+
+	playing_players := entity.NewListPlayer(s.GetPlayingPresences())
+	playing_players.ReadWallet(ctx, nk, logger)
+
+	var pjoins, pleaves []*pb.Player
+	if joins != nil {
+		pjoins = entity.NewListPlayer(joins)
+	}
+
+	if leaves != nil {
+		pleaves = entity.NewListPlayer(leaves)
+	}
+
+	msg := &pb.UpdateTable{
+		Bet:            int64(s.Label.Bet),
+		JoinPlayers:    pjoins,
+		LeavePlayers:   pleaves,
+		Players:        players,
+		PlayingPlayers: playing_players,
+	}
+
+	m.NotifyUpdateTable(s, logger, dispatcher, msg)
+}
+
+func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	// update new presence
+	s.AddPresence(presences)
+	s.JoinsInProgress -= len(presences)
+
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+}
+
+func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	s.RemovePresence(presences)
+
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences)
+}
+
+func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	for _, presence := range presences {
+		_, found := s.PlayingPresences.Get(presence.GetUserId())
+		if found {
+			s.AddLeavePresence([]runtime.Presence{presence})
+		} else {
+			s.RemovePresence([]runtime.Presence{presence})
+			m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, []runtime.Presence{presence})
+		}
+	}
+}
+
+func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+	pendingLeaves := s.GetLeavePresences()
+	s.RemovePresence(pendingLeaves)
+
+	players := entity.NewListPlayer(s.GetPresences())
+	players.ReadWallet(ctx, nk, logger)
+
+	playing_players := entity.NewListPlayer(s.GetPlayingPresences())
+	playing_players.ReadWallet(ctx, nk, logger)
+
+	msg := &pb.UpdateTable{
+		Bet:            int64(s.Label.Bet),
+		Players:        players,
+		PlayingPlayers: playing_players,
+	}
+
+	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
