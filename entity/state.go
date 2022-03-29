@@ -28,7 +28,6 @@ type MatchState struct {
 	Random       *rand.Rand
 	Label        *MatchLabel
 	MinPresences int
-	EmptyTicks   int
 
 	// Currently connected users, or reserved spaces.
 	Presences        *linkedhashmap.Map
@@ -62,9 +61,7 @@ func NewMathState(label *MatchLabel) MatchState {
 
 func (s *MatchState) AddPresence(presences []runtime.Presence) {
 	for _, presence := range presences {
-		s.EmptyTicks = 0
 		s.Presences.Put(presence.GetUserId(), presence)
-		s.JoinsInProgress--
 	}
 }
 
@@ -146,7 +143,7 @@ func (s *MatchState) GetShowCardCount() int {
 	return len(s.OrganizeCards)
 }
 
-func (s *MatchState) GetVPresence() []runtime.Presence {
+func (s *MatchState) GetPresences() []runtime.Presence {
 	presences := make([]runtime.Presence, 0)
 	s.Presences.Each(func(key interface{}, value interface{}) {
 		presences = append(presences, value.(runtime.Presence))
@@ -155,7 +152,7 @@ func (s *MatchState) GetVPresence() []runtime.Presence {
 	return presences
 }
 
-func (s *MatchState) GetPPresence() []runtime.Presence {
+func (s *MatchState) GetPlayingPresences() []runtime.Presence {
 	presences := make([]runtime.Presence, 0)
 	s.PlayingPresences.Each(func(key interface{}, value interface{}) {
 		presences = append(presences, value.(runtime.Presence))
@@ -164,7 +161,7 @@ func (s *MatchState) GetPPresence() []runtime.Presence {
 	return presences
 }
 
-func (s *MatchState) GetLeavePresence() []runtime.Presence {
+func (s *MatchState) GetLeavePresences() []runtime.Presence {
 	presences := make([]runtime.Presence, 0)
 	s.LeavePresences.Each(func(key interface{}, value interface{}) {
 		presences = append(presences, value.(runtime.Presence))

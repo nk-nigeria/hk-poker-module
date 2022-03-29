@@ -20,8 +20,8 @@ func NewPlayer(presence runtime.Presence) *pb.Player {
 
 func NewListPlayer(presences []runtime.Presence) ArrPbPlayer {
 	listPlayer := make([]*pb.Player, 0, len(presences))
-	for _, presense := range presences {
-		p := NewPlayer(presense)
+	for _, presence := range presences {
+		p := NewPlayer(presence)
 		listPlayer = append(listPlayer, p)
 	}
 	return listPlayer

@@ -38,9 +38,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	s := state.(*entity.MatchState)
 	logger.Info("match join, state=%v, presences=%v", s, presences)
 
-	s.AddPresence(presences)
-
-	m.processor.ProcessPresences(ctx, logger, nk, dispatcher, s, presences, []runtime.Presence{})
+	m.processor.ProcessPresencesJoin(ctx, logger, nk, dispatcher, s, presences)
 
 	return s
 }
@@ -50,13 +48,12 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 
 	logger.Info("match leave, state=%v, presences=%v", s, presences)
 
-	if m.machine.IsPlayingState() {
-		s.AddLeavePresence(presences)
-		return nil
+	if m.machine.IsPlayingState() || m.machine.IsReward() {
+		m.processor.ProcessPresencesLeavePending(ctx, logger, nk, dispatcher, s, presences)
+		return s
 	}
 
-	s.RemovePresence(presences)
-	m.processor.ProcessPresences(ctx, logger, nk, dispatcher, s, []runtime.Presence{}, presences)
+	m.processor.ProcessPresencesLeave(ctx, logger, nk, dispatcher, s, presences)
 
 	return s
 }

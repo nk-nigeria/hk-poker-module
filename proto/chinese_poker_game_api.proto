@@ -116,10 +116,10 @@ message Organize {
 
 // Message data sent by server to clients representing the joining or leaving of presence
 message UpdateTable {
-  repeated Player players_p = 1;
-  repeated Player players_v = 2;
-  Player join_presence = 3;
-  Player leave_presence = 4;
+  repeated Player players = 1;
+  repeated Player playing_players = 2;
+  repeated Player join_players = 3;
+  repeated Player leave_players = 4;
   int64 bet = 5; // chip bet info
   int64 vip = 6; // min level vip require join room
   int64 time_play = 7; // timestamp play game

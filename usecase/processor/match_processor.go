@@ -251,43 +251,74 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	}
 }
 
-func (m *processor) ProcessPresences(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence) {
-	for _, presence := range joins {
-		_, found := s.Presences.Get(presence.GetUserId())
+func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence) {
+	players := entity.NewListPlayer(s.GetPresences())
+	players.ReadWallet(ctx, nk, logger)
+
+	playing_players := entity.NewListPlayer(s.GetPlayingPresences())
+	playing_players.ReadWallet(ctx, nk, logger)
+
+	var pjoins, pleaves []*pb.Player
+	if joins != nil {
+		pjoins = entity.NewListPlayer(joins)
+	}
+
+	if leaves != nil {
+		pleaves = entity.NewListPlayer(leaves)
+	}
+
+	msg := &pb.UpdateTable{
+		Bet:            int64(s.Label.Bet),
+		JoinPlayers:    pjoins,
+		LeavePlayers:   pleaves,
+		Players:        players,
+		PlayingPlayers: playing_players,
+	}
+
+	m.NotifyUpdateTable(s, logger, dispatcher, msg)
+}
+
+func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	// update new presence
+	s.AddPresence(presences)
+	s.JoinsInProgress -= len(presences)
+
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+}
+
+func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	s.RemovePresence(presences)
+
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences)
+}
+
+func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	for _, presence := range presences {
+		_, found := s.PlayingPresences.Get(presence.GetUserId())
 		if found {
-			msg := &pb.UpdateTable{
-				Vip:          0,
-				Bet:          int64(s.Label.Bet),
-				JoinPresence: entity.NewPlayer(presence),
-			}
-			listPlayerP := entity.NewListPlayer(s.GetPPresence())
-			listPlayerP.ReadWallet(ctx, nk, logger)
-			msg.PlayersP = listPlayerP
-
-			listPlayerv := entity.NewListPlayer(s.GetVPresence())
-			listPlayerv.ReadWallet(ctx, nk, logger)
-			msg.PlayersV = listPlayerv
-
-			// Send a message to the user that just joined, if one is needed based on the logic above.
-			m.NotifyUpdateTable(s, logger, dispatcher, msg)
+			s.AddLeavePresence([]runtime.Presence{presence})
+		} else {
+			s.RemovePresence([]runtime.Presence{presence})
+			m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, []runtime.Presence{presence})
 		}
 	}
+}
 
-	for _, presence := range leaves {
-		msg := &pb.UpdateTable{
-			Vip:           0,
-			Bet:           int64(s.Label.Bet),
-			LeavePresence: entity.NewPlayer(presence),
-		}
-		listPlayerP := entity.NewListPlayer(s.GetPPresence())
-		listPlayerP.ReadWallet(ctx, nk, logger)
-		msg.PlayersP = listPlayerP
+func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+	pendingLeaves := s.GetLeavePresences()
+	s.RemovePresence(pendingLeaves)
 
-		listPlayerv := entity.NewListPlayer(s.GetVPresence())
-		listPlayerv.ReadWallet(ctx, nk, logger)
-		msg.PlayersV = listPlayerv
+	players := entity.NewListPlayer(s.GetPresences())
+	players.ReadWallet(ctx, nk, logger)
 
-		// Send a message to the user that just joined, if one is needed based on the logic above.
-		m.NotifyUpdateTable(s, logger, dispatcher, msg)
+	playing_players := entity.NewListPlayer(s.GetPlayingPresences())
+	playing_players.ReadWallet(ctx, nk, logger)
+
+	msg := &pb.UpdateTable{
+		Bet:            int64(s.Label.Bet),
+		Players:        players,
+		PlayingPlayers: playing_players,
 	}
+
+	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
