@@ -175,10 +175,10 @@ func (m *processor) NotifyUpdateGameState(s *entity.MatchState, logger runtime.L
 		updateState, nil, nil, true)
 }
 
-func (m *processor) NotifyUpdatePresences(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
+func (m *processor) NotifyUpdateTable(s *entity.MatchState, logger runtime.Logger, dispatcher runtime.MatchDispatcher, updateState proto.Message) {
 	m.broadcastMessage(
 		logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_PRESENCE),
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		updateState, nil, nil, true)
 }
 

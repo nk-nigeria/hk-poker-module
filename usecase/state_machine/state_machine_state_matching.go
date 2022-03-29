@@ -24,6 +24,9 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 
+	procPkg.GetLogger().Info("apply leave presence")
+	state.ApplyLeavePresence()
+
 	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,
 		procPkg.GetLogger(),

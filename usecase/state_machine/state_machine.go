@@ -133,6 +133,10 @@ func NewGameStateMachine() UseCase {
 	return gs
 }
 
+func (m *Machine) IsPlayingState() bool {
+	return m.MustState() == statePlay
+}
+
 func (m *Machine) Trigger(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error {
 	return m.state.FireCtx(ctx, trigger, args...)
 }

@@ -81,7 +81,6 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		Password: password,
 		MaxSize:  entity.MaxPresences,
 	}
-	label.Id = entity.GenerateRandomString(6)
 
 	labelJSON, err := json.Marshal(label)
 	if err != nil {

@@ -83,7 +83,7 @@ enum OpCodeRequest {
 // The complete set of opcodes used for communication between clients and server.
 enum OpCodeUpdate {
   OPCODE_UPDATE_UNSPECIFIED = 0;
-  OPCODE_UPDATE_PRESENCE = 1; //message UpdatePresence
+  OPCODE_UPDATE_TABLE = 1; //message UpdateTable
   OPCODE_UPDATE_DEAL = 2; //message UpdateDeal
   OPCODE_UPDATE_FINISH = 3; //message UpdateFinish
   // Request was rejected.
@@ -120,11 +120,10 @@ message UpdateTable {
   repeated Player players_v = 2;
   Player join_presence = 3;
   Player leave_presence = 4;
-  string id = 5; // table info
-  int64 bet = 6; // chip bet info
-  int64 vip = 7; // min level vip require join room
-  int64 time_play = 8; // timstamp play game
-  int64 remain_time = 9; // remain time to end game
+  int64 bet = 5; // chip bet info
+  int64 vip = 6; // min level vip require join room
+  int64 time_play = 7; // timestamp play game
+  int64 remain_time = 8; // remain time to end game
 }
 
 message PresenceCards {
