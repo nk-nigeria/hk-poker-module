@@ -2,7 +2,6 @@ package processor
 
 import (
 	"context"
-
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
@@ -279,20 +278,33 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 }
 
 func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	logger.Info("process presences join %v", presences)
 	// update new presence
-	s.AddPresence(presences)
-	s.JoinsInProgress -= len(presences)
+	newJoins := make([]runtime.Presence, 0)
+	for _, presence := range presences {
+		_, found := s.LeavePresences.Get(presence.GetUserId())
+		if found {
+			s.LeavePresences.Remove(presence.GetUserId())
+		} else {
+			newJoins = append(newJoins, presence)
+		}
+	}
+
+	s.AddPresence(newJoins)
+	s.JoinsInProgress -= len(newJoins)
 
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
 }
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	logger.Info("process presences leave %v", presences)
 	s.RemovePresence(presences)
 
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences)
 }
 
 func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	logger.Info("process presences leave pending %v", presences)
 	for _, presence := range presences {
 		_, found := s.PlayingPresences.Get(presence.GetUserId())
 		if found {
@@ -306,6 +318,8 @@ func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger run
 
 func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	pendingLeaves := s.GetLeavePresences()
+	logger.Info("process apply presences %v", pendingLeaves)
+
 	s.RemovePresence(pendingLeaves)
 
 	players := entity.NewListPlayer(s.GetPresences())

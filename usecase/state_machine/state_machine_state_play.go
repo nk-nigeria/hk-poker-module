@@ -70,6 +70,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 			}
 		}
 
+		log.GetLogger().Info("[play] not timeout show %v, play %v", state.GetShowCardCount(), state.GetPlayingCount())
 		// Check all user show card
 		if state.GetShowCardCount() >= state.GetPlayingCount() {
 			s.Trigger(ctx, triggerPlayCombineAll)
