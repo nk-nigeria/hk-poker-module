@@ -226,6 +226,9 @@ func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 
 	result.r1.Scoop = kWinScoop
 	result.r2.Scoop = kLoseScoop
+
+	scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
+	result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_Scoop, int64(scoopScore))
 }
 
 //compareNormalWithNormal
@@ -316,12 +319,17 @@ func compareNormalWithNormal(h1, h2 *Hand, result *ComparisonResult) {
 		winHand--
 	}
 
+	scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
 	if winHand == cmpHand {
 		result.r1.Scoop = kWinScoop
 		result.r2.Scoop = kLoseScoop
+
+		result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_Scoop, int64(scoopScore))
 	} else if -winHand == cmpHand {
 		result.r2.Scoop = kWinScoop
 		result.r1.Scoop = kLoseScoop
+
+		result.addHandBonus(h2.owner, h1.owner, pb.HandBonusType_Scoop, int64(scoopScore))
 	}
 }
 
