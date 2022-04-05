@@ -10,5 +10,6 @@ RUN go build --trimpath --mod=readonly --buildmode=plugin -o ./chinese-poker.so
 
 FROM heroiclabs/nakama:3.4.0
 
+COPY --from=builder /backend/bin/lobby.so /nakama/data/modules
 COPY --from=builder /backend/chinese-poker.so /nakama/data/modules
 COPY --from=builder /backend/local.yml /nakama/data/
