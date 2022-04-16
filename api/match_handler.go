@@ -62,7 +62,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		return nil, 0, ""
 	}
 	var bet entity.Bet
-
+	// logger.Info("bet json: %s", betJson)
 	err := json.Unmarshal(betJson, &bet)
 	if err != nil {
 		logger.Error("Unmarshal error match init parameter \"bet\"")
@@ -95,7 +95,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		return nil, tickRate, ""
 	}
 
-	logger.Info("match init label=", string(labelJSON))
+	logger.Info("match init label= %s", string(labelJSON))
 
 	matchState := entity.NewMathState(label)
 	// fire idle event
