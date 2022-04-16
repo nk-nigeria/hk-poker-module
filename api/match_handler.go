@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
@@ -55,12 +56,18 @@ func (m *MatchHandler) GetState() stateless.State {
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
 	logger.Info("match init: %v", params)
-	bet, ok := params["bet"].(int32)
+	betJson, ok := params["bet"].([]byte)
 	if !ok {
 		logger.Error("invalid match init parameter \"bet\"")
 		return nil, 0, ""
 	}
+	var bet entity.Bet
 
+	err := json.Unmarshal(betJson, &bet)
+	if err != nil {
+		logger.Error("Unmarshal error match init parameter \"bet\"")
+		return nil, 0, ""
+	}
 	name, ok := params["name"].(string)
 	if !ok {
 		logger.Error("invalid match init parameter \"name\"")
@@ -75,7 +82,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	label := &entity.MatchLabel{
 		Open:     1,
-		Bet:      bet,
+		Bet:      int32(bet.MarkUnit),
 		Code:     entity.ModuleName,
 		Name:     name,
 		Password: password,
