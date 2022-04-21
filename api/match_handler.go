@@ -56,18 +56,12 @@ func (m *MatchHandler) GetState() stateless.State {
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
 	logger.Info("match init: %v", params)
-	betJson, ok := params["bet"].([]byte)
+	bet, ok := params["bet"].(int32)
 	if !ok {
 		logger.Error("invalid match init parameter \"bet\"")
 		return nil, 0, ""
 	}
-	var bet entity.Bet
-	// logger.Info("bet json: %s", betJson)
-	err := json.Unmarshal(betJson, &bet)
-	if err != nil {
-		logger.Error("Unmarshal error match init parameter \"bet\"")
-		return nil, 0, ""
-	}
+
 	name, ok := params["name"].(string)
 	if !ok {
 		logger.Error("invalid match init parameter \"name\"")
@@ -82,7 +76,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	label := &entity.MatchLabel{
 		Open:     1,
-		Bet:      int32(bet.MarkUnit),
+		Bet:      bet,
 		Code:     entity.ModuleName,
 		Name:     name,
 		Password: password,
