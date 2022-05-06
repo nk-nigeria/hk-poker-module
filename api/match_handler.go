@@ -43,6 +43,12 @@ type MatchHandler struct {
 	machine   gsm.UseCase
 }
 
+func (m *MatchHandler) MatchSignal(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, data string) (interface{}, string) {
+	//panic("implement me")
+	s := state.(*entity.MatchState)
+	return s, ""
+}
+
 func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) *MatchHandler {
 	return &MatchHandler{
 		processor: processor.NewMatchProcessor(marshaler, unmarshaler, engine.NewChinesePokerEngine()),
