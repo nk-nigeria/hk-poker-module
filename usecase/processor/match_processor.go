@@ -188,6 +188,9 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 	for _, uf := range updateFinish.Results {
 		listUserId = append(listUserId, uf.UserId)
 	}
+
+	logger.Info("updateWallet users %v, label %v", listUserId, s.Label)
+
 	wallets, err := m.readWalletUsers(ctx, nk, logger, listUserId...)
 	if err != nil {
 		return
@@ -207,9 +210,12 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		percentFee := 0.05
 		fee := int64(percentFee*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
 		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
-		balance.AmountChipCurrent = balance.AmountChipCurrent + balance.AmountChipAdd - fee
+		balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
 		balanceResult.Updates = append(balanceResult.Updates, &balance)
+
+		logger.Info("update user %v, change %v", uf.UserId, balance)
 	}
+
 	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult)
 	m.broadcastMessage(
 		logger,
@@ -226,6 +232,7 @@ func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule
 }
 
 func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
+	logger.Info("updateChipByResultGameFinish %v", balanceResult)
 	walletUpdates := make([]*runtime.WalletUpdate, 0, len(balanceResult.Updates))
 	for _, result := range balanceResult.Updates {
 		amoutChip := result.AmountChipCurrent - result.AmountChipBefore
@@ -244,10 +251,12 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 
 	logger.Info("wallet update ctx %v, walletUpdates %v", ctx, walletUpdates)
 
-	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
+	results, err := nk.WalletsUpdate(ctx, walletUpdates, true)
 	if err != nil {
 		logger.WithField("err", err).Error("Wallets update error.")
 	}
+
+	logger.Info("wallet update error %v, result %v", err, results)
 }
 
 func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence) {
