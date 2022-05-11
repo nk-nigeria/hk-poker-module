@@ -12,6 +12,15 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	s := state.(*entity.MatchState)
 	logger.Info("match join attempt, state=%v, meta=%v", s, metadata)
 
+	// check password
+	if s.Label.Password != "" {
+		logger.Info("match protect with password, check password")
+		joinPassword := metadata["password"]
+		if joinPassword != s.Label.Password {
+			return s, false, "wrong password"
+		}
+	}
+
 	// Check if it's a user attempting to rejoin after a disconnect.
 	if presence, ok := s.Presences.Get(presence.GetUserId()); ok {
 		if presence == nil {
