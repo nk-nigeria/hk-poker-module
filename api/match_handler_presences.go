@@ -13,7 +13,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	logger.Info("match join attempt, state=%v, meta=%v", s, metadata)
 
 	// check password
-	if s.Label.Open == false {
+	if s.Label.Open > 0 {
 		logger.Info("match protect with password, check password")
 		joinPassword := metadata["password"]
 		if joinPassword != s.Label.Password {

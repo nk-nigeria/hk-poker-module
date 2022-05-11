@@ -15,7 +15,7 @@ const (
 )
 
 type MatchLabel struct {
-	Open     bool   `json:"open"`
+	Open     int32  `json:"open"`
 	Bet      int32  `json:"bet"`
 	Code     string `json:"code"`
 	Name     string `json:"name"`

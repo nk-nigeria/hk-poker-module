@@ -80,9 +80,9 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		//return nil, 0, ""
 	}
 
-	open := true
+	open := int32(1)
 	if password != "" {
-		open = false
+		open = 0
 	}
 
 	label := &entity.MatchLabel{
