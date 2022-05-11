@@ -70,14 +70,14 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	name, ok := params["name"].(string)
 	if !ok {
-		logger.Error("invalid match init parameter \"name\"")
-		return nil, 0, ""
+		logger.Warn("invalid match init parameter \"name\"")
+		//return nil, 0, ""
 	}
 
 	password, ok := params["password"].(string)
 	if !ok {
-		logger.Error("invalid match init parameter \"password\"")
-		return nil, 0, ""
+		logger.Warn("invalid match init parameter \"password\"")
+		//return nil, 0, ""
 	}
 
 	open := true
