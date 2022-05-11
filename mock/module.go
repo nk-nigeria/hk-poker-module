@@ -12,6 +12,65 @@ import (
 type MockModule struct {
 }
 
+func (m MockModule) UsersGetRandom(ctx context.Context, count int) ([]*api.User, error) {
+	panic("implement me")
+}
+
+func (m MockModule) MatchSignal(ctx context.Context, id string, data string) (string, error) {
+	panic("implement me")
+}
+
+func (m MockModule) NotificationSendAll(ctx context.Context, subject string, content map[string]interface{}, code int, persistent bool) error {
+	panic("implement me")
+}
+
+func (m MockModule) LeaderboardRecordsHaystack(ctx context.Context, id, ownerID string, limit int, expiry int64) ([]*api.LeaderboardRecord, error) {
+	panic("implement me")
+}
+
+func (m MockModule) PurchaseValidateApple(ctx context.Context, userID, receipt string, persist bool, passwordOverride ...string) (*api.ValidatePurchaseResponse, error) {
+	panic("implement me")
+}
+
+func (m MockModule) PurchaseValidateGoogle(ctx context.Context, userID, receipt string, persist bool, overrides ...struct {
+	ClientEmail string
+	PrivateKey  string
+}) (*api.ValidatePurchaseResponse, error) {
+	panic("implement me")
+}
+
+func (m MockModule) PurchaseValidateHuawei(ctx context.Context, userID, signature, inAppPurchaseData string, persist bool) (*api.ValidatePurchaseResponse, error) {
+	panic("implement me")
+}
+
+func (m MockModule) TournamentCreate(ctx context.Context, id string, authoritative bool, sortOrder, operator, resetSchedule string, metadata map[string]interface{}, title, description string, category, startTime, endTime, duration, maxSize, maxNumScore int, joinRequired bool) error {
+	panic("implement me")
+}
+
+func (m MockModule) GroupUsersBan(ctx context.Context, callerID, groupID string, userIDs []string) error {
+	panic("implement me")
+}
+
+func (m MockModule) FriendsAdd(ctx context.Context, userID string, username string, ids []string, usernames []string) error {
+	panic("implement me")
+}
+
+func (m MockModule) FriendsDelete(ctx context.Context, userID string, username string, ids []string, usernames []string) error {
+	panic("implement me")
+}
+
+func (m MockModule) ChannelIdBuild(ctx context.Context, sender string, target string, chanType runtime.ChannelType) (string, error) {
+	panic("implement me")
+}
+
+func (m MockModule) ChannelMessageSend(ctx context.Context, channelID string, content map[string]interface{}, senderId, senderUsername string, persist bool) (*rtapi.ChannelMessageAck, error) {
+	panic("implement me")
+}
+
+func (m MockModule) ChannelMessageUpdate(ctx context.Context, channelID, messageID string, content map[string]interface{}, senderId, senderUsername string, persist bool) (*rtapi.ChannelMessageAck, error) {
+	panic("implement me")
+}
+
 func (m MockModule) AuthenticateApple(ctx context.Context, token, username string, create bool) (string, string, bool, error) {
 	panic("implement me")
 }

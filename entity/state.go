@@ -15,13 +15,12 @@ const (
 )
 
 type MatchLabel struct {
-	Open              int32  `json:"open"`
-	LastOpenValueNoti int32  `json:"-"` // using for check has noti new state of open
-	Bet               int32  `json:"bet"`
-	Code              string `json:"code"`
-	Name              string `json:"name"`
-	Password          string `json:"password"`
-	MaxSize           int32  `json:"max_size"`
+	Open     bool   `json:"open"`
+	Bet      int32  `json:"bet"`
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	MaxSize  int32  `json:"max_size"`
 }
 
 type MatchState struct {
@@ -55,7 +54,6 @@ func NewMathState(label *MatchLabel) MatchState {
 		PlayingPresences: linkedhashmap.New(),
 		LeavePresences:   linkedhashmap.New(),
 	}
-	m.Label.LastOpenValueNoti = m.Label.Open
 	return m
 }
 
