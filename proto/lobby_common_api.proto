@@ -17,9 +17,9 @@ syntax = "proto3";
 // The realtime protocol for the template match engine.
 package api;
 
-option go_package = "github.com/ciaolink-game-platform/cgp-common-module/api";
+option go_package = "github.com/ciaolink-game-platform/cgp-bing-module/api";
 
-message LeaderBoardRecord {
+message CommonApiLeaderBoardRecord {
   string game_code = 1;
   string user_id = 2;
   int64 score = 3;

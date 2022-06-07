@@ -58,7 +58,7 @@ func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger 
 			Metadata:  metadata,
 		})
 		if amountChip > 0 {
-			leaderBoardRecord := &pb.LeaderBoardRecord{
+			leaderBoardRecord := &pb.CommonApiLeaderBoardRecord{
 				GameCode: constant.GameCode,
 				UserId:   result.UserId,
 				Score:    amountChip,
