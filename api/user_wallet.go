@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -55,6 +57,14 @@ func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger 
 			Changeset: changeset,
 			Metadata:  metadata,
 		})
+		if amountChip > 0 {
+			leaderBoardRecord := &pb.LeaderBoardRecord{
+				GameCode: constant.GameCode,
+				UserId:   result.UserId,
+				Score:    amountChip,
+			}
+			message_queue.GetNatsService().Publish(constant.TopicLeaderBoardAddScore, leaderBoardRecord)
+		}
 	}
 
 	logger.Info("update wallet ctx %v, walletUpdates %v", ctx, walletUpdates)
