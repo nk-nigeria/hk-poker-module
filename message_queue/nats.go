@@ -50,6 +50,8 @@ func (conn *NatsService) Publish(topic string, data proto.Message) {
 	err = conn.conn.Publish(topic, dataByte)
 	if err != nil {
 		conn.logger.Error("Publish topic error %v", err)
+	} else {
+		conn.logger.Info("Publish topic success %v", topic)
 	}
 }
 
