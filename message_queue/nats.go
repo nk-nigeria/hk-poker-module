@@ -37,7 +37,8 @@ func (conn *NatsService) Connect() {
 	conn.conn, err = nats.Connect(conn.Url)
 	if err != nil {
 		conn.logger.Error("Cannot connect to nats server %v", err)
-		return
+	} else {
+		conn.logger.Error("Connect to nats server success")
 	}
 }
 
