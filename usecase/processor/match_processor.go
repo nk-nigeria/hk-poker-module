@@ -2,7 +2,9 @@ package processor
 
 import (
 	"context"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -235,12 +237,20 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	logger.Info("updateChipByResultGameFinish %v", balanceResult)
 	walletUpdates := make([]*runtime.WalletUpdate, 0, len(balanceResult.Updates))
 	for _, result := range balanceResult.Updates {
-		amoutChip := result.AmountChipCurrent - result.AmountChipBefore
+		amountChip := result.AmountChipCurrent - result.AmountChipBefore
 		changeset := map[string]int64{
-			"chips": amoutChip, // Substract amountChip coins to the user's wallet.
+			"chips": amountChip, // Substract amountChip coins to the user's wallet.
 		}
 		metadata := map[string]interface{}{
 			"game_reward": entity.ModuleName,
+		}
+		if amountChip > 0 {
+			leaderBoardRecord := &pb.CommonApiLeaderBoardRecord{
+				GameCode: constant.GameCode,
+				UserId:   result.UserId,
+				Score:    amountChip,
+			}
+			message_queue.GetNatsService().Publish(constant.TopicLeaderBoardAddScore, leaderBoardRecord)
 		}
 		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
 			UserID:    result.UserId,
