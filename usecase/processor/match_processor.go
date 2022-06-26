@@ -2,7 +2,9 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
@@ -53,7 +55,7 @@ func (m *processor) ProcessNewGame(logger runtime.Logger, dispatcher runtime.Mat
 	}
 }
 
-func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
 	pbGameState := pb.UpdateGameState{
@@ -86,7 +88,7 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
 		updateFinish, nil, nil, true)
 
-	m.updateWallet(ctx, nk, logger, dispatcher, s, updateFinish)
+	m.updateWallet(ctx, nk, logger, db, dispatcher, s, updateFinish)
 	logger.Info("process finish game done %v", updateFinish)
 }
 
@@ -186,7 +188,7 @@ func (m *processor) NotifyUpdateTable(s *entity.MatchState, logger runtime.Logge
 
 }
 
-func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) {
+func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) {
 	listUserId := make([]string, 0, len(updateFinish.Results))
 	for _, uf := range updateFinish.Results {
 		listUserId = append(listUserId, uf.UserId)
@@ -204,6 +206,7 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 	}
 
 	balanceResult := pb.BalanceResult{}
+	listFeeGame := make([]entity.FeeGame, 0)
 	for _, uf := range updateFinish.Results {
 		balance := &pb.BalanceUpdate{
 			UserId:           uf.UserId,
@@ -216,6 +219,12 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
 		balanceResult.Updates = append(balanceResult.Updates, balance)
 		logger.Info("update user %v, change %s", uf.UserId, balance)
+		if fee > 0 {
+			listFeeGame = append(listFeeGame, entity.FeeGame{
+				UserID: balance.UserId,
+				Fee:    fee,
+			})
+		}
 	}
 
 	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult)
@@ -228,6 +237,7 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		nil,
 		true,
 	)
+	cgbdb.AddNewMultiFeeGame(ctx, logger, db, listFeeGame)
 }
 func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, userIds ...string) ([]entity.Wallet, error) {
 	return entity.ReadWalletUsers(ctx, nk, logger, userIds...)

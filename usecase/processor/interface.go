@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -10,7 +11,7 @@ import (
 
 type UseCase interface {
 	ProcessNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
-	ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
+	ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
 	CombineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)
 	ShowCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)
 	DeclareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)

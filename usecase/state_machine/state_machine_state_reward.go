@@ -31,6 +31,7 @@ func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
 		procPkg.GetContext(),
 		procPkg.GetLogger(),
 		procPkg.GetNK(),
+		procPkg.GetDb(),
 		procPkg.GetDispatcher(),
 		state)
 
