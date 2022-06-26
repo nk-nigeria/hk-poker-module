@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
@@ -204,7 +205,7 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 
 	balanceResult := pb.BalanceResult{}
 	for _, uf := range updateFinish.Results {
-		balance := pb.BalanceUpdate{
+		balance := &pb.BalanceUpdate{
 			UserId:           uf.UserId,
 			AmountChipBefore: mapUserWallet[uf.UserId].Chips,
 		}
@@ -213,9 +214,8 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		fee := int64(percentFee*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
 		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
 		balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
-		balanceResult.Updates = append(balanceResult.Updates, &balance)
-
-		logger.Info("update user %v, change %v", uf.UserId, balance)
+		balanceResult.Updates = append(balanceResult.Updates, balance)
+		logger.Info("update user %v, change %s", uf.UserId, balance)
 	}
 
 	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult)
