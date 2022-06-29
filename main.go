@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
-	"time"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api"
+	_ "golang.org/x/crypto/bcrypt"
 )
 
 const (
