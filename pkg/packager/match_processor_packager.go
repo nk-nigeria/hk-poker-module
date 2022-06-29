@@ -2,6 +2,7 @@ package packager
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	processor_interface "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/processor"
@@ -18,9 +19,10 @@ type ProcessorPackager struct {
 	dispatcher runtime.MatchDispatcher
 	messages   []runtime.MatchData
 	ctx        context.Context
+	db         *sql.DB
 }
 
-func NewProcessorPackage(state *entity.MatchState, processor processor_interface.UseCase, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, messages []runtime.MatchData, ctx context.Context) *ProcessorPackager {
+func NewProcessorPackage(state *entity.MatchState, processor processor_interface.UseCase, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, messages []runtime.MatchData, ctx context.Context) *ProcessorPackager {
 	return &ProcessorPackager{
 		state:      state,
 		processor:  processor,
@@ -29,6 +31,7 @@ func NewProcessorPackage(state *entity.MatchState, processor processor_interface
 		dispatcher: dispatcher,
 		messages:   messages,
 		ctx:        ctx,
+		db:         db,
 	}
 }
 
@@ -46,6 +49,10 @@ func (p ProcessorPackager) GetLogger() runtime.Logger {
 
 func (p ProcessorPackager) GetNK() runtime.NakamaModule {
 	return p.nk
+}
+
+func (p ProcessorPackager) GetDb() *sql.DB {
+	return p.db
 }
 
 func (p ProcessorPackager) GetDispatcher() runtime.MatchDispatcher {
