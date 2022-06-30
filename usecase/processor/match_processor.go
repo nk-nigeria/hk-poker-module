@@ -214,11 +214,11 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		}
 
 		percentFee := 0.05
-		fee := int64(percentFee*float64(uf.ScoreResult.NumHandWin)) * int64(s.Label.Bet)
+		fee := int64(percentFee * float64(uf.ScoreResult.NumHandWin*s.Label.Bet))
 		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
 		balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
 		balanceResult.Updates = append(balanceResult.Updates, balance)
-		logger.Info("update user %v, change %s", uf.UserId, balance)
+		logger.Info("update user %v, fee %d change %s", uf.UserId, fee, balance)
 		if fee > 0 {
 			listFeeGame = append(listFeeGame, entity.FeeGame{
 				UserID: balance.UserId,
