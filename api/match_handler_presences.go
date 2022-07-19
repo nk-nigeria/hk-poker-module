@@ -6,6 +6,8 @@ import (
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
@@ -36,6 +38,16 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	// Check if match is full.
 	if s.Presences.Size()+s.JoinsInProgress >= entity.MaxPresences {
 		return s, false, "match full"
+	}
+	// check chip balance in wallet before allow join
+	wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
+	if err != nil {
+		return s, false, status.Error(codes.Internal, "read chip balance failed").Error()
+	}
+	if wallet.Chips < int64(s.Label.Bet) {
+		logger.Warn("[Reject] reject allow user %s join game, not enough chip join game, balance user chip %d , game bet %d",
+			presence.GetUserId(), wallet.Chips, s.Label.Bet)
+		return s, false, status.Error(codes.Internal, "chip balance not enough").Error()
 	}
 
 	// New player attempting to connect.
