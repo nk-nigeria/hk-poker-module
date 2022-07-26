@@ -223,11 +223,11 @@ func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	result.r2.BonusFactor = -bonusMisset
 	result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_MisSet, int64(bonusMisset))
 
-	// result.r1.Scoop = kWinScoop
-	// result.r2.Scoop = kLoseScoop
+	result.r1.Scoop = kWinMisset
+	result.r2.Scoop = kLoseMisset
 
 	// scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
-	// result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_MisSet, int64(bonusMisset))
+	// result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_Scoop, int64(scoopScore))
 }
 
 //compareNormalWithNormal
@@ -346,12 +346,15 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 	// missetScore := mapBonusPoint[pb.HandBonusType_MisSet]
 	if cresult.Scoop != 0 {
 		if cresult.Scoop == kWinScoop {
-			result.Scoop++
 			result.BonusFactor += int64(scoopScore)
 		} else if cresult.Scoop == kLoseScoop {
-			result.Scoop--
 			result.BonusFactor -= int64(scoopScore)
 		}
+	}
+	if cresult.Scoop > 0 {
+		result.Scoop++
+	} else if cresult.Scoop < 0 {
+		result.Scoop--
 	}
 
 	result.NaturalFactor += int64(cresult.NaturalFactor)

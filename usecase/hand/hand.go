@@ -11,6 +11,9 @@ import (
 var (
 	kWinScoop  = 1
 	kLoseScoop = -1
+
+	kWinMisset  = 2
+	kLoseMisset = -2
 )
 
 var (
