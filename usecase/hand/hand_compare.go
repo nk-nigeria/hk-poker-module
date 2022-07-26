@@ -221,14 +221,13 @@ func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	bonusMisset := mapBonusPoint[pb.HandBonusType_MisSet]
 	result.r1.BonusFactor = bonusMisset
 	result.r2.BonusFactor = -bonusMisset
-
 	result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_MisSet, int64(bonusMisset))
 
-	result.r1.Scoop = kWinScoop
-	result.r2.Scoop = kLoseScoop
+	// result.r1.Scoop = kWinScoop
+	// result.r2.Scoop = kLoseScoop
 
-	scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
-	result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_Scoop, int64(scoopScore))
+	// scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
+	// result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_MisSet, int64(bonusMisset))
 }
 
 //compareNormalWithNormal
@@ -344,18 +343,21 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 	result.BackBonusFactor += int64(cresult.BackBonusFactor)
 
 	scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
-	if cresult.Scoop == kWinScoop {
-		result.Scoop++
-		result.BonusFactor += int64(scoopScore)
-	} else if cresult.Scoop == kLoseScoop {
-		result.Scoop--
-		result.BonusFactor -= int64(scoopScore)
+	// missetScore := mapBonusPoint[pb.HandBonusType_MisSet]
+	if cresult.Scoop != 0 {
+		if cresult.Scoop == kWinScoop {
+			result.Scoop++
+			result.BonusFactor += int64(scoopScore)
+		} else if cresult.Scoop == kLoseScoop {
+			result.Scoop--
+			result.BonusFactor -= int64(scoopScore)
+		}
 	}
 
 	result.NaturalFactor += int64(cresult.NaturalFactor)
 
 	cmpCtx := GetCompareContext(ctx)
-	if result.Scoop >= int64(cmpCtx.PresenceCount)-1 {
+	if cmpCtx.PresenceCount > 2 && result.Scoop >= int64(cmpCtx.PresenceCount)-1 {
 		cmpCtx.ScoopAllUser = cmpResult.UserId
 		cmpCtx.ScoopAllResult = cmpResult
 	}
@@ -372,6 +374,7 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 	if cresult.BackFactor > 0 {
 		result.NumHandWin++
 	}
+
 }
 
 func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonResult, bonuses *[]*pb.HandBonus) {
