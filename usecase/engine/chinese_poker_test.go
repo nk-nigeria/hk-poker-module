@@ -1,9 +1,11 @@
 package engine
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 )
 
@@ -56,5 +58,32 @@ func TestGame(t *testing.T) {
 
 	for u, cards := range state.Cards {
 		t.Logf("card2 %v, %v", u, cards)
+	}
+}
+
+func TestEngine_Finish(t *testing.T) {
+	type fields struct {
+		deck *entity.Deck
+	}
+	type args struct {
+		s *entity.MatchState
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   *pb.UpdateFinish
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Engine{
+				deck: tt.fields.deck,
+			}
+			if got := c.Finish(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Engine.Finish() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
