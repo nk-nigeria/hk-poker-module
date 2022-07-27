@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/stretchr/testify/assert"
 )
 
 func mockHandNatural1() (*Hand, error) {
@@ -265,5 +266,25 @@ func TestCompareHand3FlushWithNormal(t *testing.T) {
 	h2, _ := mockHandNormal()
 
 	result := CompareHand(nil, h1, h2)
+
 	t.Logf("result %v", result)
+	assert.Equal(t, pb.PointType_Point_Natural, h1.pointType, "should be natural, 3flush")
+	assert.Equal(t, pb.PointType_Point_Normal, h2.pointType, "should be normal")
+	assert.Equal(t, mapNaturalPoint[pb.HandBonusType_BonusNaturalThreeOfFlushes], result.GetR1().NaturalFactor, "should be natural, 3flush")
+	assert.Equal(t, -mapNaturalPoint[pb.HandBonusType_BonusNaturalThreeOfFlushes], result.GetR2().NaturalFactor, "should be normal")
+
+	assert.Equal(t, 0, result.GetR1().BackFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR1().MiddleFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR1().FrontFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR1().BackBonusFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR1().MiddleBonusFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR1().FrontBonusFactor, "should be 0")
+
+	assert.Equal(t, 0, result.GetR2().BackFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR2().MiddleFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR2().FrontFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR2().BackBonusFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR2().MiddleBonusFactor, "should be 0")
+	assert.Equal(t, 0, result.GetR2().FrontBonusFactor, "should be 0")
+
 }
