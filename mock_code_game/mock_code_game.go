@@ -1,67 +1,13 @@
-package engine
+package mockcodegame
 
 import (
-	"testing"
-
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"github.com/emirpasic/gods/maps/linkedhashmap"
 )
 
-func TestGame(t *testing.T) {
-	t.Logf("Test Game")
-	processor := NewChinesePokerEngine()
+var MapMockCodeListCard = make(map[int32][]*pb.ListCard)
 
-	// mock presense
-	presense := linkedhashmap.New()
-	presense.Put("user1", nil)
-	presense.Put("user2", nil)
-	presense.Put("user3", nil)
-
-	// mock state
-	state := &entity.MatchState{
-		Presences:        presense,
-		PlayingPresences: linkedhashmap.New(),
-	}
-
-	//var err = processor.NewGame(state)
-	//if err != nil {
-	//	t.Errorf("new game error %v", err)
-	//}
-
-	t.Logf("new game success")
-	processor.Deal(state)
-
-	// check dealt cards
-	for u, cards := range state.Cards {
-		t.Logf("card %v, %v", u, cards)
-	}
-
-	card1 := state.Cards["user1"]
-	card2 := state.Cards["user2"]
-	card3 := state.Cards["user3"]
-
-	cardOrganize1 := entity.Shuffle(card1)
-	cardOrganize2 := entity.Shuffle(card2)
-	cardOrganize3 := entity.Shuffle(card3)
-
-	processor.Organize(state, "user1", cardOrganize1)
-	processor.Organize(state, "user2", cardOrganize2)
-	processor.Organize(state, "user3", cardOrganize3)
-
-	processor.Finish(state)
-	// check dealt cards
-	for u, cards := range state.OrganizeCards {
-		t.Logf("card organize %v, %v", u, cards)
-	}
-
-	for u, cards := range state.Cards {
-		t.Logf("card2 %v, %v", u, cards)
-	}
-}
-
-func TestGameNormalWithNorma(t *testing.T) {
-	listCard1 := (&pb.ListCard{
+func init() {
+	MapMockCodeListCard[1] = append(MapMockCodeListCard[1], &pb.ListCard{
 		Cards: []*pb.Card{
 			{
 				Rank: pb.CardRank_RANK_J,
@@ -118,9 +64,9 @@ func TestGameNormalWithNorma(t *testing.T) {
 				Suit: pb.CardSuit_SUIT_HEARTS,
 			},
 		},
-	})
-
-	listCard2 := (&pb.ListCard{
+	},
+	)
+	MapMockCodeListCard[1] = append(MapMockCodeListCard[1], &pb.ListCard{
 		Cards: []*pb.Card{
 			{
 				Rank: pb.CardRank_RANK_9,
@@ -177,31 +123,6 @@ func TestGameNormalWithNorma(t *testing.T) {
 				Suit: pb.CardSuit_SUIT_HEARTS,
 			},
 		},
-	})
-
-	processor := NewChinesePokerEngine()
-
-	// mock presense
-	presense := linkedhashmap.New()
-	presense.Put("user1", nil)
-	presense.Put("user2", nil)
-
-	// mock state
-	state := &entity.MatchState{
-		Presences:        presense,
-		PlayingPresences: presense,
-		OrganizeCards:    make(map[string]*pb.ListCard),
-		Cards:            make(map[string]*pb.ListCard),
-	}
-
-	//var err = processor.NewGame(state)
-	//if err != nil {
-	//	t.Errorf("new game error %v", err)
-	//}
-
-	processor.Organize(state, "user1", listCard1)
-	processor.Organize(state, "user2", listCard2)
-
-	result := processor.Finish(state)
-	t.Logf("%v", result)
+	},
+	)
 }

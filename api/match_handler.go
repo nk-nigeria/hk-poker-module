@@ -85,13 +85,16 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		open = 0
 	}
 
+	mockCodeCard, _ := params["mock_code_card"].(int32)
+
 	label := &entity.MatchLabel{
-		Open:     open,
-		Bet:      bet,
-		Code:     entity.ModuleName,
-		Name:     name,
-		Password: password,
-		MaxSize:  entity.MaxPresences,
+		Open:         open,
+		Bet:          bet,
+		Code:         entity.ModuleName,
+		Name:         name,
+		Password:     password,
+		MaxSize:      entity.MaxPresences,
+		MockCodeCard: mockCodeCard,
 	}
 
 	labelJSON, err := json.Marshal(label)
