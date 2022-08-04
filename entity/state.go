@@ -33,7 +33,8 @@ type MatchState struct {
 	PlayingPresences *linkedhashmap.Map
 	LeavePresences   *linkedhashmap.Map
 	// Number of users currently in the process of connecting to the match.
-	JoinsInProgress int
+	JoinsInProgress   int
+	PresencesNoAction map[string]int
 
 	// Mark assignments to player user IDs.
 	Cards map[string]*pb.ListCard
@@ -47,12 +48,13 @@ type MatchState struct {
 
 func NewMathState(label *MatchLabel) MatchState {
 	m := MatchState{
-		Random:           rand.New(rand.NewSource(time.Now().UnixNano())),
-		Label:            label,
-		MinPresences:     MinPresences,
-		Presences:        linkedhashmap.New(),
-		PlayingPresences: linkedhashmap.New(),
-		LeavePresences:   linkedhashmap.New(),
+		Random:            rand.New(rand.NewSource(time.Now().UnixNano())),
+		Label:             label,
+		MinPresences:      MinPresences,
+		Presences:         linkedhashmap.New(),
+		PlayingPresences:  linkedhashmap.New(),
+		LeavePresences:    linkedhashmap.New(),
+		PresencesNoAction: make(map[string]int, 0),
 	}
 	return m
 }
@@ -66,6 +68,7 @@ func (s *MatchState) AddPresence(presences []runtime.Presence) {
 func (s *MatchState) RemovePresence(presences []runtime.Presence) {
 	for _, presence := range presences {
 		s.Presences.Remove(presence.GetUserId())
+		delete(s.PresencesNoAction, presence.GetUserId())
 	}
 }
 
@@ -78,6 +81,7 @@ func (s *MatchState) AddLeavePresence(presences []runtime.Presence) {
 func (s *MatchState) ApplyLeavePresence() {
 	s.LeavePresences.Each(func(key interface{}, value interface{}) {
 		s.Presences.Remove(key)
+		delete(s.PresencesNoAction, key.(string))
 	})
 
 	s.LeavePresences = linkedhashmap.New()
@@ -87,7 +91,23 @@ func (s *MatchState) SetupMatchPresence() {
 	s.PlayingPresences = linkedhashmap.New()
 	s.Presences.Each(func(key interface{}, value interface{}) {
 		s.PlayingPresences.Put(key, value)
+		keyStr := key.(string)
+		if val, exist := s.PresencesNoAction[keyStr]; exist {
+			s.PresencesNoAction[keyStr] = val + 1
+		} else {
+			s.PresencesNoAction[keyStr] = 1
+		}
 	})
+}
+
+func (s *MatchState) GetPresenceNotInteract(roundGame int) []runtime.Presence {
+	listPresence := make([]runtime.Presence, 0)
+	s.Presences.Each(func(key interface{}, value interface{}) {
+		if roundGameNotInteract, exist := s.PresencesNoAction[key.(string)]; exist && roundGameNotInteract > roundGame {
+			listPresence = append(listPresence, value.(runtime.Presence))
+		}
+	})
+	return listPresence
 }
 
 func (s *MatchState) SetUpCountDown(duration time.Duration) {
@@ -127,10 +147,12 @@ func (s *MatchState) IsReadyToPlay() bool {
 
 func (s *MatchState) UpdateShowCard(userId string, cards *pb.ListCard) {
 	s.OrganizeCards[userId] = cards
+	s.PresencesNoAction[userId] = 0
 }
 
 func (s *MatchState) RemoveShowCard(userId string) {
 	delete(s.OrganizeCards, userId)
+	s.PresencesNoAction[userId] = 0
 }
 
 func (s *MatchState) GetPlayingCount() int {

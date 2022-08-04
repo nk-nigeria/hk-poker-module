@@ -2,6 +2,7 @@ package state_machine
 
 import (
 	"context"
+
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -35,9 +36,9 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 			CountDown: int64(state.GetRemainCountDown()),
 		},
 	)
-
 	// Setup match presences
 	state.SetupMatchPresence()
+
 	// New game here
 	procPkg.GetProcessor().ProcessNewGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
 
