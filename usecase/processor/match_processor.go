@@ -271,12 +271,12 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 
 	logger.Info("wallet update ctx %v, walletUpdates %v", ctx, walletUpdates)
 
-	results, err := nk.WalletsUpdate(ctx, walletUpdates, true)
+	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
 	if err != nil {
 		logger.WithField("err", err).Error("Wallets update error.")
 	}
 
-	logger.Info("wallet update error %v, result %v", err, results)
+	// logger.Info("wallet update error %v, result %v", err, results)
 }
 
 func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence) {

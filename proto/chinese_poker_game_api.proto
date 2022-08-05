@@ -78,6 +78,7 @@ enum OpCodeRequest {
   OPCODE_REQUEST_COMBINE_CARDS = 4;
   OPCODE_REQUEST_SHOW_CARDS = 5; //message Organize
   OPCODE_REQUEST_DECLARE_CARDS = 6; //message Organize
+  OPCODE_USER_INTERACT_CARDS = 7; //message noti user move card
 }
 
 // The complete set of opcodes used for communication between clients and server.

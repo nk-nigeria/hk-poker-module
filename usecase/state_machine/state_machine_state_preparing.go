@@ -2,6 +2,7 @@ package state_machine
 
 import (
 	"context"
+	"strings"
 
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
@@ -28,10 +29,18 @@ func (s *StatePreparing) Enter(ctx context.Context, args ...interface{}) error {
 
 	// remove all user not interact 2 game continue
 	listPrecense := state.GetPresenceNotInteract(2)
-	state.AddLeavePresence(listPrecense)
-	procPkg.GetProcessor().ProcessApplyPresencesLeave(ctx,
-		procPkg.GetLogger(),
-		procPkg.GetNK(), procPkg.GetDispatcher(), state)
+	if len(listPrecense) > 0 {
+		listUserId := make([]string, len(listPrecense))
+		for _, p := range listPrecense {
+			listUserId = append(listUserId, p.GetUserId())
+		}
+		procPkg.GetLogger().Info("Kick %d user from math %s",
+			len(listPrecense), strings.Join(listUserId, ","))
+		state.AddLeavePresence(listPrecense)
+		procPkg.GetProcessor().ProcessApplyPresencesLeave(ctx,
+			procPkg.GetLogger(),
+			procPkg.GetNK(), procPkg.GetDispatcher(), state)
+	}
 
 	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,

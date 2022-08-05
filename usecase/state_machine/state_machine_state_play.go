@@ -68,6 +68,9 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 				processor.ShowCard(logger, dispatcher, state, message)
 			case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
 				processor.DeclareCard(logger, dispatcher, state, message)
+				state.ResetUserNotInteract(message.GetUserId())
+			case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
+				state.ResetUserNotInteract(message.GetUserId())
 			}
 		}
 
