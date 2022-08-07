@@ -2,11 +2,12 @@ package mock
 
 import (
 	"context"
+	"os"
+	"time"
+
 	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/rtapi"
 	"github.com/heroiclabs/nakama-common/runtime"
-	"os"
-	"time"
 )
 
 type MockModule struct {
@@ -359,27 +360,11 @@ func (m MockModule) LeaderboardsGetId(ctx context.Context, ids []string) ([]*api
 	panic("implement me")
 }
 
-func (m MockModule) PurchaseValidateApple(ctx context.Context, userID, receipt string, passwordOverride ...string) (*api.ValidatePurchaseResponse, error) {
-	panic("implement me")
-}
-
-func (m MockModule) PurchaseValidateGoogle(ctx context.Context, userID, receipt string) (*api.ValidatePurchaseResponse, error) {
-	panic("implement me")
-}
-
-func (m MockModule) PurchaseValidateHuawei(ctx context.Context, userID, signature, inAppPurchaseData string) (*api.ValidatePurchaseResponse, error) {
-	panic("implement me")
-}
-
 func (m MockModule) PurchasesList(ctx context.Context, userID string, limit int, cursor string) (*api.PurchaseList, error) {
 	panic("implement me")
 }
 
 func (m MockModule) PurchaseGetByTransactionId(ctx context.Context, transactionID string) (string, *api.ValidatedPurchase, error) {
-	panic("implement me")
-}
-
-func (m MockModule) TournamentCreate(ctx context.Context, id string, sortOrder, operator, resetSchedule string, metadata map[string]interface{}, title, description string, category, startTime, endTime, duration, maxSize, maxNumScore int, joinRequired bool) error {
 	panic("implement me")
 }
 
