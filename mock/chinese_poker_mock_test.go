@@ -28,7 +28,7 @@ type ChinsePokerMock struct {
 }
 
 func TestChinsePokerMock(t *testing.T) {
-	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/chinese_poker_mock/chinese_poker_mock_1.json"
+	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/chinese_poker_mock/chinese_poker_mock_2.json"
 	data, err := os.ReadFile(fileMock) // just pass the file name
 	if err != nil {
 		t.Fatalf("Error read file mock %s , err %s", fileMock, err.Error())
@@ -83,7 +83,7 @@ func TestChinsePokerMock(t *testing.T) {
 			actualResult.ScoreResult.BackBonusFactor,
 			"back bonus factor")
 
-		assert.Equal(t, expectResult.ScoreResult.FrontBonusFactor,
+		assert.Equal(t, expectResult.ScoreResult.FrontFactor,
 			actualResult.ScoreResult.FrontFactor,
 			"front factor")
 		assert.Equal(t, expectResult.ScoreResult.MiddleFactor,
