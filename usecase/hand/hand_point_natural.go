@@ -89,7 +89,9 @@ func CheckSixPairs(bcards *entity.BinListCard) (*HandPoint, bool) {
 // CheckThreeStraight
 // 3 sảnh
 func CheckThreeStraights(hand *Hand) (*HandPoint, bool) {
-	threeStraight := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
+	bcards := entity.NewBinListCards(hand.frontHand.Cards)
+	_, isFontHandStraight := CheckStraight(bcards)
+	threeStraight := isFontHandStraight && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
 	if threeStraight {
 		var listCard entity.ListCard
 		listCard = append(listCard, SortCard(hand.backHand.Cards)...)

@@ -2,8 +2,11 @@ package mock
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
@@ -23,12 +26,33 @@ type InputChinsePokerMock struct {
 }
 
 type ChinsePokerMock struct {
+	Name   string               `json:"name"`
 	Input  InputChinsePokerMock `json:"input"`
 	Output pb.UpdateFinish      `json:"output"`
 }
 
-func TestChinsePokerMock(t *testing.T) {
-	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/chinese_poker_mock/chinese_poker_mock_2.json"
+func TestChinsePokerAllMock(t *testing.T) {
+	path := "./chinese_poker_mock"
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		nameFile := f.Name()
+		if !strings.HasSuffix(nameFile, ".json") {
+			continue
+		}
+		// t.Logf(f.Name())
+		fullFilePath := filepath.Join(path, f.Name())
+		RunTestChinsePokerMock(fullFilePath, t)
+	}
+}
+
+func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 	data, err := os.ReadFile(fileMock) // just pass the file name
 	if err != nil {
 		t.Fatalf("Error read file mock %s , err %s", fileMock, err.Error())
@@ -38,6 +62,7 @@ func TestChinsePokerMock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse file mock %s err %s", fileMock, err.Error())
 	}
+	t.Logf("Run test for mock %s", cpMock.Name)
 
 	processor := engine.NewChinesePokerEngine()
 	presense := linkedhashmap.New()
@@ -138,4 +163,8 @@ func TestChinsePokerMock(t *testing.T) {
 		assert.Equal(t, expect.Type, actual.Type, "Type")
 	}
 	t.Logf("%v", result)
+}
+func TestChinsePokerMock(t *testing.T) {
+	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/chinese_poker_mock/chinese_poker_mock_2.json"
+	RunTestChinsePokerMock(fileMock, t)
 }
