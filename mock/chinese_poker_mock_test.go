@@ -2,6 +2,7 @@ package mock
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -82,6 +83,28 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 		processor.Organize(state, u.UserId, listCard)
 	}
 	result := processor.Finish(state)
+	sort.Slice(cpMock.Output.Bonuses, func(i, j int) bool {
+		a := cpMock.Output.Bonuses[i]
+		b := cpMock.Output.Bonuses[j]
+		if a.Win < b.Win {
+			return true
+		}
+		if a.Lose < b.Lose {
+			return true
+		}
+		return a.Type.Number() < b.Type.Number()
+	})
+	sort.Slice(result.Bonuses, func(i, j int) bool {
+		a := result.Bonuses[i]
+		b := result.Bonuses[j]
+		if a.Win < b.Win {
+			return true
+		}
+		if a.Lose < b.Lose {
+			return true
+		}
+		return a.Type.Number() < b.Type.Number()
+	})
 	mapExpectResult := make(map[string]*pb.ComparisonResult)
 	for _, r := range cpMock.Output.Results {
 		mapExpectResult[r.GetUserId()] = r
@@ -96,34 +119,34 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 		actualResult := mapActualResult[userId]
 		assert.Equal(t, expectResult.PointResult.Type,
 			actualResult.PointResult.Type,
-			"type point -1(misset) 0(normal) 1(natual), ")
+			fmt.Sprintf("%s - %s", cpMock.Name, "type point -1(misset) 0(normal) 1(natual) "))
 
 		assert.Equal(t, expectResult.ScoreResult.FrontBonusFactor,
 			actualResult.ScoreResult.FrontBonusFactor,
-			"front bonus factor")
+			fmt.Sprintf("%s - %s", cpMock.Name, "front bonus factor"))
 		assert.Equal(t, expectResult.ScoreResult.MiddleBonusFactor,
 			actualResult.ScoreResult.MiddleBonusFactor,
-			"mid bonus factor")
+			fmt.Sprintf("%s - %s", cpMock.Name, "mid bonus factor"))
 		assert.Equal(t, expectResult.ScoreResult.BackBonusFactor,
 			actualResult.ScoreResult.BackBonusFactor,
-			"back bonus factor")
+			fmt.Sprintf("%s - %s", cpMock.Name, "back bonus factor"))
 
 		assert.Equal(t, expectResult.ScoreResult.FrontFactor,
 			actualResult.ScoreResult.FrontFactor,
-			"front factor")
+			fmt.Sprintf("%s - %s", cpMock.Name, "front factor"))
 		assert.Equal(t, expectResult.ScoreResult.MiddleFactor,
 			actualResult.ScoreResult.MiddleFactor,
-			"mid factor")
+			fmt.Sprintf("%s - %s", cpMock.Name, "mid factor"))
 		assert.Equal(t, expectResult.ScoreResult.BackFactor,
 			actualResult.ScoreResult.BackFactor,
-			"back factor")
+			fmt.Sprintf("%s - %s", cpMock.Name, "back factor"))
 
 		assert.Equal(t, expectResult.ScoreResult.NaturalFactor,
 			actualResult.ScoreResult.NaturalFactor,
-			"NaturalFactor")
+			fmt.Sprintf("%s - %s", cpMock.Name, "NaturalFactor"))
 		assert.Equal(t, expectResult.ScoreResult.NumHandWin,
 			actualResult.ScoreResult.NumHandWin,
-			"NumHandWin")
+			fmt.Sprintf("%s - %s", cpMock.Name, "NumHandWin"))
 		// assert.Equal(t, expectResult.ScoreResult.Scoop,
 		// 	actualResult.ScoreResult.Scoop,
 		// 	"Scoop")
@@ -132,28 +155,6 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 
 	assert.Equal(t, len(cpMock.Output.Bonuses), len(result.Bonuses), "len arr bonus")
 	//sort bonus by user id
-	sort.Slice(cpMock.Output.Bonuses, func(i, j int) bool {
-		a := cpMock.Output.Bonuses[i]
-		b := cpMock.Output.Bonuses[j]
-		if a.Win < b.Win {
-			return true
-		}
-		if a.Win > b.Win {
-			return false
-		}
-		return a.Lose < b.Lose
-	})
-	sort.Slice(result.Bonuses, func(i, j int) bool {
-		a := result.Bonuses[i]
-		b := result.Bonuses[j]
-		if a.Win < b.Win {
-			return true
-		}
-		if a.Win > b.Win {
-			return false
-		}
-		return a.Lose < b.Lose
-	})
 
 	for idx, expect := range cpMock.Output.Bonuses {
 		actual := result.Bonuses[idx]
@@ -165,6 +166,6 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 	t.Logf("%v", result)
 }
 func TestChinsePokerMock(t *testing.T) {
-	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/chinese_poker_mock/chinese_poker_mock_2.json"
+	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/chinese_poker_mock/top-3-kind-mid-4-kind-bot-4-kind.json"
 	RunTestChinsePokerMock(fileMock, t)
 }

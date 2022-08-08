@@ -24,9 +24,14 @@ var (
 		pb.HandBonusType_BonusFourOfAKindBackHand:   4,
 		pb.HandBonusType_BonusStraightFlushBackHand: 5,
 
-		pb.HandBonusType_MisSet:   5,
-		pb.HandBonusType_Scoop:    3,
-		pb.HandBonusType_ScoopAll: 6,
+		pb.HandBonusType_MisSet: 6,
+		// pb.HandBonusType_Scoop:    3,
+		// pb.HandBonusType_ScoopAll: 6,
+	}
+
+	mapRatioScoop = map[pb.HandBonusType]int{
+		pb.HandBonusType_Scoop:    2,
+		pb.HandBonusType_ScoopAll: 4,
 	}
 
 	baseHandPoint = 1
