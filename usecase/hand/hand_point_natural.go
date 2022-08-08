@@ -111,7 +111,10 @@ func CheckThreeStraights(hand *Hand) (*HandPoint, bool) {
 // CheckThreeFlushes
 // 3 cái thùng
 func CheckThreeFlushes(hand *Hand) (*HandPoint, bool) {
-	threeFlush := hand.frontHand.Point.IsStraight() && hand.middleHand.Point.IsStraight() && hand.backHand.Point.IsStraight()
+	// isFontHandFlush :=
+	bcards := entity.NewBinListCards(hand.frontHand.Cards)
+	_, isFontHandFlush := CheckFlush(bcards)
+	threeFlush := isFontHandFlush && hand.middleHand.Point.IsFlush() && hand.backHand.Point.IsFlush()
 	if threeFlush {
 		var listCard entity.ListCard
 		listCard = append(listCard, SortCard(hand.backHand.Cards)...)

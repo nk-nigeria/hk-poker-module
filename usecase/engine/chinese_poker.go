@@ -2,10 +2,11 @@ package engine
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/hand"
-	"github.com/mxschmitt/golang-combinations"
+	combinations "github.com/mxschmitt/golang-combinations"
 )
 
 type Engine struct {
@@ -26,6 +27,22 @@ func (c *Engine) NewGame(s *entity.MatchState) error {
 func (c *Engine) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
+	if list, exist := mockcodegame.MapMockCodeListCard[s.Label.MockCodeCard]; exist {
+		if len(list) >= s.PlayingPresences.Size() {
+			log.GetLogger().Debug("[MockCard] Match has label mock code card %d " +
+				"Init card for player from mock")
+			idx := 0
+			for _, k := range s.PlayingPresences.Keys() {
+				userId := k.(string)
+				s.Cards[userId] = list[idx]
+				idx++
+			}
+			return nil
+		} else {
+			log.GetLogger().Debug("[MockCard] Match has label mock code card %d "+
+				"but list card in mock smaller than size playert join game, fallback to normal", s.Label.MockCodeCard)
+		}
+	}
 
 	// loop on userid in match
 	for _, k := range s.PlayingPresences.Keys() {
