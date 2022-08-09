@@ -29,7 +29,7 @@ var (
 		// pb.HandBonusType_ScoopAll: 6,
 	}
 
-	mapRatioScoop = map[pb.HandBonusType]int{
+	mapRatioScoop = map[pb.HandBonusType]int64{
 		pb.HandBonusType_Scoop:    2,
 		pb.HandBonusType_ScoopAll: 4,
 	}
@@ -379,33 +379,77 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 	}
 }
 
-func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonResult, bonuses *[]*pb.HandBonus) {
-	lbonuses := *bonuses
-	cmpCtx := GetCompareContext(ctx)
-	if cmpCtx.ScoopAllUser != "" {
-		resultScoopAll := cmpCtx.ScoopAllResult
-		bonus := int64(mapBonusPoint[pb.HandBonusType_ScoopAll])
-		for _, result := range cmpResult {
-			if result.UserId != cmpCtx.ScoopAllUser {
-				resultScoopAll.ScoreResult.BonusFactor += bonus
-				result.ScoreResult.BonusFactor -= bonus
+// func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonResult, bonuses *[]*pb.HandBonus) {
+// 	lbonuses := *bonuses
+// 	cmpCtx := GetCompareContext(ctx)
+// 	if cmpCtx.ScoopAllUser != "" {
+// 		resultScoopAll := cmpCtx.ScoopAllResult
+// 		bonus := int64(mapBonusPoint[pb.HandBonusType_ScoopAll])
+// 		for _, result := range cmpResult {
+// 			if result.UserId != cmpCtx.ScoopAllUser {
+// 				resultScoopAll.ScoreResult.BonusFactor += bonus
+// 				result.ScoreResult.BonusFactor -= bonus
 
-				lbonuses = append(lbonuses, &pb.HandBonus{
-					Win:  cmpCtx.ScoopAllUser,
-					Lose: result.UserId,
-					Type: pb.HandBonusType_ScoopAll,
-				})
-			}
+// 				lbonuses = append(lbonuses, &pb.HandBonus{
+// 					Win:  cmpCtx.ScoopAllUser,
+// 					Lose: result.UserId,
+// 					Type: pb.HandBonusType_ScoopAll,
+// 				})
+// 			}
+// 		}
+// 	}
+// }
+
+func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonResult, mapRCPair map[string]*ComparisonResult, bonuses *[]*pb.HandBonus) {
+	cmpCtx := GetCompareContext(ctx)
+	if cmpCtx.ScoopAllUser == "" {
+		return
+	}
+	lbonuses := *bonuses
+	resultScoopAll := cmpCtx.ScoopAllResult
+	// resultScoopAllUserId := cmpCtx.ScoopAllUser
+	bonusRatioScoopAll := mapRatioScoop[pb.HandBonusType_ScoopAll]
+	// bonusRatioScoop := mapRatioScoop[pb.HandBonusType_Scoop]
+	for _, result := range cmpResult {
+		if result.UserId == cmpCtx.ScoopAllUser {
+			continue
 		}
+		rc, exist := mapRCPair[result.UserId+cmpCtx.ScoopAllUser]
+		if !exist {
+			rc = mapRCPair[cmpCtx.ScoopAllUser+result.UserId]
+		}
+		r1 := rc.GetR1()
+		totalFactor := int64(r1.BackBonusFactor +
+			r1.BackFactor + r1.BonusFactor +
+			r1.FrontBonusFactor + r1.FrontFactor +
+			r1.MiddleBonusFactor + r1.MiddleFactor +
+			r1.NaturalFactor + r1.Scoop)
+		if totalFactor < 0 {
+			totalFactor = -totalFactor
+		}
+
+		resultScoopAll.ScoreResult.BonusFactor += totalFactor * bonusRatioScoopAll
+		result.ScoreResult.BonusFactor -= totalFactor * (bonusRatioScoopAll - 1)
+
+		lbonuses = append(lbonuses, &pb.HandBonus{
+			Win:    cmpCtx.ScoopAllUser,
+			Lose:   result.UserId,
+			Type:   pb.HandBonusType_ScoopAll,
+			Factor: totalFactor * bonusRatioScoopAll,
+		})
 	}
 }
 
 func CalcTotalFactor(cmpResult []*pb.ComparisonResult) {
 	for _, result := range cmpResult {
-		result.ScoreResult.TotalFactor = result.ScoreResult.BackBonusFactor +
-			result.ScoreResult.BackFactor + result.ScoreResult.BonusFactor +
-			result.ScoreResult.FrontBonusFactor + result.ScoreResult.FrontFactor +
-			result.ScoreResult.MiddleBonusFactor + result.ScoreResult.MiddleFactor +
-			result.ScoreResult.NaturalFactor + result.ScoreResult.Scoop
+		result.ScoreResult.TotalFactor = getTotalFactor(result)
 	}
+}
+
+func getTotalFactor(result *pb.ComparisonResult) int64 {
+	return result.ScoreResult.BackBonusFactor +
+		result.ScoreResult.BackFactor + result.ScoreResult.BonusFactor +
+		result.ScoreResult.FrontBonusFactor + result.ScoreResult.FrontFactor +
+		result.ScoreResult.MiddleBonusFactor + result.ScoreResult.MiddleFactor +
+		result.ScoreResult.NaturalFactor + result.ScoreResult.Scoop
 }

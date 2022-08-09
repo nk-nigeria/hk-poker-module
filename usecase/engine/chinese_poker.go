@@ -109,6 +109,7 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	}
 
 	pairs := combinations.Combinations(userIds, 2)
+	mapRcPair := make(map[string]*hand.ComparisonResult, 0)
 	log.GetLogger().Info("combination %v of %v", pairs, len(userIds))
 	for _, pair := range pairs {
 		uid1 := pair[0]
@@ -117,13 +118,16 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 
 		// calculate natural point, normal point, hand bonus case
 		rc := hand.CompareHand(ctx, hands[uid1], hands[uid2])
+		mapRcPair[uid1+uid2] = rc
 		hand.ProcessCompareResult(ctx, results[uid1], rc.GetR1())
 		hand.ProcessCompareResult(ctx, results[uid2], rc.GetR2())
 
 		updateFinish.Bonuses = append(updateFinish.Bonuses, rc.GetBonuses()...)
 	}
 
-	hand.ProcessCompareBonusResult(ctx, updateFinish.Results, &updateFinish.Bonuses)
+	// hand.ProcessCompareBonusResult(ctx, updateFinish.Results, &updateFinish.Bonuses)
+	hand.ProcessCompareBonusResult(ctx,
+		updateFinish.Results, mapRcPair, &updateFinish.Bonuses)
 	hand.CalcTotalFactor(updateFinish.Results)
 
 	return &updateFinish
