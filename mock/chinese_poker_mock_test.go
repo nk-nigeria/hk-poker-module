@@ -158,14 +158,14 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 
 	for idx, expect := range cpMock.Output.Bonuses {
 		actual := result.Bonuses[idx]
-		assert.Equal(t, expect.Win, actual.Win, "user id win")
-		assert.Equal(t, expect.Lose, actual.Lose, "user id lose")
-		assert.Equal(t, expect.Factor, actual.Factor, "factor")
-		assert.Equal(t, expect.Type, actual.Type, "Type")
+		assert.Equal(t, expect.Win, actual.Win, fmt.Sprintf("%s - %s", cpMock.Name, "user id win"))
+		assert.Equal(t, expect.Lose, actual.Lose, fmt.Sprintf("%s - %s", cpMock.Name, "user id lose"))
+		assert.Equal(t, expect.Factor, actual.Factor, fmt.Sprintf("%s - %s", cpMock.Name, "factor"))
+		assert.Equal(t, expect.Type, actual.Type, fmt.Sprintf("%s - %s", cpMock.Name, "Type"))
 	}
 	t.Logf("%v", result)
 }
 func TestChinsePokerMock(t *testing.T) {
-	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/chinese_poker_mock/top-3-kind-mid-4-kind-bot-4-kind.json"
+	fileMock := "./chinese_poker_mock/top-3-kind-mid-full-house-bot-straight-flush.json"
 	RunTestChinsePokerMock(fileMock, t)
 }
