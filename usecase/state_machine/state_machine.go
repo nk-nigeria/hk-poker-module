@@ -2,9 +2,10 @@ package state_machine
 
 import (
 	"context"
+	"time"
+
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/qmuntal/stateless"
-	"time"
 )
 
 const (
@@ -34,7 +35,7 @@ const (
 const (
 	idleTimeout      = time.Second * 15
 	preparingTimeout = time.Second * 10
-	playTimeout      = time.Second * 60 * 2
+	playTimeout      = time.Second * 5 * 2
 	//playTimeout      = time.Second * 10
 	rewardTimeout = time.Second * 30
 	//rewardTimeout    = time.Second * 10

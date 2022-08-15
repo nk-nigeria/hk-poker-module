@@ -94,6 +94,7 @@ enum OpCodeUpdate {
   // update card state/combine, show, declare
   OPCODE_UPDATE_CARD_STATE = 6;
   OPCODE_UPDATE_WALLET = 7;
+  OPCODE_KICK_OFF_THE_TABLE = 8;
 }
 
 enum GameState {

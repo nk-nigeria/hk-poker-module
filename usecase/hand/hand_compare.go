@@ -25,12 +25,12 @@ var (
 		pb.HandBonusType_BonusStraightFlushBackHand: 5,
 
 		pb.HandBonusType_MisSet: 6,
-		// pb.HandBonusType_Scoop:    3,
+		pb.HandBonusType_Scoop:  3,
 		// pb.HandBonusType_ScoopAll: 6,
 	}
 
 	mapRatioScoop = map[pb.HandBonusType]int64{
-		pb.HandBonusType_Scoop:    2,
+		// pb.HandBonusType_Scoop:    2,
 		pb.HandBonusType_ScoopAll: 4,
 	}
 
@@ -348,7 +348,7 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 	result.BackBonusFactor += int64(cresult.BackBonusFactor)
 
 	scoopScore := mapBonusPoint[pb.HandBonusType_Scoop]
-	// missetScore := mapBonusPoint[pb.HandBonusType_MisSet]
+	missetScore := mapBonusPoint[pb.HandBonusType_MisSet]
 	if cresult.Scoop != 0 {
 		if cresult.Scoop == kWinScoop {
 			result.BonusFactor += int64(scoopScore)
@@ -360,6 +360,12 @@ func ProcessCompareResult(ctx context.Context, cmpResult *pb.ComparisonResult, c
 		result.Scoop++
 	} else if cresult.Scoop < 0 {
 		result.Scoop--
+	}
+
+	if cresult.Scoop == kWinMisset {
+		result.BonusFactor += int64(missetScore)
+	} else if cresult.Scoop == kLoseMisset {
+		result.BonusFactor -= int64(missetScore)
 	}
 
 	result.NaturalFactor += int64(cresult.NaturalFactor)
@@ -458,5 +464,5 @@ func getTotalFactor(result *pb.ComparisonResult) int64 {
 		result.ScoreResult.BackFactor + result.ScoreResult.BonusFactor +
 		result.ScoreResult.FrontBonusFactor + result.ScoreResult.FrontFactor +
 		result.ScoreResult.MiddleBonusFactor + result.ScoreResult.MiddleFactor +
-		result.ScoreResult.NaturalFactor + result.ScoreResult.Scoop
+		result.ScoreResult.NaturalFactor
 }

@@ -364,4 +364,9 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runti
 	}
 
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
+	logger.Info("notify to player kick off ")
+	m.broadcastMessage(
+		logger, dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_KICK_OFF_THE_TABLE),
+		nil, pendingLeaves, nil, true)
 }

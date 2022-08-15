@@ -27,7 +27,7 @@
                     "bonusFactor": 0,
                     "scoop": 0,
                     "num_hand_win": 3,
-                    "total_factor": 18
+                    "total_factor": 21
                 },
                 "point_result": {
                     "type": 0
@@ -46,7 +46,7 @@
                     "bonusFactor": 0,
                     "scoop": 0,
                     "num_hand_win": 0,
-                    "total_factor": -18
+                    "total_factor": -21
                 },
                 "point_result": {
                     "type": 0
@@ -58,7 +58,7 @@
                 "win": "1",
                 "lose": "2",
                 "type": 2,
-                "factor": 0
+                "factor": 3
             },
             {
                 "win": "1",

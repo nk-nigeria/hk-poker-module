@@ -147,13 +147,17 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 		assert.Equal(t, expectResult.ScoreResult.NumHandWin,
 			actualResult.ScoreResult.NumHandWin,
 			fmt.Sprintf("%s - %s", cpMock.Name, "NumHandWin"))
+
+		assert.Equal(t, expectResult.ScoreResult.TotalFactor,
+			actualResult.ScoreResult.TotalFactor,
+			fmt.Sprintf("%s - %s", cpMock.Name, "TotalFactor"))
 		// assert.Equal(t, expectResult.ScoreResult.Scoop,
 		// 	actualResult.ScoreResult.Scoop,
 		// 	"Scoop")
 
 	}
 
-	assert.Equal(t, len(cpMock.Output.Bonuses), len(result.Bonuses), "len arr bonus")
+	assert.Equal(t, len(cpMock.Output.Bonuses), len(result.Bonuses), fmt.Sprintf("%s - %s", cpMock.Name, "len arr bonus"))
 	//sort bonus by user id
 
 	for idx, expect := range cpMock.Output.Bonuses {
@@ -166,6 +170,6 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 	t.Logf("%v", result)
 }
 func TestChinsePokerMock(t *testing.T) {
-	fileMock := "./chinese_poker_mock/normal-win-all.json"
+	fileMock := "./chinese_poker_mock/three-straight.json"
 	RunTestChinsePokerMock(fileMock, t)
 }

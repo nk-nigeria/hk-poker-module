@@ -70,6 +70,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 				processor.DeclareCard(logger, dispatcher, state, message)
 				state.ResetUserNotInteract(message.GetUserId())
 			case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
+				logger.Info("User %s interact with card", message.GetUserId())
 				state.ResetUserNotInteract(message.GetUserId())
 			}
 		}
