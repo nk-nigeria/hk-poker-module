@@ -405,7 +405,7 @@ func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonRe
 	if cmpCtx.ScoopAllUser == "" {
 		return
 	}
-	lbonuses := *bonuses
+	// lbonuses := *bonuses
 	resultScoopAll := cmpCtx.ScoopAllResult
 	// resultScoopAllUserId := cmpCtx.ScoopAllUser
 	bonusRatioScoopAll := mapRatioScoop[pb.HandBonusType_ScoopAll]
@@ -423,7 +423,7 @@ func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonRe
 			r1.BackFactor + r1.BonusFactor +
 			r1.FrontBonusFactor + r1.FrontFactor +
 			r1.MiddleBonusFactor + r1.MiddleFactor +
-			r1.NaturalFactor + r1.Scoop)
+			r1.NaturalFactor)
 		if totalFactor < 0 {
 			totalFactor = -totalFactor
 		}
@@ -431,13 +431,14 @@ func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonRe
 		resultScoopAll.ScoreResult.BonusFactor += totalFactor * bonusRatioScoopAll
 		result.ScoreResult.BonusFactor -= totalFactor * (bonusRatioScoopAll - 1)
 
-		lbonuses = append(lbonuses, &pb.HandBonus{
+		*bonuses = append(*bonuses, &pb.HandBonus{
 			Win:    cmpCtx.ScoopAllUser,
 			Lose:   result.UserId,
 			Type:   pb.HandBonusType_ScoopAll,
 			Factor: totalFactor * bonusRatioScoopAll,
 		})
 	}
+	// lbonuses = append(lbonuses, lbonuses...)
 }
 
 func CalcTotalFactor(cmpResult []*pb.ComparisonResult) {

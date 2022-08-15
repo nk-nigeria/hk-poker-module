@@ -166,6 +166,6 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 	t.Logf("%v", result)
 }
 func TestChinsePokerMock(t *testing.T) {
-	fileMock := "./chinese_poker_mock/top-3-kind-mid-full-house-bot-straight-flush.json"
+	fileMock := "./chinese_poker_mock/normal-win-all.json"
 	RunTestChinsePokerMock(fileMock, t)
 }
