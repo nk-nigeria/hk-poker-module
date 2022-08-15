@@ -2,6 +2,7 @@ package hand
 
 import (
 	"fmt"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
@@ -216,6 +217,7 @@ func CalculatePoint(ch *ChildHand) *HandPoint {
 				return handPoint
 			}
 		}
+		log.GetLogger().Info("check not ok")
 	}
 
 	return nil
