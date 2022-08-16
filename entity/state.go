@@ -63,6 +63,7 @@ func NewMathState(label *MatchLabel) MatchState {
 func (s *MatchState) AddPresence(presences []runtime.Presence) {
 	for _, presence := range presences {
 		s.Presences.Put(presence.GetUserId(), presence)
+		s.ResetUserNotInteract(presence.GetUserId())
 	}
 }
 

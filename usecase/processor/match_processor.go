@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
@@ -162,7 +163,7 @@ func (m *processor) broadcastMessage(logger runtime.Logger, dispatcher runtime.M
 		logger.Error("Error when marshaler data for broadcastMessage")
 		return err
 	}
-	err = dispatcher.BroadcastMessage(opCode, dataJson, nil, nil, true)
+	err = dispatcher.BroadcastMessage(opCode, dataJson, presences, sender, true)
 
 	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
 	if err != nil {
@@ -347,7 +348,7 @@ func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger run
 
 func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	pendingLeaves := s.GetLeavePresences()
-	logger.Info("process apply presences %v", pendingLeaves)
+	logger.Info("process apply presences")
 
 	s.RemovePresence(pendingLeaves)
 
@@ -364,9 +365,15 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runti
 	}
 
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
-	logger.Info("notify to player kick off ")
-	m.broadcastMessage(
-		logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_KICK_OFF_THE_TABLE),
-		nil, pendingLeaves, nil, true)
+	if len(pendingLeaves) > 0 {
+		listUserId := make([]string, 0)
+		for _, p := range pendingLeaves {
+			listUserId = append(listUserId, p.GetUserId())
+		}
+		logger.Info("notify to player kick off %s", strings.Join(listUserId, ","))
+		m.broadcastMessage(
+			logger, dispatcher,
+			int64(pb.OpCodeUpdate_OPCODE_KICK_OFF_THE_TABLE),
+			nil, pendingLeaves, nil, true)
+	}
 }
