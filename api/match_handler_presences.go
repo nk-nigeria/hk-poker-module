@@ -24,13 +24,15 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	}
 
 	// Check if it's a user attempting to rejoin after a disconnect.
-	if presence, ok := s.Presences.Get(presence.GetUserId()); ok {
-		if presence == nil {
+	if p, ok := s.Presences.Get(presence.GetUserId()); ok {
+		if p == nil {
 			// User rejoining after a disconnect.
+			logger.Info("user %s rejoin after disconnect", presence.GetUserId())
 			s.JoinsInProgress++
 			return s, true, ""
 		} else {
 			// User attempting to join from 2 different devices at the same time.
+			logger.Info("user %s  join from 2 different devices at the same time. --> reject join match", presence.GetUserId())
 			return s, false, "already joined"
 		}
 	}
