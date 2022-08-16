@@ -376,4 +376,5 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runti
 			int64(pb.OpCodeUpdate_OPCODE_KICK_OFF_THE_TABLE),
 			nil, pendingLeaves, nil, true)
 	}
+	s.ApplyLeavePresence()
 }
