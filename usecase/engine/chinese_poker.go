@@ -27,7 +27,7 @@ func (c *Engine) NewGame(s *entity.MatchState) error {
 func (c *Engine) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
-	if list, exist := mockcodegame.MapMockCodeListCard[s.Label.MockCodeCard]; exist {
+	if list, exist := mockcodegame.MapMockCodeListCard[int(s.Label.MockCodeCard)]; exist {
 		if len(list) >= s.PlayingPresences.Size() {
 			log.GetLogger().Debug("[MockCard] Match has label mock code card %d " +
 				"Init card for player from mock")

@@ -17,21 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type MockCard struct {
-	UserId string `json:"userId"`
-	Card   string `json:"card"`
-}
-
-type InputChinsePokerMock struct {
-	Cards []MockCard `json:"cards"`
-}
-
-type ChinsePokerMock struct {
-	Name   string               `json:"name"`
-	Input  InputChinsePokerMock `json:"input"`
-	Output pb.UpdateFinish      `json:"output"`
-}
-
 func TestChinsePokerAllMock(t *testing.T) {
 	path := "./chinese_poker_mock"
 	files, err := ioutil.ReadDir(path)
@@ -58,7 +43,7 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error read file mock %s , err %s", fileMock, err.Error())
 	}
-	cpMock := &ChinsePokerMock{}
+	cpMock := &entity.ChinsePokerMock{}
 	err = json.Unmarshal(data, &cpMock)
 	if err != nil {
 		t.Fatalf("Parse file mock %s err %s", fileMock, err.Error())
@@ -78,7 +63,7 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 	}
 	for _, u := range cpMock.Input.Cards {
 		listCard := &pb.ListCard{
-			Cards: ParseListCard(u.Card),
+			Cards: entity.ParseListCard(u.Card),
 		}
 		processor.Organize(state, u.UserId, listCard)
 	}

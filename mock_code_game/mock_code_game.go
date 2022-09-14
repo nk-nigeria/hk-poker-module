@@ -1,128 +1,71 @@
 package mockcodegame
 
 import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/heroiclabs/nakama-common/runtime"
 )
 
-var MapMockCodeListCard = make(map[int32][]*pb.ListCard)
+var MapMockCodeListCard = make(map[int][]*pb.ListCard)
 
-func init() {
-	MapMockCodeListCard[1] = append(MapMockCodeListCard[1], &pb.ListCard{
-		Cards: []*pb.Card{
-			{
-				Rank: pb.CardRank_RANK_J,
-				Suit: pb.CardSuit_SUIT_DIAMONDS,
-			},
-			{
-				Rank: pb.CardRank_RANK_9,
-				Suit: pb.CardSuit_SUIT_CLUBS,
-			},
-			{
-				Rank: pb.CardRank_RANK_J,
-				Suit: pb.CardSuit_SUIT_SPADES,
-			},
+func InitMapMockCodeListCard(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) {
+	// path := "./mock_in_game"
+	// files, err := ioutil.ReadDir(path)
+	// if err != nil {
+	// 	return
+	// }
+	listUrlMock := []string{
+		"http://103.226.250.195:9000/chinese-poker-mock/1.json",
+		"http://103.226.250.195:9000/chinese-poker-mock/2.json",
+	}
+	for _, urlStr := range listUrlMock {
+		// if f.IsDir() {
+		// 	continue
+		// }
+		// nameFile := f.Name()
+		// if !strings.HasSuffix(nameFile, ".json") {
+		// 	continue
+		// }
+		// fileMock := filepath.Join(path, f.Name())
+		// data, err := os.ReadFile(fileMock) // just pass the file name
+		data, err := downloadFile(urlStr)
+		if err != nil {
+			return
+		}
+		cpMock := &entity.ChinsePokerMock{}
+		err = json.Unmarshal(data, &cpMock)
+		if err != nil {
+			return
+		}
+		for _, u := range cpMock.Input.Cards {
+			listCard := &pb.ListCard{
+				Cards: entity.ParseListCard(u.Card),
+			}
+			MapMockCodeListCard[cpMock.Id] = append(MapMockCodeListCard[cpMock.Id], listCard)
+		}
+	}
+	fmt.Printf("init map mock code card, len = %d \r\n", len(MapMockCodeListCard))
+}
 
-			{
-				Rank: pb.CardRank_RANK_5,
-				Suit: pb.CardSuit_SUIT_DIAMONDS,
-			},
-			{
-				Rank: pb.CardRank_RANK_7,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-			{
-				Rank: pb.CardRank_RANK_7,
-				Suit: pb.CardSuit_SUIT_SPADES,
-			},
-			{
-				Rank: pb.CardRank_RANK_2,
-				Suit: pb.CardSuit_SUIT_DIAMONDS,
-			},
-			{
-				Rank: pb.CardRank_RANK_2,
-				Suit: pb.CardSuit_SUIT_SPADES,
-			},
-			{
-				Rank: pb.CardRank_RANK_8,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-
-			{
-				Rank: pb.CardRank_RANK_8,
-				Suit: pb.CardSuit_SUIT_CLUBS,
-			},
-			{
-				Rank: pb.CardRank_RANK_8,
-				Suit: pb.CardSuit_SUIT_SPADES,
-			},
-			{
-				Rank: pb.CardRank_RANK_8,
-				Suit: pb.CardSuit_SUIT_DIAMONDS,
-			},
-			{
-				Rank: pb.CardRank_RANK_4,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-		},
-	},
-	)
-	MapMockCodeListCard[1] = append(MapMockCodeListCard[1], &pb.ListCard{
-		Cards: []*pb.Card{
-			{
-				Rank: pb.CardRank_RANK_9,
-				Suit: pb.CardSuit_SUIT_DIAMONDS,
-			},
-			{
-				Rank: pb.CardRank_RANK_A,
-				Suit: pb.CardSuit_SUIT_CLUBS,
-			},
-			{
-				Rank: pb.CardRank_RANK_5,
-				Suit: pb.CardSuit_SUIT_SPADES,
-			},
-
-			{
-				Rank: pb.CardRank_RANK_5,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-			{
-				Rank: pb.CardRank_RANK_2,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-			{
-				Rank: pb.CardRank_RANK_Q,
-				Suit: pb.CardSuit_SUIT_DIAMONDS,
-			},
-			{
-				Rank: pb.CardRank_RANK_3,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-			{
-				Rank: pb.CardRank_RANK_Q,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-			{
-				Rank: pb.CardRank_RANK_4,
-				Suit: pb.CardSuit_SUIT_SPADES,
-			},
-
-			{
-				Rank: pb.CardRank_RANK_4,
-				Suit: pb.CardSuit_SUIT_CLUBS,
-			},
-			{
-				Rank: pb.CardRank_RANK_6,
-				Suit: pb.CardSuit_SUIT_SPADES,
-			},
-			{
-				Rank: pb.CardRank_RANK_6,
-				Suit: pb.CardSuit_SUIT_CLUBS,
-			},
-			{
-				Rank: pb.CardRank_RANK_6,
-				Suit: pb.CardSuit_SUIT_HEARTS,
-			},
-		},
-	},
-	)
+func downloadFile(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode > 300 {
+		return nil, errors.New("status not ok")
+	}
+	if resp.Body == nil {
+		return nil, errors.New("body is nil")
+	}
+	defer resp.Body.Close()
+	return io.ReadAll(resp.Body)
 }

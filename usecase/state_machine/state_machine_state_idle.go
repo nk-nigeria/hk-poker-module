@@ -2,6 +2,7 @@ package state_machine
 
 import (
 	"context"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
@@ -51,10 +52,10 @@ func (s *StateIdle) Exit(_ context.Context, _ ...interface{}) error {
 }
 
 func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
-	log.GetLogger().Info("[idle] processing")
+	// log.GetLogger().Info("[idle] processing")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-	log.GetLogger().Info("state presences size %v", state.GetPresenceSize())
+	// log.GetLogger().Info("state presences size %v", state.GetPresenceSize())
 
 	if state.GetPresenceSize() > 0 {
 		s.Trigger(ctx, triggerMatching)

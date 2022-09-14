@@ -1,4 +1,4 @@
-package mock
+package entity
 
 import (
 	"bufio"

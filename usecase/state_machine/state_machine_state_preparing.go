@@ -61,7 +61,7 @@ func (s *StatePreparing) Exit(_ context.Context, _ ...interface{}) error {
 }
 
 func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error {
-	log.GetLogger().Info("[preparing] processing")
+	// log.GetLogger().Info("[preparing] processing")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
@@ -80,7 +80,7 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 		}
 	} else {
 		// check preparing condition
-		log.GetLogger().Info("[preparing] preparing timeout check presence count")
+		// log.GetLogger().Info("[preparing] preparing timeout check presence count")
 		if state.IsReadyToPlay() {
 			// change to play
 			s.Trigger(ctx, triggerPreparingDone)

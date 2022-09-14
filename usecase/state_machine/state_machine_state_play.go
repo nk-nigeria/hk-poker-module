@@ -51,11 +51,11 @@ func (s *StatePlay) Exit(_ context.Context, _ ...interface{}) error {
 }
 
 func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
-	log.GetLogger().Info("[play] processing")
+	// log.GetLogger().Info("[play] processing")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	if remain := state.GetRemainCountDown(); remain > 0 {
-		log.GetLogger().Info("[play] not timeout %v, message %v", remain, procPkg.GetMessages())
+		// log.GetLogger().Info("[play] not timeout %v, message %v", remain, procPkg.GetMessages())
 		messages := procPkg.GetMessages()
 		processor := procPkg.GetProcessor()
 		logger := procPkg.GetLogger()
@@ -75,7 +75,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 			}
 		}
 
-		log.GetLogger().Info("[play] not timeout show %v, play %v", state.GetShowCardCount(), state.GetPlayingCount())
+		// log.GetLogger().Info("[play] not timeout show %v, play %v", state.GetShowCardCount(), state.GetPlayingCount())
 		// Check all user show card
 		if state.GetShowCardCount() >= state.GetPlayingCount() {
 			s.Trigger(ctx, triggerPlayCombineAll)
