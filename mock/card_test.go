@@ -3,13 +3,14 @@ package mock
 import (
 	"testing"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestParseMockCard(t *testing.T) {
 	fileMock := "/home/sondq/Documents/myspace/cgb-chinese-poker-module/mock/mock_card/natural_special.txt"
-	list := ParseMockCard(fileMock)
+	list := entity.ParseMockCard(fileMock)
 	x := pb.UpdateFinish{}
 	pp := &protojson.MarshalOptions{
 		EmitUnpopulated: true,
