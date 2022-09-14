@@ -210,10 +210,11 @@ func (h *Hand) calculatePoint() error {
 func (h Hand) GetPointResult() *pb.PointResult {
 	h.calculatePoint()
 
-	result := &pb.PointResult{
-		Type: h.pointType,
-	}
+	// result := &pb.PointResult{
+	// 	Type: h.pointType,
+	// }
 
+	var result *pb.PointResult
 	switch h.pointType {
 	case pb.PointType_Point_Normal:
 		result = &pb.PointResult{
@@ -225,9 +226,15 @@ func (h Hand) GetPointResult() *pb.PointResult {
 		result = &pb.PointResult{
 			Natural: h.naturalPoint.ToHandResultPB(),
 		}
-	case pb.PointType_Point_Mis_Set:
+	// case pb.PointType_Point_Mis_Set:
 
+	// }
+	default:
+		{
+			result = &pb.PointResult{}
+		}
 	}
+	result.Type = h.pointType
 
 	return result
 }
