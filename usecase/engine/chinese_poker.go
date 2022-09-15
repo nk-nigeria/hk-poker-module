@@ -121,13 +121,27 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 		mapRcPair[uid1+uid2] = rc
 		hand.ProcessCompareResult(ctx, results[uid1], rc.GetR1())
 		hand.ProcessCompareResult(ctx, results[uid2], rc.GetR2())
+		for _, bonus := range rc.GetBonuses() {
+			if bonus.Type != pb.HandBonusType_Scoop {
+				updateFinish.Bonuses = append(updateFinish.Bonuses, bonus)
+			}
 
-		updateFinish.Bonuses = append(updateFinish.Bonuses, rc.GetBonuses()...)
+		}
+
 	}
 
 	// hand.ProcessCompareBonusResult(ctx, updateFinish.Results, &updateFinish.Bonuses)
 	hand.ProcessCompareBonusResult(ctx,
 		updateFinish.Results, mapRcPair, &updateFinish.Bonuses)
+
+	for _, rc := range mapRcPair {
+		for _, bonus := range rc.GetBonuses() {
+			if bonus.Type == pb.HandBonusType_Scoop {
+				updateFinish.Bonuses = append(updateFinish.Bonuses, bonus)
+			}
+		}
+
+	}
 	hand.CalcTotalFactor(updateFinish.Results)
 
 	return &updateFinish

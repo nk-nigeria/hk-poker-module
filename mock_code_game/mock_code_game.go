@@ -1,8 +1,6 @@
 package mockcodegame
 
 import (
-	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,12 +9,11 @@ import (
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"github.com/heroiclabs/nakama-common/runtime"
 )
 
 var MapMockCodeListCard = make(map[int][]*pb.ListCard)
 
-func InitMapMockCodeListCard(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) {
+func InitMapMockCodeListCard() {
 	// path := "./mock_in_game"
 	// files, err := ioutil.ReadDir(path)
 	// if err != nil {
