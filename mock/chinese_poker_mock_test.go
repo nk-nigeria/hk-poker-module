@@ -68,28 +68,7 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 		processor.Organize(state, u.UserId, listCard)
 	}
 	result := processor.Finish(state)
-	// sort.Slice(cpMock.Output.Bonuses, func(i, j int) bool {
-	// 	a := cpMock.Output.Bonuses[i]
-	// 	b := cpMock.Output.Bonuses[j]
-	// 	if compareStr(a.GetWin(), b.GetWin()) {
-	// 		return true
-	// 	}
-	// 	if compareStr(a.GetLose(), b.GetLose()) {
-	// 		return true
-	// 	}
-	// 	return a.Type.Number() < b.Type.Number()
-	// })
-	// sort.Slice(result.Bonuses, func(i, j int) bool {
-	// 	a := result.Bonuses[i]
-	// 	b := result.Bonuses[j]
-	// 	if compareStr(a.GetWin(), b.GetWin()) {
-	// 		return true
-	// 	}
-	// 	if compareStr(a.GetLose(), b.GetLose()) {
-	// 		return true
-	// 	}
-	// 	return a.Type.Number() < b.Type.Number()
-	// })
+
 	mapExpectResult := make(map[string]*pb.ComparisonResult)
 	for _, r := range cpMock.Output.Results {
 		mapExpectResult[r.GetUserId()] = r
@@ -163,7 +142,7 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 }
 
 func TestChinsePokerMock(t *testing.T) {
-	fileMock := "./chinese_poker_mock/win-all-3-player-1-normal-1misset.json"
+	fileMock := "./chinese_poker_mock/mock_bug_IUHqN8Rr.json"
 	RunTestChinsePokerMock(fileMock, t)
 }
 
