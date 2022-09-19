@@ -30,7 +30,7 @@
                     "total_factor": 10
                 },
                 "point_result": {
-                    "type": 0
+                    "type":1
                 }
             },
             {
@@ -49,7 +49,7 @@
                     "total_factor": -10
                 },
                 "point_result": {
-                    "type": 0
+                    "type":0
                 }
             }
         ],

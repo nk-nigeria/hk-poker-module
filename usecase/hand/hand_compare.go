@@ -29,10 +29,11 @@ var (
 		// pb.HandBonusType_ScoopAll: 6,
 	}
 
-	mapRatioScoop = map[pb.HandBonusType]int64{
-		// pb.HandBonusType_Scoop:    2,
-		pb.HandBonusType_ScoopAll: 4,
-	}
+	// mapRatioScoop = map[pb.HandBonusType]int64{
+	// 	// pb.HandBonusType_Scoop:    2,
+	// 	pb.HandBonusType_ScoopAll: 4,
+	// }
+	ratioScoopApp = []int64{1, 1, 2, 3}
 
 	baseHandPoint = 1
 )
@@ -159,8 +160,8 @@ func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
 	return result
 }
 
-//compareNaturalWithNatural
-//case 1
+// compareNaturalWithNatural
+// case 1
 func compareNaturalWithNatural(h1, h2 *Hand, result *ComparisonResult) {
 	var score = 0
 	if cmp := CompareHandPoint(h1.naturalPoint, h2.naturalPoint); cmp > 0 {
@@ -175,8 +176,8 @@ func compareNaturalWithNatural(h1, h2 *Hand, result *ComparisonResult) {
 	result.r2.NaturalFactor = -score
 }
 
-//compareNaturalWithMisset
-//case2
+// compareNaturalWithMisset
+// case2
 func compareNaturalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	score := mapNaturalPoint[rankingTypeToBonusType(h1.naturalPoint.rankingType)]
 	result.addHandBonus(h1.owner, h2.owner, rankingTypeToBonusType(h1.naturalPoint.rankingType), int64(score))
@@ -184,8 +185,8 @@ func compareNaturalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	result.r2.NaturalFactor = -score
 }
 
-//compareNaturalWithNormal
-//case3
+// compareNaturalWithNormal
+// case3
 func compareNaturalWithNormal(h1, h2 *Hand, result *ComparisonResult) {
 	score := mapNaturalPoint[rankingTypeToBonusType(h1.naturalPoint.rankingType)]
 	result.addHandBonus(h1.owner, h2.owner, rankingTypeToBonusType(h1.naturalPoint.rankingType), int64(score))
@@ -193,13 +194,13 @@ func compareNaturalWithNormal(h1, h2 *Hand, result *ComparisonResult) {
 	result.r2.NaturalFactor = -score
 }
 
-//compareMissetWithMisset
-//case4
+// compareMissetWithMisset
+// case4
 func compareMissetWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	// Don't need to do anything
 }
 
-//compareNormalWithMisset
+// compareNormalWithMisset
 func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	// check special case bonus only
 	if bonus, bonusScore := h1.frontHand.GetBonus(); bonus != pb.HandBonusType_None {
@@ -235,7 +236,7 @@ func compareNormalWithMisset(h1, h2 *Hand, result *ComparisonResult) {
 	// result.addHandBonus(h1.owner, h2.owner, pb.HandBonusType_Scoop, int64(scoopScore))
 }
 
-//compareNormalWithNormal
+// compareNormalWithNormal
 func compareNormalWithNormal(h1, h2 *Hand, result *ComparisonResult) {
 	winHand := 0
 	cmpHand := 0
@@ -420,7 +421,7 @@ func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonRe
 	// lbonuses := *bonuses
 	resultScoopAll := cmpCtx.ScoopAllResult
 	// resultScoopAllUserId := cmpCtx.ScoopAllUser
-	bonusRatioScoopAll := mapRatioScoop[pb.HandBonusType_ScoopAll]
+	bonusRatioScoopAll := ratioScoopApp[cmpCtx.PresenceCount-1]
 	// bonusRatioScoop := mapRatioScoop[pb.HandBonusType_Scoop]
 	for _, result := range cmpResult {
 		if result.UserId == cmpCtx.ScoopAllUser {
@@ -441,7 +442,7 @@ func ProcessCompareBonusResult(ctx context.Context, cmpResult []*pb.ComparisonRe
 		}
 
 		resultScoopAll.ScoreResult.BonusFactor += totalFactor * bonusRatioScoopAll
-		result.ScoreResult.BonusFactor -= totalFactor * (bonusRatioScoopAll - 1)
+		result.ScoreResult.BonusFactor -= totalFactor * (bonusRatioScoopAll)
 
 		*bonuses = append(*bonuses, &pb.HandBonus{
 			Win:    cmpCtx.ScoopAllUser,

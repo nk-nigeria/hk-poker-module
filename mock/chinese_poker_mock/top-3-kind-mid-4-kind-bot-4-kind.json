@@ -25,7 +25,7 @@
                     "back_bonus_factor": 4,
                     "natural_factor": 0,
                     "bonusFactor": 0,
-                    "scoop": 0,
+                    "scoop": 1,
                     "num_hand_win": 3,
                     "total_factor": 21
                 },
@@ -44,7 +44,7 @@
                     "back_bonus_factor": -4,
                     "natural_factor": 0,
                     "bonusFactor": 0,
-                    "scoop": 0,
+                    "scoop": -1,
                     "num_hand_win": 0,
                     "total_factor": -21
                 },
