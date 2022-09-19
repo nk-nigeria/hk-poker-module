@@ -26,9 +26,9 @@ enum CardStatus {
 
 enum CardSuit {
   SUIT_UNSPECIFIED = 0;
-  SUIT_CLUBS = 1;
+  SUIT_HEARTS = 1;
   SUIT_DIAMONDS = 2;
-  SUIT_HEARTS = 3;
+  SUIT_CLUBS = 3;
   SUIT_SPADES = 4;
 }
 
