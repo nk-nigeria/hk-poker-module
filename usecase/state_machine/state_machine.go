@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/qmuntal/stateless"
 )
@@ -51,6 +52,39 @@ func (m *Machine) configure() {
 	// init state
 	m.state.Configure(stateInit).
 		Permit(triggerIdle, stateIdle)
+	m.state.OnTransitioning(func(ctx context.Context, t stateless.Transition) {
+		procPkg := packager.GetProcessorPackagerFromContext(ctx)
+		state := procPkg.GetState()
+		switch t.Destination {
+		case stateInit:
+			state.GameState = pb.GameState_GameStateIdle
+		case stateIdle:
+			{
+				state.GameState = pb.GameState_GameStateIdle
+			}
+		case stateMatching:
+			{
+				state.GameState = pb.GameState_GameStateMatching
+			}
+		case statePreparing:
+			{
+				state.GameState = pb.GameState_GameStatePreparing
+			}
+		case statePlay:
+			{
+				state.GameState = pb.GameState_GameStatePlay
+			}
+		case stateReward:
+			{
+				state.GameState = pb.GameState_GameStateReward
+			}
+		case stateFinish:
+			{
+				state.GameState = pb.GameState_GameStateFinish
+			}
+
+		}
+	})
 
 	// idle state: wait for first user, check no one and timeout
 	idle := NewIdleState(fireCtx)

@@ -303,7 +303,24 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 		Players:        players,
 		PlayingPlayers: playing_players,
 	}
+	{
+		// mapPlayging := make(map[string]bool, 0)
 
+		for _, p := range msg.Players {
+			// check playing
+			mapUserPlaying := s.PlayingPresences
+			_, p.IsPlaying = mapUserPlaying.Get(p.GetId())
+			// status hold card
+			if _, exist := s.OrganizeCards[p.GetId()]; exist {
+				p.CardStatus = pb.CardStatus(pb.CardEvent_DECLARE)
+				// p.Cards = s.OrganizeCards[p.GetId()]
+			} else {
+				p.CardStatus = pb.CardStatus(pb.CardEvent_COMBINE)
+			}
+		}
+	}
+	msg.RemainTime = int64(s.GetRemainCountDown())
+	msg.GameState = s.GameState
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
 
@@ -324,6 +341,18 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Log
 	s.JoinsInProgress -= len(newJoins)
 
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+	// noti state for new presence join
+	if s.GameState == pb.GameState_GameStatePlay {
+		updateState := &pb.UpdateGameState{
+			State:     pb.GameState_GameStatePlay,
+			CountDown: int64(s.GetRemainCountDown()),
+		}
+		m.broadcastMessage(
+			logger, dispatcher,
+			int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+			updateState, newJoins, nil, true)
+	}
+
 }
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {

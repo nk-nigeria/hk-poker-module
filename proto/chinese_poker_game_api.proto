@@ -126,6 +126,7 @@ message UpdateTable {
   int64 vip = 6; // min level vip require join room
   int64 time_play = 7; // timestamp play game
   int64 remain_time = 8; // remain time to end game
+  GameState game_state = 9;
 }
 
 message PresenceCards {
@@ -260,4 +261,7 @@ message Player {
   string id = 1;
   string user_name = 2;
   string wallet = 3;
+  bool is_playing = 4; 
+  CardStatus card_status = 5;
+  ListCard cards = 6;
 }
