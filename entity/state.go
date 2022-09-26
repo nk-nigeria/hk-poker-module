@@ -45,6 +45,7 @@ type MatchState struct {
 
 	CountDownReachTime time.Time
 	LastCountDown      int
+	GameState          pb.GameState
 }
 
 func NewMathState(label *MatchLabel) MatchState {
