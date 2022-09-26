@@ -124,6 +124,15 @@ func (m *processor) DeclareCard(logger runtime.Logger, dispatcher runtime.MatchD
 	logger.Info("User %s request declareCard", message.GetUserId())
 	// TODO: check royalties
 	m.saveCard(logger, s, message)
+	msg := pb.UpdateGameState{
+		State: pb.GameState_GameStatePlay,
+		ArrangeCard: &pb.ArrangeCard{
+			Presence:  message.GetUserId(),
+			CardEvent: pb.CardEvent_DECLARE,
+		},
+	}
+	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
+
 }
 
 func (m *processor) saveCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
