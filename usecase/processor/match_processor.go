@@ -247,6 +247,8 @@ func (m *processor) updateWallet(ctx context.Context, nk runtime.NakamaModule, l
 		nil,
 		true,
 	)
+	s.SetBalanceResult(&balanceResult)
+
 	cgbdb.AddNewMultiFeeGame(ctx, logger, db, listFeeGame)
 }
 func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, userIds ...string) ([]entity.Wallet, error) {
@@ -333,6 +335,37 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
 
+func (m *processor) NotificationUserInfo(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins []runtime.Presence) {
+	listUserId := make([]string, 0)
+	// unique user
+	{
+		mapUserId := make(map[string]bool, 0)
+		for _, presence := range s.GetPresences() {
+			mapUserId[presence.GetUserId()] = true
+		}
+		for _, presence := range joins {
+			mapUserId[presence.GetUserId()] = true
+		}
+		for k := range mapUserId {
+			listUserId = append(listUserId, k)
+		}
+	}
+	// get profile
+	{
+		listProfile, err := entity.GetProfileUser(ctx, nk, listUserId...)
+		if err != nil {
+			logger.Error("get list profile user err %s , list user %s",
+				err.Error(), strings.Join(listUserId, ","))
+		}
+		m.broadcastMessage(
+			logger, dispatcher,
+			int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+			&pb.ListSimpleProfile{Profiles: listProfile},
+			nil, nil, true)
+	}
+
+}
+
 func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
 	logger.Info("process presences join %v", presences)
 	// update new presence
@@ -350,16 +383,40 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Log
 	s.JoinsInProgress -= len(newJoins)
 
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+	m.NotificationUserInfo(ctx, logger, nk, dispatcher, s, presences)
 	// noti state for new presence join
-	if s.GameState == pb.GameState_GameStatePlay {
-		updateState := &pb.UpdateGameState{
-			State:     pb.GameState_GameStatePlay,
-			CountDown: int64(s.GetRemainCountDown()),
+	switch s.GameState {
+	// case pb.GameState_GameStatePlay:
+	// 	{
+	// 		if s.GameState == pb.GameState_GameStatePlay {
+	// 			updateState := &pb.UpdateGameState{
+	// 				State:     pb.GameState_GameStatePlay,
+	// 				CountDown: int64(s.GetRemainCountDown()),
+	// 			}
+	// 			m.broadcastMessage(
+	// 				logger, dispatcher,
+	// 				int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+	// 				updateState, newJoins, nil, true)
+	// 		}
+	// 	}
+	case pb.GameState_GameStateReward:
+		{
+			balanceResult := s.GetBalanceResult()
+			if balanceResult != nil {
+				m.broadcastMessage(
+					logger,
+					dispatcher,
+					int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET),
+					balanceResult,
+					presences,
+					nil,
+					true,
+				)
+			}
 		}
-		m.broadcastMessage(
-			logger, dispatcher,
-			int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
-			updateState, newJoins, nil, true)
+	default:
+		{
+		}
 	}
 
 }

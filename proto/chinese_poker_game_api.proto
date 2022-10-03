@@ -95,6 +95,7 @@ enum OpCodeUpdate {
   OPCODE_UPDATE_CARD_STATE = 6;
   OPCODE_UPDATE_WALLET = 7;
   OPCODE_KICK_OFF_THE_TABLE = 8;
+  OPCODE_UPDATE_USER_INFO = 9;
 }
 
 enum GameState {
@@ -261,7 +262,21 @@ message Player {
   string id = 1;
   string user_name = 2;
   string wallet = 3;
-  bool is_playing = 4; 
+  bool is_playing = 4;
   CardStatus card_status = 5;
   ListCard cards = 6;
+}
+
+message SimpleProfile {
+  string user_id = 1;
+  string user_name = 2;
+  string display_name = 3;
+  string status = 5;
+  int64 account_chip = 6;
+  string avatar_id = 13;
+  int64 vip_level = 15;
+}
+
+message ListSimpleProfile {
+  repeated SimpleProfile profiles = 1;
 }
