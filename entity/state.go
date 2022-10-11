@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"context"
 	"math/rand"
 	"time"
 
@@ -61,9 +62,21 @@ func NewMathState(label *MatchLabel) MatchState {
 	return m
 }
 
-func (s *MatchState) AddPresence(presences []runtime.Presence) {
+func (s *MatchState) GetBalanceResult() *pb.BalanceResult {
+	return s.balanceResult
+}
+func (s *MatchState) SetBalanceResult(u *pb.BalanceResult) {
+	s.balanceResult = u
+}
+
+func (s *MatchState) ResetBalanceResult() {
+	s.SetBalanceResult(nil)
+}
+
+func (s *MatchState) AddPresence(ctx context.Context, nk runtime.NakamaModule, presences []runtime.Presence) {
 	for _, presence := range presences {
-		s.Presences.Put(presence.GetUserId(), presence)
+		m := NewMyPrecense(ctx, nk, presence)
+		s.Presences.Put(presence.GetUserId(), m)
 		s.ResetUserNotInteract(presence.GetUserId())
 	}
 }
