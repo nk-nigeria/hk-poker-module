@@ -82,7 +82,6 @@ func (m *Machine) configure() {
 			{
 				state.GameState = pb.GameState_GameStateFinish
 			}
-
 		}
 	})
 

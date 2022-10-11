@@ -47,6 +47,9 @@ type MatchState struct {
 	CountDownReachTime time.Time
 	LastCountDown      int
 	GameState          pb.GameState
+	// save balance result in state reward
+	// using for send noti to presence join in state reward
+	balanceResult *pb.BalanceResult
 }
 
 func NewMathState(label *MatchLabel) MatchState {
@@ -58,6 +61,7 @@ func NewMathState(label *MatchLabel) MatchState {
 		PlayingPresences:    linkedhashmap.New(),
 		LeavePresences:      linkedhashmap.New(),
 		PresencesNoInteract: make(map[string]int, 0),
+		balanceResult:       nil,
 	}
 	return m
 }

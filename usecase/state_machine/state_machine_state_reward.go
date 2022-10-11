@@ -38,8 +38,12 @@ func (s *StateReward) Enter(ctx context.Context, _ ...interface{}) error {
 	return nil
 }
 
-func (s *StateReward) Exit(_ context.Context, _ ...interface{}) error {
+func (s *StateReward) Exit(ctx context.Context, _ ...interface{}) error {
 	log.GetLogger().Info("[reward] exit")
+	// clear result
+	procPkg := packager.GetProcessorPackagerFromContext(ctx)
+	state := procPkg.GetState()
+	state.ResetBalanceResult()
 	return nil
 }
 
