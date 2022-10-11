@@ -265,6 +265,8 @@ message Player {
   bool is_playing = 4;
   CardStatus card_status = 5;
   ListCard cards = 6;
+  int64 vip_level = 7;
+  string avatar_id = 13;
 }
 
 message SimpleProfile {
