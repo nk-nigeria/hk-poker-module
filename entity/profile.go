@@ -3,6 +3,7 @@ package entity
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -18,7 +19,7 @@ func (l ListProfile) ToMap() map[string]*pb.SimpleProfile {
 	return mapProfile
 }
 
-func GetProfileUser(ctx context.Context, nk runtime.NakamaModule, userIDs ...string) (ListProfile, error) {
+func GetProfileUsers(ctx context.Context, nk runtime.NakamaModule, userIDs ...string) (ListProfile, error) {
 	accounts, err := nk.AccountsGetId(ctx, userIDs)
 	if err != nil {
 		return nil, err
@@ -29,12 +30,13 @@ func GetProfileUser(ctx context.Context, nk runtime.NakamaModule, userIDs ...str
 		var metadata map[string]interface{}
 		json.Unmarshal([]byte(u.GetMetadata()), &metadata)
 		profile := pb.SimpleProfile{
-			UserId:      u.GetId(),
-			UserName:    u.GetUsername(),
-			DisplayName: u.GetDisplayName(),
-			Status:      InterfaceToString(metadata["status"]),
-			AvatarId:    InterfaceToString(metadata["avatar_id"]),
-			VipLevel:    ToInt64(metadata["vip_level"], 0),
+			UserId:       u.GetId(),
+			UserName:     u.GetUsername(),
+			DisplayName:  u.GetDisplayName(),
+			Status:       InterfaceToString(metadata["status"]),
+			AvatarId:     InterfaceToString(metadata["avatar_id"]),
+			VipLevel:     ToInt64(metadata["vip_level"], 0),
+			PlayingMatch: InterfaceToString(metadata["on_playing_in_match"]),
 		}
 		if acc.GetWallet() != "" {
 			wallet, err := ParseWallet(acc.GetWallet())
@@ -45,4 +47,15 @@ func GetProfileUser(ctx context.Context, nk runtime.NakamaModule, userIDs ...str
 		listProfile = append(listProfile, &profile)
 	}
 	return listProfile, nil
+}
+
+func GetProfileUser(ctx context.Context, nk runtime.NakamaModule, userID string) (*pb.SimpleProfile, error) {
+	listProfile, err := GetProfileUsers(ctx, nk, userID)
+	if err != nil {
+		return nil, err
+	}
+	if len(listProfile) == 0 {
+		return nil, errors.New("Profile not found")
+	}
+	return listProfile[0], nil
 }

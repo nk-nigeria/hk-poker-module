@@ -277,6 +277,7 @@ message SimpleProfile {
   int64 account_chip = 6;
   string avatar_id = 13;
   int64 vip_level = 15;
+  string playing_match = 16; 
 }
 
 message ListSimpleProfile {

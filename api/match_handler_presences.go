@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/grpc/codes"
@@ -62,7 +63,10 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	logger.Info("match join, state=%v, presences=%v", s, presences)
 
 	m.processor.ProcessPresencesJoin(ctx, logger, nk, dispatcher, s, presences)
-
+	matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+	for _, precense := range s.GetPresences() {
+		cgbdb.UpdateUserPlayingInMatch(ctx, logger, db, precense.GetUserId(), matchId)
+	}
 	return s
 }
 
@@ -77,6 +81,8 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 	}
 
 	m.processor.ProcessPresencesLeave(ctx, logger, nk, dispatcher, s, presences)
-
+	for _, precense := range presences {
+		cgbdb.UpdateUserPlayingInMatch(ctx, logger, db, precense.GetUserId(), "")
+	}
 	return s
 }

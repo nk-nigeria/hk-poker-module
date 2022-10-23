@@ -19,7 +19,7 @@ func NewMyPrecense(ctx context.Context, nk runtime.NakamaModule, precense runtim
 	m := MyPrecense{
 		Presence: precense,
 	}
-	profiles, err := GetProfileUser(ctx, nk, precense.GetUserId())
+	profiles, err := GetProfileUsers(ctx, nk, precense.GetUserId())
 	if err != nil {
 		return m
 	}
