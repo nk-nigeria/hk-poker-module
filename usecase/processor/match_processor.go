@@ -352,7 +352,7 @@ func (m *processor) NotificationUserInfo(ctx context.Context, logger runtime.Log
 	}
 	// get profile
 	{
-		listProfile, err := entity.GetProfileUser(ctx, nk, listUserId...)
+		listProfile, err := entity.GetProfileUsers(ctx, nk, listUserId...)
 		if err != nil {
 			logger.Error("get list profile user err %s , list user %s",
 				err.Error(), strings.Join(listUserId, ","))

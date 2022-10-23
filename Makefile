@@ -9,3 +9,6 @@ sync:
 	rsync -aurv --delete ./bin/${APP_NAME} root@cgpdev:/root/cgp-server/data/modules/
 	ssh root@cgpdev 'cd /root/cgp-server && docker restart nakama'
 
+bsync: build sync
+proto:
+	protoc -I ./ --go_out=$(pwd)/proto  ./proto/chinese_poker_game_api.proto
