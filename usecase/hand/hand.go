@@ -81,7 +81,8 @@ type Hand struct {
 	pointType    pb.PointType
 	calculated   bool
 
-	owner string
+	owner   string
+	jackpot bool
 }
 
 func (h Hand) String() string {
@@ -203,11 +204,10 @@ func (h *Hand) calculatePoint() error {
 		h.naturalPoint = handPoint
 		return nil
 	}
-
 	return nil
 }
 
-func (h Hand) GetPointResult() *pb.PointResult {
+func (h *Hand) GetPointResult() *pb.PointResult {
 	h.calculatePoint()
 
 	// result := &pb.PointResult{
@@ -235,6 +235,10 @@ func (h Hand) GetPointResult() *pb.PointResult {
 		}
 	}
 	result.Type = h.pointType
-
+	h.jackpot = CheckJackpot(h.middleHand) || CheckJackpot(h.backHand)
 	return result
+}
+
+func (h *Hand) IsJackpot() bool {
+	return h.jackpot
 }

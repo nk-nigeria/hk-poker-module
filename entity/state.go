@@ -191,6 +191,19 @@ func (s *MatchState) GetPresences() []runtime.Presence {
 	return presences
 }
 
+func (s *MatchState) GetPresence(userID string) runtime.Presence {
+	_, value := s.Presences.Find(func(key, value interface{}) bool {
+		if key == userID {
+			return true
+		}
+		return false
+	})
+	if value == nil {
+		return nil
+	}
+	return value.(runtime.Presence)
+}
+
 func (s *MatchState) GetPlayingPresences() []runtime.Presence {
 	presences := make([]runtime.Presence, 0)
 	s.PlayingPresences.Each(func(key interface{}, value interface{}) {

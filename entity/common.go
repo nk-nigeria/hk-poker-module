@@ -14,6 +14,12 @@ const (
 
 var SnowlakeNode, _ = snowflake.NewNode(1)
 
+type WalletAction string
+
+const (
+	WalletActionWinGameJackpot WalletAction = "win_game_jackpot"
+)
+
 func InterfaceToString(inf interface{}) string {
 	if inf == nil {
 		return ""
@@ -44,4 +50,18 @@ func ToInt64(inf interface{}, def int64) int64 {
 		fmt.Printf("I don't know about type %T!\n", v)
 	}
 	return def
+}
+
+func MinInt64(a, b int64) int64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func MaxInt64(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
 }
