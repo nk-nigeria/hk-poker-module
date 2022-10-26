@@ -408,7 +408,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Log
 	s.JoinsInProgress -= len(newJoins)
 
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
-	m.NotificationUserInfo(ctx, logger, nk, dispatcher, s, presences)
+	// m.NotificationUserInfo(ctx, logger, nk, dispatcher, s, presences)
 	// noti state for new presence join
 	switch s.GameState {
 	// case pb.GameState_GameStatePlay:
@@ -536,7 +536,7 @@ func (m *processor) handlerJackpotProcess(
 		vipLv := entity.MaxInt64(myPrecense.VipLevel, 1)
 		maxJP := int64(bet) * 100 * vipLv
 		maxJP = entity.MinInt64(maxJP, jackpotTreasure.Chips)
-		err = cgbdb.IncChipJackpot(ctx, logger, db, entity.ModuleName, -maxJP)
+		_, err = cgbdb.IncChipJackpot(ctx, logger, db, entity.ModuleName, -maxJP)
 		if err != nil {
 			matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 			logger.
@@ -546,5 +546,7 @@ func (m *processor) handlerJackpotProcess(
 			return
 		}
 		updateFinish.Jackpot.Chips = maxJP
+		cgbdb.AddJackpotHistoryUserWin(ctx, logger, db, updateFinish.Jackpot.GameCode,
+			updateFinish.Jackpot.UserId, -updateFinish.Jackpot.Chips)
 	}
 }

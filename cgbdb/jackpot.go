@@ -37,6 +37,17 @@ const JackpotTableName = "jackpot"
 //
 //	CONSTRAINT jackpot_pkey PRIMARY KEY (id)
 func AddOrUpdateChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string, chips int64) error {
+	var err error
+	var num int64
+	defer func() {
+		if err == nil {
+			AddJackpotHistoryChipsChange(ctx, logger, db, game, chips)
+		}
+	}()
+	num, err = IncChipJackpot(ctx, logger, db, game, chips)
+	if num > 0 {
+		return nil
+	}
 	query := "INSERT INTO " + JackpotTableName +
 		" (id, game, chips, create_time, update_time) " +
 		" SELECT $1, $2, $3, now(), now() " +
@@ -46,16 +57,17 @@ func AddOrUpdateChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.
 		game, chips, game)
 	if err != nil {
 		logger.WithField("game", game).WithField("err", err.Error()).Error("Error err when insert jackpot")
-		return status.Error(codes.Internal, "Error insert jackpot")
+		err = status.Error(codes.Internal, "Error insert jackpot")
+		return err
 	}
 	if rowsAffectedCount, _ := result.RowsAffected(); rowsAffectedCount == 0 {
 		// return 0, status.Error(codes.Internal, "Error update reward refer user.")
-		return IncChipJackpot(ctx, logger, db, game, chips)
+		err = status.Error(codes.Internal, "Error when insert jackpot")
 	}
-	return nil
+	return err
 }
 
-func IncChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string, chips int64) error {
+func IncChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string, chips int64) (int64, error) {
 	query := "UPDATE " + JackpotTableName +
 		" SET chips= " +
 		" CASE WHEN chips+$2 > 0 then chips+$3 else 0 END, update_time=now()" +
@@ -63,12 +75,13 @@ func IncChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game
 	result, err := db.ExecContext(ctx, query, game, chips, chips)
 	if err != nil {
 		logger.WithField("game", game).WithField("err", err.Error()).Error("Error when update jackpot")
-		return status.Error(codes.Internal, "Error update jackpot")
+		return 0, status.Error(codes.Internal, "Error update jackpot")
 	}
-	if rowsAffectedCount, _ := result.RowsAffected(); rowsAffectedCount != 1 {
-		return status.Error(codes.Internal, "Error update not effect")
+	rowsAffectedCount, _ := result.RowsAffected()
+	if rowsAffectedCount != 1 {
+		return 0, status.Error(codes.Internal, "Error update not effect")
 	}
-	return nil
+	return rowsAffectedCount, nil
 }
 
 func GetJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string) (*pb.Jackpot, error) {
