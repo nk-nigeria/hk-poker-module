@@ -1,12 +1,13 @@
 package hand
 
 import (
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/stretchr/testify/assert"
 )
 
 var randinst *rand.Rand
@@ -152,6 +153,31 @@ func mockThreeOfAKind() []*pb.Card {
 
 }
 
+func mockJackpot() []*pb.Card {
+	cards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_A,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_J,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_Q,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_K,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+	}
+	return cards
+}
 func TestIsDragonSuccess(t *testing.T) {
 	listCard := entity.NewListCard(mockDragon())
 	handCard, isDragon := CheckDragon(entity.NewBinListCards(listCard))
@@ -230,4 +256,31 @@ func TestIsSixPairFailed(t *testing.T) {
 	handCard, isvalid := CheckSixPairs(entity.NewBinListCards(listCard))
 	assert.Equal(t, false, isvalid)
 	assert.Nil(t, handCard)
+}
+
+func TestCheckJackpot(t *testing.T) {
+	type args struct {
+		childHand *ChildHand
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "TestCheckJackpot",
+			args: args{
+				childHand: NewChildHand(entity.NewListCard(mockJackpot()), kMidHand),
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CheckJackpot(tt.args.childHand); got != tt.want {
+				t.Errorf("CheckJackpot() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

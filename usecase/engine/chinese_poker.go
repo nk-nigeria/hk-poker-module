@@ -80,6 +80,7 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 	userIds := make([]string, 0, presenceCount)
 	hands := make(map[string]*hand.Hand)
 	results := make(map[string]*pb.ComparisonResult)
+	userJackpot := ""
 	for _, val := range s.PlayingPresences.Keys() {
 		uid := val.(string)
 		userIds = append(userIds, uid)
@@ -102,6 +103,9 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 		}
 
 		results[uid] = result
+		if h.IsJackpot() {
+			userJackpot = uid
+		}
 
 		updateFinish.Results = append(updateFinish.Results, result)
 
@@ -143,6 +147,11 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 
 	}
 	hand.CalcTotalFactor(updateFinish.Results)
-
+	if userJackpot != "" {
+		updateFinish.Jackpot = &pb.Jackpot{
+			UserId:   userJackpot,
+			GameCode: entity.ModuleName,
+		}
+	}
 	return &updateFinish
 }

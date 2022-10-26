@@ -7,6 +7,8 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/emirpasic/gods v1.12.0
 	github.com/heroiclabs/nakama-common v1.22.0
+	github.com/jackc/pgtype v1.8.1
+	github.com/lib/pq v1.10.2
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nats-io/nats.go v1.16.0
 	github.com/qmuntal/stateless v1.5.3
@@ -20,8 +22,9 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
-	golang.org/x/net v0.1.0 // indirect
+	github.com/jackc/pgio v1.0.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

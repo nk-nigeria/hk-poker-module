@@ -245,6 +245,7 @@ message ComparisonResult {
 message UpdateFinish {
   repeated ComparisonResult results = 1;
   repeated HandBonus bonuses = 2;
+  Jackpot jackpot = 3;
 }
 
 message BalanceUpdate {
@@ -256,6 +257,7 @@ message BalanceUpdate {
 
 message BalanceResult {
   repeated BalanceUpdate updates = 1;
+  Jackpot jackpot = 2;
 }
 
 message Player {
@@ -282,4 +284,12 @@ message SimpleProfile {
 
 message ListSimpleProfile {
   repeated SimpleProfile profiles = 1;
+}
+
+message Jackpot {
+  int64 id = 1;
+  string user_id = 2;
+  string game_code = 3;
+  int64 chips = 4;
+  int64 create_time_unix = 5;
 }

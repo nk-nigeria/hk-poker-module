@@ -23,6 +23,7 @@ func InitMapMockCodeListCard() {
 		"http://103.226.250.195:9000/chinese-poker-mock/1.json",
 		"http://103.226.250.195:9000/chinese-poker-mock/2.json",
 		"http://103.226.250.195:9000/chinese-poker-mock/3.json",
+		"http://103.226.250.195:9000/chinese-poker-mock/4.json",
 	}
 	for _, urlStr := range listUrlMock {
 		// if f.IsDir() {

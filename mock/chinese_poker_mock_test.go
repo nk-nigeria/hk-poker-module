@@ -142,7 +142,7 @@ func RunTestChinsePokerMock(fileMock string, t *testing.T) {
 }
 
 func TestChinsePokerMock(t *testing.T) {
-	fileMock := "./chinese_poker_mock/mock_bug_IUHqN8Rr.json"
+	fileMock := "./chinese_poker_mock/jackpot.json"
 	RunTestChinsePokerMock(fileMock, t)
 }
 

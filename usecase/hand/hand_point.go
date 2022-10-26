@@ -225,7 +225,6 @@ func CalculatePoint(ch *ChildHand) *HandPoint {
 
 func CheckHighCard(bcards *entity.BinListCard) (*HandPoint, bool) {
 	cards := bcards.ToList()
-
 	return createPointFromList(pb.HandRanking_HighCard, ScorePointHighCard, cards), true
 }
 

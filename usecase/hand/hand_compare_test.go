@@ -6,6 +6,7 @@ import (
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/stretchr/testify/assert"
 )
 
 func mockHandNatural1() (*Hand, error) {
