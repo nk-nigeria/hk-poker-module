@@ -248,7 +248,18 @@ func (m *processor) updateChipsForUserPlaying(ctx context.Context, nk runtime.Na
 	cgbdb.AddNewMultiFeeGame(ctx, logger, db, listFeeGame)
 	m.handlerJackpotProcess(ctx, logger, nk, db, s, updateFinish, listFeeGame)
 	balanceResult.Jackpot = updateFinish.Jackpot
-	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult)
+	s.SetJackpotTreasure(updateFinish.JpTreasure)
+	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult) // summary balance ủe
+	// summary balance user if win jackpot
+	if updateFinish.Jackpot != nil {
+		for _, b := range balanceResult.GetUpdates() {
+			if b.GetUserId() == updateFinish.Jackpot.UserId {
+				b.AmountChipAdd += updateFinish.Jackpot.Chips
+				b.AmountChipCurrent += updateFinish.Jackpot.Chips
+			}
+		}
+	}
+
 	s.SetBalanceResult(&balanceResult)
 	m.broadcastMessage(
 		logger,
@@ -355,40 +366,11 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 			}
 		}
 	}
+	msg.JpTreasure = s.GetJackpotTreasure()
 	msg.RemainTime = int64(s.GetRemainCountDown())
 	msg.GameState = s.GameState
+
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
-}
-
-func (m *processor) NotificationUserInfo(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins []runtime.Presence) {
-	listUserId := make([]string, 0)
-	// unique user
-	{
-		mapUserId := make(map[string]bool, 0)
-		for _, presence := range s.GetPresences() {
-			mapUserId[presence.GetUserId()] = true
-		}
-		for _, presence := range joins {
-			mapUserId[presence.GetUserId()] = true
-		}
-		for k := range mapUserId {
-			listUserId = append(listUserId, k)
-		}
-	}
-	// get profile
-	{
-		listProfile, err := entity.GetProfileUsers(ctx, nk, listUserId...)
-		if err != nil {
-			logger.Error("get list profile user err %s , list user %s",
-				err.Error(), strings.Join(listUserId, ","))
-		}
-		m.broadcastMessage(
-			logger, dispatcher,
-			int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
-			&pb.ListSimpleProfile{Profiles: listProfile},
-			nil, nil, true)
-	}
-
 }
 
 func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
@@ -467,23 +449,29 @@ func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger run
 
 func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	pendingLeaves := s.GetLeavePresences()
+	defer func() {
+		players := entity.NewListPlayer(s.GetPresences())
+		// players.ReadWallet(ctx, nk, logger)
+
+		playing_players := entity.NewListPlayer(s.GetPlayingPresences())
+		// playing_players.ReadWallet(ctx, nk, logger)
+
+		msg := &pb.UpdateTable{
+			Bet:            int64(s.Label.Bet),
+			Players:        players,
+			PlayingPlayers: playing_players,
+			JpTreasure:     s.GetJackpotTreasure(),
+		}
+
+		m.NotifyUpdateTable(s, logger, dispatcher, msg)
+	}()
+	if len(pendingLeaves) == 0 {
+		return
+	}
 	logger.Info("process apply presences")
 
 	s.RemovePresence(pendingLeaves)
 
-	players := entity.NewListPlayer(s.GetPresences())
-	// players.ReadWallet(ctx, nk, logger)
-
-	playing_players := entity.NewListPlayer(s.GetPlayingPresences())
-	// playing_players.ReadWallet(ctx, nk, logger)
-
-	msg := &pb.UpdateTable{
-		Bet:            int64(s.Label.Bet),
-		Players:        players,
-		PlayingPlayers: playing_players,
-	}
-
-	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 	if len(pendingLeaves) > 0 {
 		listUserId := make([]string, 0)
 		for _, p := range pendingLeaves {
@@ -498,6 +486,8 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runti
 	s.ApplyLeavePresence()
 }
 
+// check win jackpot, and always get jackpot treasure before exit
+// if user win. update jackpot, jackpot history
 func (m *processor) handlerJackpotProcess(
 	ctx context.Context,
 	logger runtime.Logger,
@@ -506,6 +496,15 @@ func (m *processor) handlerJackpotProcess(
 	listFeeGame []entity.FeeGame,
 ) {
 	// add chip jackpot
+	defer func() {
+		jpTreasure, _ := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
+		if jpTreasure != nil {
+			updateFinish.JpTreasure = &pb.Jackpot{
+				GameCode: jpTreasure.GetGameCode(),
+				Chips:    jpTreasure.Chips,
+			}
+		}
+	}()
 	{
 		totalFee := int64(0)
 		for _, free := range listFeeGame {
@@ -536,7 +535,7 @@ func (m *processor) handlerJackpotProcess(
 		vipLv := entity.MaxInt64(myPrecense.VipLevel, 1)
 		maxJP := int64(bet) * 100 * vipLv
 		maxJP = entity.MinInt64(maxJP, jackpotTreasure.Chips)
-		_, err = cgbdb.IncChipJackpot(ctx, logger, db, entity.ModuleName, -maxJP)
+		err = cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, -maxJP)
 		if err != nil {
 			matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 			logger.
@@ -548,5 +547,6 @@ func (m *processor) handlerJackpotProcess(
 		updateFinish.Jackpot.Chips = maxJP
 		cgbdb.AddJackpotHistoryUserWin(ctx, logger, db, updateFinish.Jackpot.GameCode,
 			updateFinish.Jackpot.UserId, -updateFinish.Jackpot.Chips)
+
 	}
 }

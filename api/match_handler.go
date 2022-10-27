@@ -19,11 +19,12 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
-
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
+	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/processor"
 	gsm "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/state_machine"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -106,6 +107,14 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	logger.Info("match init label= %s", string(labelJSON))
 
 	matchState := entity.NewMathState(label)
+	// init jp treasure
+	jpTreasure, _ := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
+	if jpTreasure != nil {
+		matchState.SetJackpotTreasure(&pb.Jackpot{
+			GameCode: jpTreasure.GetGameCode(),
+			Chips:    jpTreasure.Chips,
+		})
+	}
 	// fire idle event
 	procPkg := packager.NewProcessorPackage(&matchState, m.processor, logger, nil, nil, nil, nil, nil)
 	m.machine.TriggerIdle(packager.GetContextWithProcessorPackager(procPkg))

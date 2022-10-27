@@ -128,6 +128,7 @@ message UpdateTable {
   int64 time_play = 7; // timestamp play game
   int64 remain_time = 8; // remain time to end game
   GameState game_state = 9;
+  Jackpot jp_treasure = 10;
 }
 
 message PresenceCards {
@@ -246,6 +247,7 @@ message UpdateFinish {
   repeated ComparisonResult results = 1;
   repeated HandBonus bonuses = 2;
   Jackpot jackpot = 3;
+  Jackpot jp_treasure = 4;
 }
 
 message BalanceUpdate {

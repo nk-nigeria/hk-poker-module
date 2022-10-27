@@ -44,7 +44,7 @@ func AddOrUpdateChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.
 			AddJackpotHistoryChipsChange(ctx, logger, db, game, chips)
 		}
 	}()
-	num, err = IncChipJackpot(ctx, logger, db, game, chips)
+	num, err = incChipJackpot(ctx, logger, db, game, chips)
 	if num > 0 {
 		return nil
 	}
@@ -67,7 +67,7 @@ func AddOrUpdateChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.
 	return err
 }
 
-func IncChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string, chips int64) (int64, error) {
+func incChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string, chips int64) (int64, error) {
 	query := "UPDATE " + JackpotTableName +
 		" SET chips= " +
 		" CASE WHEN chips+$2 > 0 then chips+$3 else 0 END, update_time=now()" +

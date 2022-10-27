@@ -49,7 +49,8 @@ type MatchState struct {
 	GameState          pb.GameState
 	// save balance result in state reward
 	// using for send noti to presence join in state reward
-	balanceResult *pb.BalanceResult
+	balanceResult   *pb.BalanceResult
+	jackpotTreasure *pb.Jackpot
 }
 
 func NewMathState(label *MatchLabel) MatchState {
@@ -75,6 +76,16 @@ func (s *MatchState) SetBalanceResult(u *pb.BalanceResult) {
 
 func (s *MatchState) ResetBalanceResult() {
 	s.SetBalanceResult(nil)
+}
+
+func (s *MatchState) SetJackpotTreasure(jp *pb.Jackpot) {
+	s.jackpotTreasure = &pb.Jackpot{
+		GameCode: jp.GetGameCode(),
+		Chips:    jp.GetChips(),
+	}
+}
+func (s *MatchState) GetJackpotTreasure() *pb.Jackpot {
+	return s.jackpotTreasure
 }
 
 func (s *MatchState) AddPresence(ctx context.Context, nk runtime.NakamaModule, presences []runtime.Presence) {
