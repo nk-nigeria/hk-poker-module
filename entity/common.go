@@ -8,9 +8,23 @@ import (
 )
 
 const (
-	ModuleName      = "chinese-poker"
-	MaxPresenceCard = 13
+	ModuleName        = "chinese-poker"
+	MaxPresenceCard   = 13
+	JackpotPercentTax = 1 // 1%
 )
+
+// free game by lv
+// [level]=%
+// https://docs.google.com/spreadsheets/d/1OKPtCzTGe5Da-HRUKe37rS3bIGYw4F_B/edit#gid=1754766987
+var feeGameByLvPercent = map[int]int{0: 7, 1: 7, 2: 6, 3: 5, 4: 5, 6: 4, 7: 4, 8: 4, 9: 4, 10: 4}
+
+func GetFeeGameByLevel(lv int) int {
+	val, exist := feeGameByLvPercent[lv]
+	if exist {
+		return val
+	}
+	return 5
+}
 
 var SnowlakeNode, _ = snowflake.NewNode(1)
 

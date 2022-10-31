@@ -152,6 +152,8 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 			UserId:   userJackpot,
 			GameCode: entity.ModuleName,
 		}
+	} else {
+		updateFinish.Jackpot = &pb.Jackpot{}
 	}
 	return &updateFinish
 }

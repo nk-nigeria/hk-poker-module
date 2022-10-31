@@ -84,12 +84,45 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 
 	// update finish
 	updateFinish := m.engine.Finish(s)
-	defer m.broadcastMessage(
+	m.readJackpotTreasure(ctx, nk, logger, db, dispatcher, s, updateFinish)
+	balanceResult := m.calcRewardForUserPlaying(ctx, nk, logger, db, dispatcher, s, updateFinish)
+	if balanceResult == nil {
+		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+		logger.
+			WithField("jackpot game", entity.ModuleName).
+			WithField("match id", matchId).
+			WithField("user win jackpot", updateFinish.Jackpot.GetUserId()).
+			Error("calc reward failed")
+		return
+	}
+	m.handlerJackpotProcess(ctx, logger, nk, db, s, updateFinish, balanceResult)
+	balanceResult.Jackpot = updateFinish.Jackpot
+	// read new treasure after update chips win to jp treasure
+	m.readJackpotTreasure(ctx, nk, logger, db, dispatcher, s, updateFinish)
+	s.SetJackpotTreasure(updateFinish.JpTreasure)
+	m.updateChipByResultGameFinish(ctx, logger, nk, balanceResult) // summary balance ủe
+	// summary balance user if win jackpot
+	if updateFinish.Jackpot != nil {
+		for _, b := range balanceResult.GetUpdates() {
+			if b.GetUserId() == updateFinish.Jackpot.UserId {
+				b.AmountChipAdd += updateFinish.Jackpot.Chips
+				b.AmountChipCurrent += updateFinish.Jackpot.Chips
+				break
+			}
+		}
+	}
+	s.SetBalanceResult(balanceResult)
+	m.broadcastMessage(
+		logger,
+		dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET),
+		balanceResult,
+		nil, nil, true,
+	)
+	m.broadcastMessage(
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
 		updateFinish, nil, nil, true)
-
-	m.updateChipsForUserPlaying(ctx, nk, logger, db, dispatcher, s, updateFinish)
 	logger.Info("process finish game done %v", updateFinish)
 }
 
@@ -198,7 +231,10 @@ func (m *processor) NotifyUpdateTable(s *entity.MatchState, logger runtime.Logge
 
 }
 
-func (m *processor) updateChipsForUserPlaying(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) {
+// caculator amount chips user win or lose on this match
+// with amount chip before and after apply reward
+// and add jackpot if user win
+func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) *pb.BalanceResult {
 	listUserId := make([]string, 0, len(updateFinish.Results))
 	for _, uf := range updateFinish.Results {
 		listUserId = append(listUserId, uf.UserId)
@@ -214,7 +250,7 @@ func (m *processor) updateChipsForUserPlaying(ctx context.Context, nk runtime.Na
 			WithField("data", string(updateFinishData)).
 			WithField("err", err).
 			Error("read wallet error")
-		return
+		return nil
 	}
 	mapUserWallet := make(map[string]entity.Wallet)
 	for _, w := range wallets {
@@ -229,47 +265,31 @@ func (m *processor) updateChipsForUserPlaying(ctx context.Context, nk runtime.Na
 			AmountChipBefore: mapUserWallet[uf.UserId].Chips,
 		}
 
-		percentJackpot := 0.01
-		percentFreeGame := 0.04
-		percentFee := percentFreeGame + percentJackpot
+		myPrecense, ok := s.GetPresence(uf.GetUserId()).(entity.MyPrecense)
+		percentFreeGame := entity.GetFeeGameByLevel(0)
+		if ok {
+			percentFreeGame = entity.GetFeeGameByLevel(int(myPrecense.VipLevel))
+		}
+		percentFee := percentFreeGame
 
-		fee := int64(percentFee * float64(uf.ScoreResult.NumHandWin*s.Label.Bet))
+		fee := int64(uf.ScoreResult.NumHandWin) * int64(s.Label.Bet) / 100 * int64(percentFee)
 		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
-		balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
-		balanceResult.Updates = append(balanceResult.Updates, balance)
-		logger.Info("update user %v, fee %d change %s", uf.UserId, fee, balance)
-		if fee > 0 {
+		if (balance.AmountChipAdd) > 0 {
+			// win
+			balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
 			listFeeGame = append(listFeeGame, entity.FeeGame{
 				UserID: balance.UserId,
 				Fee:    fee,
 			})
+		} else {
+			// lose
+			balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd
 		}
+		balanceResult.Updates = append(balanceResult.Updates, balance)
+		// logger.Info("update user %v, fee %d change %s", uf.UserId, fee, balance)
 	}
 	cgbdb.AddNewMultiFeeGame(ctx, logger, db, listFeeGame)
-	m.handlerJackpotProcess(ctx, logger, nk, db, s, updateFinish, listFeeGame)
-	balanceResult.Jackpot = updateFinish.Jackpot
-	s.SetJackpotTreasure(updateFinish.JpTreasure)
-	m.updateChipByResultGameFinish(ctx, logger, nk, &balanceResult) // summary balance ủe
-	// summary balance user if win jackpot
-	if updateFinish.Jackpot != nil {
-		for _, b := range balanceResult.GetUpdates() {
-			if b.GetUserId() == updateFinish.Jackpot.UserId {
-				b.AmountChipAdd += updateFinish.Jackpot.Chips
-				b.AmountChipCurrent += updateFinish.Jackpot.Chips
-			}
-		}
-	}
-
-	s.SetBalanceResult(&balanceResult)
-	m.broadcastMessage(
-		logger,
-		dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET),
-		&balanceResult,
-		nil,
-		nil,
-		true,
-	)
+	return &balanceResult
 
 }
 func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, userIds ...string) ([]entity.Wallet, error) {
@@ -492,61 +512,83 @@ func (m *processor) handlerJackpotProcess(
 	ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule, db *sql.DB,
-	s *entity.MatchState, updateFinish *pb.UpdateFinish,
-	listFeeGame []entity.FeeGame,
+	s *entity.MatchState,
+	updateFinish *pb.UpdateFinish,
+	balanceResult *pb.BalanceResult,
 ) {
-	// add chip jackpot
+	// add chips to jackpot treasure
 	defer func() {
-		jpTreasure, _ := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
-		if jpTreasure != nil {
-			updateFinish.JpTreasure = &pb.Jackpot{
-				GameCode: jpTreasure.GetGameCode(),
-				Chips:    jpTreasure.Chips,
+		totalChipsWin := int64(0)
+		for _, v := range balanceResult.Updates {
+			if v.AmountChipAdd > 0 {
+				totalChipsWin += v.AmountChipAdd
 			}
 		}
+		totalJpChipTax := totalChipsWin / 100 * entity.JackpotPercentTax
+		cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, int64(totalJpChipTax))
 	}()
-	{
-		totalFee := int64(0)
-		for _, free := range listFeeGame {
-			totalFee += free.Fee
-		}
-		cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, totalFee)
-	}
 	// update chip if have user win jackpot
-	{
-		if updateFinish.Jackpot == nil || updateFinish.Jackpot.UserId == "" {
-			// no user win
-			return
-		}
-		jackpotTreasure, err := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
-		if err != nil {
-			matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-			logger.
-				WithField("jackpot game", entity.ModuleName).
-				WithField("match id", matchId).
-				WithField("err", err.Error()).Error("get jackpot treasure error")
-			return
-		}
 
-		myPrecense := s.GetPresence(updateFinish.Jackpot.UserId).(entity.MyPrecense)
-		// JACKPOT PUSOY
-		// Công thức tính tiền max khi JP: JP = MCB x 100 x hệ số Vip
-		bet := s.Label.Bet
-		vipLv := entity.MaxInt64(myPrecense.VipLevel, 1)
-		maxJP := int64(bet) * 100 * vipLv
-		maxJP = entity.MinInt64(maxJP, jackpotTreasure.Chips)
-		err = cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, -maxJP)
-		if err != nil {
-			matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-			logger.
-				WithField("jackpot game", entity.ModuleName).
-				WithField("match id", matchId).
-				WithField("err", err.Error()).Error("update jackpot treasure error")
-			return
-		}
-		updateFinish.Jackpot.Chips = maxJP
-		cgbdb.AddJackpotHistoryUserWin(ctx, logger, db, updateFinish.Jackpot.GameCode,
-			updateFinish.Jackpot.UserId, -updateFinish.Jackpot.Chips)
+	if updateFinish.Jackpot == nil || updateFinish.Jackpot.UserId == "" {
+		// no user win
+		return
+	}
+	jackpotTreasure, err := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
+	if err != nil {
+		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+		logger.
+			WithField("jackpot game", entity.ModuleName).
+			WithField("match id", matchId).
+			WithField("err", err.Error()).Error("get jackpot treasure error")
+		return
+	}
+	if jackpotTreasure.Chips <= 0 {
+		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+		logger.
+			WithField("jackpot game", entity.ModuleName).
+			WithField("match id", matchId).
+			WithField("user win jackpot", updateFinish.Jackpot.GetUserId()).
+			Debug("No chips in jackpot treasure, ignore this win jackpot")
+		return
+	}
+	myPrecense := s.GetPresence(updateFinish.Jackpot.UserId).(entity.MyPrecense)
+	// JACKPOT PUSOY
+	// Công thức tính tiền max khi JP: JP = MCB x 100 x hệ số Vip
+	bet := s.Label.Bet
+	vipLv := entity.MaxInt64(myPrecense.VipLevel, 1)
+	maxJP := int64(bet) * 100 * vipLv
+	maxJP = entity.MinInt64(maxJP, jackpotTreasure.Chips)
+	err = cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, -maxJP)
+	if err != nil {
+		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+		logger.
+			WithField("jackpot game", entity.ModuleName).
+			WithField("match id", matchId).
+			WithField("err", err.Error()).Error("update jackpot treasure error")
+		return
+	}
+	updateFinish.Jackpot.Chips = maxJP
+	cgbdb.AddJackpotHistoryUserWin(ctx, logger, db, updateFinish.Jackpot.GameCode,
+		updateFinish.Jackpot.UserId, -updateFinish.Jackpot.Chips)
 
+}
+
+// read jackpot treasure and set to updateFinish
+func (m *processor) readJackpotTreasure(
+	ctx context.Context,
+	nk runtime.NakamaModule,
+	logger runtime.Logger,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	s *entity.MatchState,
+	updateFinish *pb.UpdateFinish,
+) {
+	updateFinish.JpTreasure = &pb.Jackpot{}
+	jpTreasure, _ := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
+	if jpTreasure != nil {
+		updateFinish.JpTreasure = &pb.Jackpot{
+			GameCode: jpTreasure.GetGameCode(),
+			Chips:    jpTreasure.Chips,
+		}
 	}
 }
