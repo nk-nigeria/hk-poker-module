@@ -36,7 +36,7 @@ func (s *StatePreparing) Enter(ctx context.Context, args ...interface{}) error {
 		}
 		procPkg.GetLogger().Info("Kick %d user from math %s",
 			len(listPrecense), strings.Join(listUserId, ","))
-		state.AddLeavePresence(listPrecense)
+		state.AddLeavePresence(listPrecense...)
 		procPkg.GetProcessor().ProcessApplyPresencesLeave(ctx,
 			procPkg.GetLogger(),
 			procPkg.GetNK(),

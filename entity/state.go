@@ -96,14 +96,14 @@ func (s *MatchState) AddPresence(ctx context.Context, nk runtime.NakamaModule, p
 	}
 }
 
-func (s *MatchState) RemovePresence(presences []runtime.Presence) {
+func (s *MatchState) RemovePresence(presences ...runtime.Presence) {
 	for _, presence := range presences {
 		s.Presences.Remove(presence.GetUserId())
 		delete(s.PresencesNoInteract, presence.GetUserId())
 	}
 }
 
-func (s *MatchState) AddLeavePresence(presences []runtime.Presence) {
+func (s *MatchState) AddLeavePresence(presences ...runtime.Presence) {
 	for _, presence := range presences {
 		s.LeavePresences.Put(presence.GetUserId(), presence)
 	}
@@ -124,15 +124,23 @@ func (s *MatchState) ApplyLeavePresence() {
 
 func (s *MatchState) SetupMatchPresence() {
 	s.PlayingPresences = linkedhashmap.New()
+	presences := make([]runtime.Presence, 0, s.Presences.Size())
 	s.Presences.Each(func(key interface{}, value interface{}) {
-		s.PlayingPresences.Put(key, value)
-		keyStr := key.(string)
+		presences = append(presences, value.(runtime.Presence))
+	})
+	s.AddPlayingPresences(presences...)
+}
+
+func (s *MatchState) AddPlayingPresences(presences ...runtime.Presence) {
+	for _, p := range presences {
+		s.PlayingPresences.Put(p.GetUserId(), p)
+		keyStr := p.GetUserId()
 		if val, exist := s.PresencesNoInteract[keyStr]; exist {
 			s.PresencesNoInteract[keyStr] = val + 1
 		} else {
 			s.PresencesNoInteract[keyStr] = 1
 		}
-	})
+	}
 }
 
 func (s *MatchState) GetPresenceNotInteract(roundGame int) []runtime.Presence {

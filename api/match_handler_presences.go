@@ -29,6 +29,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 		// 	// User rejoining after a disconnect.
 		logger.Info("user %s rejoin after disconnect", presence.GetUserId())
 		s.RemoveLeavePresence(presence.GetUserId())
+
 		s.JoinsInProgress++
 		return s, true, ""
 		// } else {

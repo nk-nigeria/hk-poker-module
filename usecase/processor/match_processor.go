@@ -403,17 +403,22 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 	logger.Info("process presences join %v", presences)
 	// update new presence
 	newJoins := make([]runtime.Presence, 0)
+
 	for _, presence := range presences {
-		_, found := s.LeavePresences.Get(presence.GetUserId())
-		if found {
-			s.LeavePresences.Remove(presence.GetUserId())
-		} else {
-			newJoins = append(newJoins, presence)
+		// check in list leave pending
+		{
+			_, found := s.LeavePresences.Get(presence.GetUserId())
+			if found {
+				s.LeavePresences.Remove(presence.GetUserId())
+			} else {
+				newJoins = append(newJoins, presence)
+			}
 		}
 	}
 
 	s.AddPresence(ctx, nk, newJoins)
 	s.JoinsInProgress -= len(newJoins)
+
 	// update match profile user
 	{
 		var listUserId []string
@@ -424,22 +429,27 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, matchId)
 	}
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
-	// m.NotificationUserInfo(ctx, logger, nk, dispatcher, s, presences)
-	// noti state for new presence join
+	//send cards for player rejoin
+	for _, presence := range presences {
+		if _, found := s.PlayingPresences.Get(presence.GetUserId()); found {
+			card := s.Cards[presence.GetUserId()]
+			if card == nil {
+				continue
+			}
+			buf, _ := m.marshaler.Marshal(&pb.UpdateDeal{
+				PresenceCard: &pb.PresenceCards{
+					Presence: presence.GetUserId(),
+					Cards:    card.Cards,
+				},
+			})
+
+			_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_DEAL),
+				buf, []runtime.Presence{presence.(runtime.Presence)}, nil, true)
+
+		}
+	}
+	// send update wallet for new user join
 	switch s.GameState {
-	// case pb.GameState_GameStatePlay:
-	// 	{
-	// 		if s.GameState == pb.GameState_GameStatePlay {
-	// 			updateState := &pb.UpdateGameState{
-	// 				State:     pb.GameState_GameStatePlay,
-	// 				CountDown: int64(s.GetRemainCountDown()),
-	// 			}
-	// 			m.broadcastMessage(
-	// 				logger, dispatcher,
-	// 				int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
-	// 				updateState, newJoins, nil, true)
-	// 		}
-	// 	}
 	case pb.GameState_GameStateReward:
 		{
 			balanceResult := s.GetBalanceResult()
@@ -463,7 +473,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
 	logger.Info("process presences leave %v", presences)
-	s.RemovePresence(presences)
+	s.RemovePresence(presences...)
 	var listUserId []string
 	for _, p := range presences {
 		listUserId = append(listUserId, p.GetUserId())
@@ -477,9 +487,9 @@ func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger run
 	for _, presence := range presences {
 		_, found := s.PlayingPresences.Get(presence.GetUserId())
 		if found {
-			s.AddLeavePresence([]runtime.Presence{presence})
+			s.AddLeavePresence(presence)
 		} else {
-			s.RemovePresence([]runtime.Presence{presence})
+			s.RemovePresence(presence)
 			m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, []runtime.Presence{presence})
 		}
 	}
@@ -514,7 +524,7 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context,
 	}
 	logger.Info("process apply presences")
 
-	s.RemovePresence(pendingLeaves)
+	s.RemovePresence(pendingLeaves...)
 
 	if len(pendingLeaves) > 0 {
 		listUserId := make([]string, 0)
