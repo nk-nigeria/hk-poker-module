@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/grpc/codes"
@@ -25,18 +24,21 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	}
 
 	// Check if it's a user attempting to rejoin after a disconnect.
-	if p, ok := s.Presences.Get(presence.GetUserId()); ok {
-		if p == nil {
-			// User rejoining after a disconnect.
-			logger.Info("user %s rejoin after disconnect", presence.GetUserId())
-			s.JoinsInProgress++
-			return s, true, ""
-		} else {
-			// User attempting to join from 2 different devices at the same time.
-			logger.Info("user %s  join from 2 different devices at the same time. --> reject join match", presence.GetUserId())
-			return s, false, "already joined"
-		}
+	if p, _ := s.Presences.Get(presence.GetUserId()); p != nil {
+		// if p == nil {
+		// 	// User rejoining after a disconnect.
+		logger.Info("user %s rejoin after disconnect", presence.GetUserId())
+		s.RemoveLeavePresence(presence.GetUserId())
+		s.JoinsInProgress++
+		return s, true, ""
+		// } else {
+		// 	// User attempting to join from 2 different devices at the same time.
+		// 	logger.Info("user %s  join from 2 different devices at the same time. --> reject join match", presence.GetUserId())
+		// 	return s, false, "already joined"
+		// }
 	}
+
+	// join as new user
 
 	// Check if match is full.
 	if s.Presences.Size()+s.JoinsInProgress >= entity.MaxPresences {
@@ -62,11 +64,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	s := state.(*entity.MatchState)
 	logger.Info("match join, state=%v, presences=%v", s, presences)
 
-	m.processor.ProcessPresencesJoin(ctx, logger, nk, dispatcher, s, presences)
-	matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-	for _, precense := range s.GetPresences() {
-		cgbdb.UpdateUserPlayingInMatch(ctx, logger, db, precense.GetUserId(), matchId)
-	}
+	m.processor.ProcessPresencesJoin(ctx, logger, nk, db, dispatcher, s, presences)
 	return s
 }
 
@@ -79,10 +77,6 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 		m.processor.ProcessPresencesLeavePending(ctx, logger, nk, dispatcher, s, presences)
 		return s
 	}
-
-	m.processor.ProcessPresencesLeave(ctx, logger, nk, dispatcher, s, presences)
-	for _, precense := range presences {
-		cgbdb.UpdateUserPlayingInMatch(ctx, logger, db, precense.GetUserId(), "")
-	}
+	m.processor.ProcessPresencesLeave(ctx, logger, nk, db, dispatcher, s, presences)
 	return s
 }

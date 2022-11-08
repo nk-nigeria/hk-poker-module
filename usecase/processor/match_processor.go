@@ -393,7 +393,13 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
 
-func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+func (m *processor) ProcessPresencesJoin(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule, db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	s *entity.MatchState,
+	presences []runtime.Presence,
+) {
 	logger.Info("process presences join %v", presences)
 	// update new presence
 	newJoins := make([]runtime.Presence, 0)
@@ -408,7 +414,15 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Log
 
 	s.AddPresence(ctx, nk, newJoins)
 	s.JoinsInProgress -= len(newJoins)
-
+	// update match profile user
+	{
+		var listUserId []string
+		for _, p := range newJoins {
+			listUserId = append(listUserId, p.GetUserId())
+		}
+		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, matchId)
+	}
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
 	// m.NotificationUserInfo(ctx, logger, nk, dispatcher, s, presences)
 	// noti state for new presence join
@@ -447,10 +461,14 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context, logger runtime.Log
 	}
 }
 
-func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
 	logger.Info("process presences leave %v", presences)
 	s.RemovePresence(presences)
-
+	var listUserId []string
+	for _, p := range presences {
+		listUserId = append(listUserId, p.GetUserId())
+	}
+	cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences)
 }
 
@@ -467,7 +485,13 @@ func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger run
 	}
 }
 
-func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+func (m *processor) ProcessApplyPresencesLeave(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	s *entity.MatchState,
+) {
 	pendingLeaves := s.GetLeavePresences()
 	defer func() {
 		players := entity.NewListPlayer(s.GetPresences())
@@ -497,6 +521,7 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context, logger runti
 		for _, p := range pendingLeaves {
 			listUserId = append(listUserId, p.GetUserId())
 		}
+		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
 		logger.Info("notify to player kick off %s", strings.Join(listUserId, ","))
 		m.broadcastMessage(
 			logger, dispatcher,

@@ -109,6 +109,10 @@ func (s *MatchState) AddLeavePresence(presences []runtime.Presence) {
 	}
 }
 
+func (s *MatchState) RemoveLeavePresence(userId string) {
+	s.LeavePresences.Remove(userId)
+}
+
 func (s *MatchState) ApplyLeavePresence() {
 	s.LeavePresences.Each(func(key interface{}, value interface{}) {
 		s.Presences.Remove(key)

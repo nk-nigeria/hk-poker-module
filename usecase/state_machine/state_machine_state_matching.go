@@ -27,8 +27,13 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 
 	procPkg.GetLogger().Info("apply leave presence")
 
-	procPkg.GetProcessor().ProcessApplyPresencesLeave(procPkg.GetContext(), procPkg.GetLogger(), procPkg.GetNK(), procPkg.GetDispatcher(), state)
-
+	procPkg.GetProcessor().ProcessApplyPresencesLeave(
+		procPkg.GetContext(),
+		procPkg.GetLogger(),
+		procPkg.GetNK(),
+		procPkg.GetDb(),
+		procPkg.GetDispatcher(),
+		state)
 	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,
 		procPkg.GetLogger(),

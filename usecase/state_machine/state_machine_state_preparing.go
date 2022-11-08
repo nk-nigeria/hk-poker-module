@@ -39,7 +39,11 @@ func (s *StatePreparing) Enter(ctx context.Context, args ...interface{}) error {
 		state.AddLeavePresence(listPrecense)
 		procPkg.GetProcessor().ProcessApplyPresencesLeave(ctx,
 			procPkg.GetLogger(),
-			procPkg.GetNK(), procPkg.GetDispatcher(), state)
+			procPkg.GetNK(),
+			procPkg.GetDb(),
+			procPkg.GetDispatcher(),
+			state,
+		)
 	}
 
 	procPkg.GetProcessor().NotifyUpdateGameState(
