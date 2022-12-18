@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+
 	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -31,7 +33,10 @@ func (m *MatchHandler) subtractChip(ctx context.Context, logger runtime.Logger, 
 
 	_, _, err := nk.WalletUpdate(ctx, userID, changeset, metadata, true)
 	if err != nil {
-		logger.WithField("err", err).Error("Wallet update error.")
+		logger.
+			WithField("err", err).
+			WithField("userID", userID).
+			Error("Wallet update error.")
 	}
 }
 
@@ -60,6 +65,8 @@ func (m *MatchHandler) updateChipByResultGameFinish(ctx context.Context, logger 
 	logger.Info("update wallet ctx %v, walletUpdates %v", ctx, walletUpdates)
 	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
 	if err != nil {
-		logger.WithField("err", err).Error("Wallets update error.")
+		payload, _ := json.Marshal(walletUpdates)
+		logger.
+			WithField("err", err).WithField("payload", string(payload)).Error("Wallets update error.")
 	}
 }

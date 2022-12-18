@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"strings"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
@@ -323,8 +324,7 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	}
 
 	// add chip for user win jackpot
-	if balanceResult.Jackpot != nil {
-		jp := balanceResult.Jackpot
+	if jp := balanceResult.Jackpot; jp != nil && jp.UserId != "" {
 		changeset := map[string]int64{
 			"chips": jp.Chips, // Substract amountChip coins to the user's wallet.
 		}
@@ -342,7 +342,11 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	logger.Info("wallet update ctx %v, walletUpdates %v", ctx, walletUpdates)
 	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
 	if err != nil {
-		logger.WithField("err", err).Error("Wallets update error.")
+		payload, _ := json.Marshal(walletUpdates)
+		logger.
+			WithField("payload", string(payload)).
+			WithField("err", err).
+			Error("Wallets update error.")
 		return
 	}
 }
