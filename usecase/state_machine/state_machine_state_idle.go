@@ -67,7 +67,7 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 		log.GetLogger().Info("[idle] idle timeout => exit")
 		return presenter.ErrGameFinish
 	} else {
-		log.GetLogger().Info("[idle] idle timeout remain %v", remain)
+		// log.GetLogger().Debug("[idle] idle timeout remain %v", remain)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package state_machine
 
 import (
 	"context"
+	"time"
 
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
@@ -24,7 +25,7 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	log.GetLogger().Info("[matching] enter")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-
+	state.SetUpCountDown(1 * time.Second)
 	procPkg.GetLogger().Info("apply leave presence")
 
 	procPkg.GetProcessor().ProcessApplyPresencesLeave(
@@ -42,7 +43,6 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 			State: pb.GameState_GameStateMatching,
 		},
 	)
-
 	return nil
 }
 
@@ -55,6 +55,11 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 	// log.GetLogger().Info("[matching] processing")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
+	remain := state.GetRemainCountDown()
+	if remain > 0 {
+		return nil
+	}
+
 	presenceCount := state.GetPresenceSize()
 	if state.IsReadyToPlay() {
 		s.Trigger(ctx, triggerPresenceReady)
