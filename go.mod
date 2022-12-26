@@ -23,7 +23,8 @@ require (
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/net v0.0.0-20220630215102-69896b714898 // indirect
+	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
