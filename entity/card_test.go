@@ -1,8 +1,9 @@
 package entity
 
 import (
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"testing"
+
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 func TestCard_NewCard(t *testing.T) {

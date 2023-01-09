@@ -1,6 +1,6 @@
 package entity
 
-import pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+import pb "github.com/ciaolink-game-platform/cgp-common/proto"
 
 type MockCard struct {
 	UserId string `json:"userId"`

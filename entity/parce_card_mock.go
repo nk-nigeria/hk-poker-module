@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 func ParseCard(str string) *pb.Card {

@@ -2,8 +2,8 @@ package hand
 
 import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	blc "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/bin_list_card"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 var naturalCardChecker = []HandCheckFunc{

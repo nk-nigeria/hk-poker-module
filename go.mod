@@ -2,14 +2,17 @@ module github.com/ciaolink-game-platform/cgp-chinese-poker-module
 
 go 1.18
 
+replace github.com/ciaolink-game-platform/cgp-common => ./cgp-common
+
 require (
 	github.com/bits-and-blooms/bitset v1.2.0
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230109140550-9302927e0938
 	github.com/emirpasic/gods v1.12.0
 	github.com/heroiclabs/nakama-common v1.22.0
 	github.com/jackc/pgtype v1.8.1
 	github.com/lib/pq v1.10.2
-	github.com/mxschmitt/golang-combinations v1.1.0
+	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nats-io/nats.go v1.16.0
 	github.com/qmuntal/stateless v1.5.3
 	github.com/stretchr/testify v1.7.2

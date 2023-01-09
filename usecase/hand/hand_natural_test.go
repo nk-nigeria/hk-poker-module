@@ -1,10 +1,11 @@
 package hand
 
 import (
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"testing"
 
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 func TestCheckCleanDragon(t *testing.T) {

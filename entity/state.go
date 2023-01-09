@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"github.com/heroiclabs/nakama-common/runtime"
 )

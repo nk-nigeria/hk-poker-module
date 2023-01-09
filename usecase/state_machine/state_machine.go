@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/qmuntal/stateless"
 )
 
@@ -112,7 +112,8 @@ func (m *Machine) configure() {
 		Permit(triggerPreparingDone, statePlay).
 		Permit(triggerPreparingFailed, stateMatching)
 
-	// playing state: wait for all user show card or timeout => switch to reward
+	// playing state: wait for all user show card or timeout =>
+	//  switch to reward
 	play := NewStatePlay(fireCtx)
 	m.state.Configure(statePlay).
 		OnEntry(play.Enter).

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 

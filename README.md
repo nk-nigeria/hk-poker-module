@@ -1,6 +1,10 @@
 Ciaolink Chinese Poker Module
 ===
-
+### Init submodule
+export GOPRIVATE=github.com/ciaolink-game-platform
+git submodule update --remote
+go mod tidy
+go mod vendor
 ### Start
 
 The recommended workflow is to use Docker and the compose file to build and run the game server and database resources.

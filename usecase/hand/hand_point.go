@@ -5,8 +5,8 @@ import (
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	blc "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/bin_list_card"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 //  				t1		s1		s2		s3		s4		s5

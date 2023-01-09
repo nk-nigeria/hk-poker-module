@@ -4,8 +4,8 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/hand"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	combinations "github.com/mxschmitt/golang-combinations"
 )
 

@@ -6,7 +6,7 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/ciaolink-game-platform/cgp-chinese-poker-module/proto"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 type StateIdle struct {
