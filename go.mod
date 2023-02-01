@@ -7,7 +7,7 @@ replace github.com/ciaolink-game-platform/cgp-common => ./cgp-common
 require (
 	github.com/bits-and-blooms/bitset v1.2.0
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230109140550-9302927e0938
+	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230130140436-7d98de50766c
 	github.com/emirpasic/gods v1.12.0
 	github.com/heroiclabs/nakama-common v1.22.0
 	github.com/jackc/pgtype v1.8.1
