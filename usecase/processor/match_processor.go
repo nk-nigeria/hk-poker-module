@@ -430,7 +430,12 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 			listUserId = append(listUserId, p.GetUserId())
 		}
 		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, matchId)
+		playingMatch := &pb.PlayingMatch{
+			Code:    entity.ModuleName,
+			MatchId: matchId,
+		}
+		playingMatchJson, _ := json.Marshal(playingMatch)
+		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, string(playingMatchJson))
 	}
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
 	//send cards for player rejoin

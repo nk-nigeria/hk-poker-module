@@ -30,13 +30,20 @@ func GetProfileUsers(ctx context.Context, nk runtime.NakamaModule, userIDs ...st
 		var metadata map[string]interface{}
 		json.Unmarshal([]byte(u.GetMetadata()), &metadata)
 		profile := pb.SimpleProfile{
-			UserId:       u.GetId(),
-			UserName:     u.GetUsername(),
-			DisplayName:  u.GetDisplayName(),
-			Status:       InterfaceToString(metadata["status"]),
-			AvatarId:     InterfaceToString(metadata["avatar_id"]),
-			VipLevel:     ToInt64(metadata["vip_level"], 0),
-			PlayingMatch: InterfaceToString(metadata["on_playing_in_match"]),
+			UserId:      u.GetId(),
+			UserName:    u.GetUsername(),
+			DisplayName: u.GetDisplayName(),
+			Status:      InterfaceToString(metadata["status"]),
+			AvatarId:    InterfaceToString(metadata["avatar_id"]),
+			VipLevel:    ToInt64(metadata["vip_level"], 0),
+		}
+		playingMatchJson := InterfaceToString(metadata["playing_in_match"])
+
+		if playingMatchJson == "" {
+			profile.PlayingMatch = nil
+		} else {
+			profile.PlayingMatch = &pb.PlayingMatch{}
+			json.Unmarshal([]byte(playingMatchJson), profile.PlayingMatch)
 		}
 		if acc.GetWallet() != "" {
 			wallet, err := ParseWallet(acc.GetWallet())

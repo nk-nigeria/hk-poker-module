@@ -15,7 +15,7 @@ func UpdateUserPlayingInMatch(ctx context.Context, logger runtime.Logger, db *sq
 				SET
 					metadata
 						= u.metadata
-						|| jsonb_build_object('on_playing_in_match','` + matchId + `' )
+						|| jsonb_build_object('playing_in_match','` + matchId + `' )
 				WHERE	
 					id = $1;`
 	_, err := db.ExecContext(ctx, query, userIdD)
@@ -25,7 +25,7 @@ func UpdateUserPlayingInMatch(ctx context.Context, logger runtime.Logger, db *sq
 	return err
 }
 
-func UpdateUsersPlayingInMatch(ctx context.Context, logger runtime.Logger, db *sql.DB, userIds []string, matchId string) error {
+func UpdateUsersPlayingInMatch(ctx context.Context, logger runtime.Logger, db *sql.DB, userIds []string, playingMatchJson string) error {
 	if len(userIds) == 0 {
 		return nil
 	}
@@ -36,7 +36,7 @@ func UpdateUsersPlayingInMatch(ctx context.Context, logger runtime.Logger, db *s
 				SET
 					metadata
 						= u.metadata
-						|| jsonb_build_object('on_playing_in_match','` + matchId + `' )
+						|| jsonb_build_object('playing_in_match','` + playingMatchJson + `' )
 				WHERE	
 					id IN ( `)
 	args := make([]any, 0)
