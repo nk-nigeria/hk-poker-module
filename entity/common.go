@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/snowflake"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const (
@@ -12,6 +13,11 @@ const (
 	MaxPresenceCard   = 13
 	JackpotPercentTax = 1 // 1%
 )
+
+var defaultMarshaler = &protojson.MarshalOptions{
+	UseEnumNumbers:  true,
+	EmitUnpopulated: true,
+}
 
 // free game by lv
 // [level]=%

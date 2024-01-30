@@ -60,20 +60,9 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 		processor := procPkg.GetProcessor()
 		logger := procPkg.GetLogger()
 		dispatcher := procPkg.GetDispatcher()
-		for _, message := range messages {
-			switch pb.OpCodeRequest(message.GetOpCode()) {
-			case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
-				processor.CombineCard(logger, dispatcher, state, message)
-			case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
-				processor.ShowCard(logger, dispatcher, state, message)
-			case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
-				processor.DeclareCard(logger, dispatcher, state, message)
-				state.ResetUserNotInteract(message.GetUserId())
-			case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
-				logger.Info("User %s interact with card", message.GetUserId())
-				state.ResetUserNotInteract(message.GetUserId())
-			}
-		}
+		processor.ProcessGame(procPkg.GetContext(),
+			logger, procPkg.GetNK(), procPkg.GetDb(),
+			dispatcher, messages, state)
 
 		// log.GetLogger().Info("[play] not timeout show %v, play %v", state.GetShowCardCount(), state.GetPlayingCount())
 		// Check all user show card

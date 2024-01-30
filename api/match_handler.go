@@ -32,10 +32,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const (
-	tickRate = 2
-)
-
 // Compile-time check to make sure all required functions are implemented.
 var _ runtime.Match = &MatchHandler{}
 
@@ -75,10 +71,9 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		//return nil, 0, ""
 	}
 
-	password, ok := params["password"].(string)
-	if !ok {
-		logger.Warn("invalid match init parameter \"password\"")
-		//return nil, 0, ""
+	password, _ := params["password"].(string)
+	if len(password) == 0 {
+		logger.Warn("init match with 'password' parameter empty")
 	}
 
 	open := int32(1)
@@ -87,7 +82,10 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	}
 
 	mockCodeCard, _ := params["mock_code_card"].(int32)
-
+	bots, _ := params["ai"].(int32)
+	if bots == 0 {
+		bots = 1
+	}
 	label := &entity.MatchLabel{
 		Open:         open,
 		Bet:          bet,
@@ -96,12 +94,13 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		Password:     password,
 		MaxSize:      entity.MaxPresences,
 		MockCodeCard: mockCodeCard,
+		Bots:         bots,
 	}
 
 	labelJSON, err := json.Marshal(label)
 	if err != nil {
 		logger.Error("match init json label failed ", err)
-		return nil, tickRate, ""
+		return nil, entity.TickRate, ""
 	}
 
 	logger.Info("match init label= %s", string(labelJSON))
@@ -119,7 +118,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	procPkg := packager.NewProcessorPackage(&matchState, m.processor, logger, nil, nil, nil, nil, nil)
 	m.machine.TriggerIdle(packager.GetContextWithProcessorPackager(procPkg))
 
-	return &matchState, tickRate, string(labelJSON)
+	return &matchState, entity.TickRate, string(labelJSON)
 }
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {

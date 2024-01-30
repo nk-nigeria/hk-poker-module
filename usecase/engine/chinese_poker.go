@@ -18,8 +18,7 @@ func NewChinesePokerEngine() UseCase {
 }
 
 func (c *Engine) NewGame(s *entity.MatchState) error {
-	s.Cards = make(map[string]*pb.ListCard)
-	s.OrganizeCards = make(map[string]*pb.ListCard)
+	s.Init()
 
 	return nil
 }

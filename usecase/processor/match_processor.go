@@ -57,6 +57,33 @@ func (m *processor) ProcessNewGame(logger runtime.Logger, dispatcher runtime.Mat
 	}
 }
 
+func (p *processor) ProcessGame(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	messages []runtime.MatchData,
+	s *entity.MatchState,
+) {
+	s.BotLoop()
+	// append bot messages
+	messages = append(messages, s.Messages()...)
+	for _, message := range messages {
+		switch pb.OpCodeRequest(message.GetOpCode()) {
+		case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
+			p.CombineCard(logger, dispatcher, s, message)
+		case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
+			p.ShowCard(logger, dispatcher, s, message)
+		case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
+			p.DeclareCard(logger, dispatcher, s, message)
+			s.ResetUserNotInteract(message.GetUserId())
+		case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
+			logger.Info("User %s interact with card", message.GetUserId())
+			s.ResetUserNotInteract(message.GetUserId())
+		}
+	}
+}
+
 func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
