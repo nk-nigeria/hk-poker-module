@@ -286,18 +286,19 @@ func (s *MatchState) BotTurn(v *bot.BotPresence) error {
 		}
 
 	}
-	buf, err := defaultMarshaler.Marshal(&pb.UpdateDeal{
-		PresenceCard: &pb.PresenceCards{
-			Presence: v.GetUserId(),
-			Cards:    botCard.Cards,
-		},
+	buf, err := defaultMarshaler.Marshal(&pb.Organize{
+		// PresenceCard: &pb.PresenceCards{
+		// 	Presence: v.GetUserId(),
+		// 	Cards:    botCard.Cards,
+		// },
+		Cards: botCard,
 	})
 	if err != nil {
 		return err
 	}
 	reqs := []pb.OpCodeRequest{
 		pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS,
-		pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS}
+	}
 	for _, req := range reqs {
 		data := bot.NewBotMatchData(
 			req, buf, v,
