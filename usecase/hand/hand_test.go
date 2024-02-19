@@ -145,7 +145,7 @@ func TestHand(t *testing.T) {
 	}
 
 	// test calculate
-	h1.calculatePoint()
+	h1.CalculatePoint()
 	t.Logf("caculate front %s", h1.frontHand.Point)
 	t.Logf("caculate middle %s", h1.middleHand.Point)
 	t.Logf("caculate back %s", h1.backHand.Point)
@@ -161,7 +161,7 @@ func TestHand(t *testing.T) {
 	}
 
 	// test calculate
-	h2.calculatePoint()
+	h2.CalculatePoint()
 	t.Logf("caculate front %v", h2.frontHand.Point)
 	t.Logf("caculate middle %v", h2.middleHand.Point)
 	t.Logf("caculate back %v", h2.backHand.Point)

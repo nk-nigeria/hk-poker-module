@@ -58,6 +58,7 @@ type MatchState struct {
 	jackpotTreasure *pb.Jackpot
 	messages        []runtime.MatchData
 	Bots            []*bot.BotPresence
+	TurnOfBots      []*bot.BotPresence
 }
 
 func NewMathState(label *MatchLabel) MatchState {
@@ -277,24 +278,44 @@ func (s *MatchState) ResetUserNotInteract(userId string) {
 }
 
 func (s *MatchState) BotTurn(v *bot.BotPresence) error {
+	s.TurnOfBots = append(s.TurnOfBots, v)
 	// find card of bot
-	var botCard *pb.ListCard
-	for userId, card := range s.Cards {
-		if userId == v.GetUserId() {
-			botCard = card
-			break
-		}
+	// var botCard *pb.ListCard
+	// for userId, card := range s.Cards {
+	// 	if userId == v.GetUserId() {
+	// 		botCard = card
+	// 		break
+	// 	}
+	// }
+	// //
+	// buf, err := defaultMarshaler.Marshal(&pb.Organize{
+	// 	Cards: &pb.ListCard{
+	// 		Cards: botCard.Cards,
+	// 	},
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+	// reqs := []pb.OpCodeRequest{
+	// 	pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS,
+	// }
+	// for _, req := range reqs {
+	// 	data := bot.NewBotMatchData(
+	// 		req, buf, v,
+	// 	)
+	// 	s.messages = append(s.messages, data)
+	// }
+	return nil
+}
 
-	}
+func (s *MatchState) FakeDeclardCards(v *bot.BotPresence, cards []*pb.Card) {
 	buf, err := defaultMarshaler.Marshal(&pb.Organize{
-		// PresenceCard: &pb.PresenceCards{
-		// 	Presence: v.GetUserId(),
-		// 	Cards:    botCard.Cards,
-		// },
-		Cards: botCard,
+		Cards: &pb.ListCard{
+			Cards: cards,
+		},
 	})
 	if err != nil {
-		return err
+		return
 	}
 	reqs := []pb.OpCodeRequest{
 		pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS,
@@ -305,10 +326,10 @@ func (s *MatchState) BotTurn(v *bot.BotPresence) error {
 		)
 		s.messages = append(s.messages, data)
 	}
-	return nil
 }
 
 func (s *MatchState) BotLoop() {
+	s.TurnOfBots = nil
 	for _, v := range s.Bots {
 		v.Loop()
 	}
@@ -319,3 +340,11 @@ func (s *MatchState) Messages() []runtime.MatchData {
 	s.messages = make([]runtime.MatchData, 0)
 	return msgs
 }
+
+// func (s *MatchState) AutoSortCard(cards []*pb.Card) []*pb.Card {
+// 	// 0:2
+// 	// 3:8
+// 	// 8:14
+// 	ml := NewBinListCards(NewListCard(cards)).ToList()
+// 	return nil
+// }

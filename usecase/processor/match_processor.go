@@ -66,6 +66,13 @@ func (p *processor) ProcessGame(ctx context.Context,
 	s *entity.MatchState,
 ) {
 	s.BotLoop()
+	for _, bot := range s.TurnOfBots {
+		// sort cat of bot
+		listCard := s.Cards[bot.GetUserId()]
+		cards := p.engine.AISortCard(listCard.Cards)
+		s.FakeDeclardCards(bot, cards)
+	}
+
 	// append bot messages
 	messages = append(messages, s.Messages()...)
 	for _, message := range messages {
@@ -235,7 +242,9 @@ func (m *processor) broadcastMessage(logger runtime.Logger, dispatcher runtime.M
 	}
 	err = dispatcher.BroadcastMessage(opCode, dataJson, presences, sender, true)
 
-	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
+	if opCode != int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE) {
+		logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
+	}
 	if err != nil {
 		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
 		return err
