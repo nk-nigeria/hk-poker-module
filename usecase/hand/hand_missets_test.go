@@ -233,7 +233,7 @@ func TestIsMisSets(t *testing.T) {
 	//assert.Equal(t, false, mis)
 
 	h1, _ = mockHandDontMissets2()
-	h1.calculatePoint()
+	h1.CalculatePoint()
 
 	t.Logf("front %s", h1.frontHand.Point)
 	t.Logf("middle %s", h1.middleHand.Point)

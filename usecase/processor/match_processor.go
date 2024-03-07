@@ -57,6 +57,40 @@ func (m *processor) ProcessNewGame(logger runtime.Logger, dispatcher runtime.Mat
 	}
 }
 
+func (p *processor) ProcessGame(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	messages []runtime.MatchData,
+	s *entity.MatchState,
+) {
+	s.BotLoop()
+	for _, bot := range s.TurnOfBots {
+		// sort cat of bot
+		listCard := s.Cards[bot.GetUserId()]
+		cards := p.engine.AISortCard(listCard.Cards)
+		s.FakeDeclardCards(bot, cards)
+	}
+
+	// append bot messages
+	messages = append(messages, s.Messages()...)
+	for _, message := range messages {
+		switch pb.OpCodeRequest(message.GetOpCode()) {
+		case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
+			p.CombineCard(logger, dispatcher, s, message)
+		case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
+			p.ShowCard(logger, dispatcher, s, message)
+		case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
+			p.DeclareCard(logger, dispatcher, s, message)
+			s.ResetUserNotInteract(message.GetUserId())
+		case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
+			logger.Info("User %s interact with card", message.GetUserId())
+			s.ResetUserNotInteract(message.GetUserId())
+		}
+	}
+}
+
 func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
@@ -208,7 +242,9 @@ func (m *processor) broadcastMessage(logger runtime.Logger, dispatcher runtime.M
 	}
 	err = dispatcher.BroadcastMessage(opCode, dataJson, presences, sender, true)
 
-	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
+	if opCode != int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE) {
+		logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
+	}
 	if err != nil {
 		logger.Error("Error BroadcastMessage, message: %s", string(dataJson))
 		return err

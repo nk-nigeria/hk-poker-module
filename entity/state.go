@@ -5,12 +5,16 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/ciaolink-game-platform/cgp-common/bot"
+
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
 const (
+	TickRate = 2
+
 	MinPresences = 2
 	MaxPresences = 4
 )
@@ -23,6 +27,7 @@ type MatchLabel struct {
 	Password     string `json:"password"`
 	MaxSize      int32  `json:"max_size"`
 	MockCodeCard int32  `json:"mock_code_card"`
+	Bots         int32  `json:"bots,omitempty"`
 }
 
 type MatchState struct {
@@ -51,6 +56,9 @@ type MatchState struct {
 	// using for send noti to presence join in state reward
 	balanceResult   *pb.BalanceResult
 	jackpotTreasure *pb.Jackpot
+	messages        []runtime.MatchData
+	Bots            []*bot.BotPresence
+	TurnOfBots      []*bot.BotPresence
 }
 
 func NewMathState(label *MatchLabel) MatchState {
@@ -63,8 +71,28 @@ func NewMathState(label *MatchLabel) MatchState {
 		LeavePresences:      linkedhashmap.New(),
 		PresencesNoInteract: make(map[string]int, 0),
 		balanceResult:       nil,
+		Bots:                make([]*bot.BotPresence, 0),
+	}
+	// Automatically add bot players
+	if label.Bots > 0 {
+		m.Bots = append(m.Bots, bot.NewBotPresences(int(label.Bots))...)
+	}
+	for _, bot := range m.Bots {
+		m.Presences.Put(bot.GetUserId(), bot)
 	}
 	return m
+}
+
+func (s *MatchState) Init() {
+	s.Cards = make(map[string]*pb.ListCard)
+	s.OrganizeCards = make(map[string]*pb.ListCard)
+	for idx, v := range s.Bots {
+		v.InitTurn(TickRate*9, 1, func() {
+			x := s.Bots[idx]
+			s.BotTurn(x)
+		})
+	}
+
 }
 
 func (s *MatchState) GetBalanceResult() *pb.BalanceResult {
@@ -248,3 +276,75 @@ func (s *MatchState) GetLeavePresences() []runtime.Presence {
 func (s *MatchState) ResetUserNotInteract(userId string) {
 	s.PresencesNoInteract[userId] = 0
 }
+
+func (s *MatchState) BotTurn(v *bot.BotPresence) error {
+	s.TurnOfBots = append(s.TurnOfBots, v)
+	// find card of bot
+	// var botCard *pb.ListCard
+	// for userId, card := range s.Cards {
+	// 	if userId == v.GetUserId() {
+	// 		botCard = card
+	// 		break
+	// 	}
+	// }
+	// //
+	// buf, err := defaultMarshaler.Marshal(&pb.Organize{
+	// 	Cards: &pb.ListCard{
+	// 		Cards: botCard.Cards,
+	// 	},
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+	// reqs := []pb.OpCodeRequest{
+	// 	pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS,
+	// }
+	// for _, req := range reqs {
+	// 	data := bot.NewBotMatchData(
+	// 		req, buf, v,
+	// 	)
+	// 	s.messages = append(s.messages, data)
+	// }
+	return nil
+}
+
+func (s *MatchState) FakeDeclardCards(v *bot.BotPresence, cards []*pb.Card) {
+	buf, err := defaultMarshaler.Marshal(&pb.Organize{
+		Cards: &pb.ListCard{
+			Cards: cards,
+		},
+	})
+	if err != nil {
+		return
+	}
+	reqs := []pb.OpCodeRequest{
+		pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS,
+	}
+	for _, req := range reqs {
+		data := bot.NewBotMatchData(
+			req, buf, v,
+		)
+		s.messages = append(s.messages, data)
+	}
+}
+
+func (s *MatchState) BotLoop() {
+	s.TurnOfBots = nil
+	for _, v := range s.Bots {
+		v.Loop()
+	}
+}
+
+func (s *MatchState) Messages() []runtime.MatchData {
+	msgs := s.messages
+	s.messages = make([]runtime.MatchData, 0)
+	return msgs
+}
+
+// func (s *MatchState) AutoSortCard(cards []*pb.Card) []*pb.Card {
+// 	// 0:2
+// 	// 3:8
+// 	// 8:14
+// 	ml := NewBinListCards(NewListCard(cards)).ToList()
+// 	return nil
+// }

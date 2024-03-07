@@ -169,7 +169,7 @@ func (h *Hand) parse() error {
 	return nil
 }
 
-func (h *Hand) calculatePoint() error {
+func (h *Hand) CalculatePoint() error {
 	if h.calculated {
 		return errors.New("hand.calculate.already")
 	}
@@ -208,7 +208,7 @@ func (h *Hand) calculatePoint() error {
 }
 
 func (h *Hand) GetPointResult() *pb.PointResult {
-	h.calculatePoint()
+	h.CalculatePoint()
 
 	// result := &pb.PointResult{
 	// 	Type: h.pointType,

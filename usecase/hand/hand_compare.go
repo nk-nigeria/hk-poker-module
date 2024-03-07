@@ -100,8 +100,8 @@ func CompareHand(ctx context.Context, h1, h2 *Hand) *ComparisonResult {
 
 	// validate scoop all user
 	result := &ComparisonResult{}
-	h1.calculatePoint()
-	h2.calculatePoint()
+	h1.CalculatePoint()
+	h2.CalculatePoint()
 
 	// case 1
 	if h1.IsNatural() && h2.IsNatural() {

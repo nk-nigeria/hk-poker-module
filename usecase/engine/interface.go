@@ -11,4 +11,6 @@ type UseCase interface {
 	Organize(s *entity.MatchState, presence string, cards *pb.ListCard) error
 	Combine(s *entity.MatchState, presence string) error
 	Finish(s *entity.MatchState) *pb.UpdateFinish
+
+	AISortCard(cards []*pb.Card) []*pb.Card
 }
