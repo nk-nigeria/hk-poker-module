@@ -4,17 +4,22 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
+	"github.com/ciaolink-game-platform/cgp-common/define"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type processor struct {
@@ -429,7 +434,6 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 	msg.JpTreasure = s.GetJackpotTreasure()
 	msg.RemainTime = int64(s.GetRemainCountDown())
 	msg.GameState = s.GameState
-
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
 
@@ -458,20 +462,9 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 
 	s.AddPresence(ctx, nk, newJoins)
 	s.JoinsInProgress -= len(newJoins)
-
 	// update match profile user
-	{
-		var listUserId []string
-		for _, p := range newJoins {
-			listUserId = append(listUserId, p.GetUserId())
-		}
-		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-		playingMatch := &pb.PlayingMatch{
-			Code:    entity.ModuleName,
-			MatchId: matchId,
-		}
-		playingMatchJson, _ := json.Marshal(playingMatch)
-		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, string(playingMatchJson))
+	for _, presence := range newJoins {
+		m.emitNkEvent(ctx, define.NakEventMatchLeave, nk, presence.GetUserId(), s)
 	}
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
 	//send cards for player rejoin
@@ -520,10 +513,12 @@ func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Lo
 	logger.Info("process presences leave %v", presences)
 	s.RemovePresence(presences...)
 	var listUserId []string
-	for _, p := range presences {
-		listUserId = append(listUserId, p.GetUserId())
+	for _, presence := range presences {
+		listUserId = append(listUserId, presence.GetUserId())
+		m.emitNkEvent(ctx, define.NakEventMatchLeave, nk, presence.GetUserId(), s)
 	}
-	cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
+	// cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
+
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences)
 }
 
@@ -573,10 +568,11 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context,
 
 	if len(pendingLeaves) > 0 {
 		listUserId := make([]string, 0)
-		for _, p := range pendingLeaves {
-			listUserId = append(listUserId, p.GetUserId())
+		for _, presence := range pendingLeaves {
+			listUserId = append(listUserId, presence.GetUserId())
+			m.emitNkEvent(ctx, define.NakEventMatchLeave, nk, presence.GetUserId(), s)
 		}
-		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
+		// cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
 		logger.Info("notify to player kick off %s", strings.Join(listUserId, ","))
 		m.broadcastMessage(
 			logger, dispatcher,
@@ -584,6 +580,33 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context,
 			nil, pendingLeaves, nil, true)
 	}
 	s.ApplyLeavePresence()
+}
+
+func (m *processor) ProcessMatchTerminate(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	s *entity.MatchState,
+) {
+	for _, presence := range s.GetPresences() {
+		m.emitNkEvent(ctx, define.NakEventMatchEnd, nk, presence.GetUserId(), s)
+	}
+}
+
+func (m *processor) emitNkEvent(ctx context.Context, eventNk define.NakEvent, nk runtime.NakamaModule, userId string, s *entity.MatchState) {
+	matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+	nk.Event(ctx, &api.Event{
+		Name:      string(eventNk),
+		Timestamp: timestamppb.Now(),
+		Properties: map[string]string{
+			"user_id":        userId,
+			"game_code":      s.Label.Code,
+			"end_match_unix": strconv.FormatInt(time.Now().Unix(), 10),
+			"match_id":       matchId,
+			"mcb":            strconv.FormatInt(int64(s.Label.Bet), 10),
+		},
+	})
 }
 
 // check win jackpot, and always get jackpot treasure before exit

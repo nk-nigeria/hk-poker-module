@@ -62,7 +62,8 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	bet, ok := params["bet"].(int32)
 	if !ok {
 		logger.Error("invalid match init parameter \"bet\"")
-		return nil, 0, ""
+		// return nil, entity.TickRate, ""
+		// bet = 1000
 	}
 
 	name, ok := params["name"].(string)
@@ -145,5 +146,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 
 func (m *MatchHandler) MatchTerminate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, graceSeconds int) interface{} {
 	logger.Info("match terminate, state=%v")
+	s := state.(*entity.MatchState)
+	m.processor.ProcessMatchTerminate(ctx, logger, nk, db, dispatcher, s)
 	return state
 }
