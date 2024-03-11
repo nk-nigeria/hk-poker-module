@@ -68,6 +68,10 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	// log.GetLogger().Info("[preparing] processing")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
+	if state.GetPrecenseNotBotCount() == 0 {
+		s.Trigger(ctx, triggerPreparingFailed)
+		return nil
+	}
 	if remain := state.GetRemainCountDown(); remain > 0 {
 		if state.IsNeedNotifyCountDown() {
 			procPkg.GetProcessor().NotifyUpdateGameState(
@@ -82,17 +86,13 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 
 			state.SetLastCountDown(remain)
 		}
-	} else {
-		// check preparing condition
-		// log.GetLogger().Info("[preparing] preparing timeout check presence count")
-		if state.IsReadyToPlay() {
-			// change to play
-			s.Trigger(ctx, triggerPreparingDone)
-		} else {
-			// change to wait
-			s.Trigger(ctx, triggerPreparingFailed)
-		}
-	}
+		return nil
 
+	}
+	if !state.IsReadyToPlay() {
+		s.Trigger(ctx, triggerPreparingFailed)
+		return nil
+	}
+	s.Trigger(ctx, triggerPreparingDone)
 	return nil
 }

@@ -128,6 +128,7 @@ func (s *MatchState) RemovePresence(presences ...runtime.Presence) {
 	for _, presence := range presences {
 		s.Presences.Remove(presence.GetUserId())
 		delete(s.PresencesNoInteract, presence.GetUserId())
+		s.PlayingPresences.Remove(presence.GetUserId())
 	}
 }
 
@@ -143,10 +144,10 @@ func (s *MatchState) RemoveLeavePresence(userId string) {
 
 func (s *MatchState) ApplyLeavePresence() {
 	s.LeavePresences.Each(func(key interface{}, value interface{}) {
-		s.Presences.Remove(key)
-		delete(s.PresencesNoInteract, key.(string))
+		// s.Presences.Remove(key)
+		// delete(s.PresencesNoInteract, key.(string))
+		s.RemovePresence(value.(runtime.Presence))
 	})
-
 	s.LeavePresences = linkedhashmap.New()
 }
 
@@ -227,6 +228,28 @@ func (s *MatchState) RemoveShowCard(userId string) {
 
 func (s *MatchState) GetPlayingCount() int {
 	return s.PlayingPresences.Size()
+}
+
+func (s *MatchState) GetPlayingNotBotCount() int {
+	num := s.PlayingPresences.Size()
+	s.PlayingPresences.Each(func(key, value interface{}) {
+		p := value.(runtime.Presence)
+		if bot.IsBot(p.GetUserId()) {
+			num--
+		}
+	})
+	return num
+}
+
+func (s *MatchState) GetPrecenseNotBotCount() int {
+	num := s.Presences.Size()
+	s.Presences.Each(func(key, value interface{}) {
+		p := value.(runtime.Presence)
+		if bot.IsBot(p.GetUserId()) {
+			num--
+		}
+	})
+	return num
 }
 
 func (s *MatchState) GetShowCardCount() int {
