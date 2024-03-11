@@ -464,7 +464,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 	s.JoinsInProgress -= len(newJoins)
 	// update match profile user
 	for _, presence := range newJoins {
-		m.emitNkEvent(ctx, define.NakEventMatchLeave, nk, presence.GetUserId(), s)
+		m.emitNkEvent(ctx, define.NakEventMatchJoin, nk, presence.GetUserId(), s)
 	}
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
 	//send cards for player rejoin

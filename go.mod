@@ -5,11 +5,11 @@ go 1.21
 require (
 	github.com/bits-and-blooms/bitset v1.5.0
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/ciaolink-game-platform/cgp-common v0.0.0-20240310081717-782e1a0fa850
+	github.com/ciaolink-game-platform/cgp-common v0.0.0-20240310135149-2492c8c3a5ef
 	github.com/emirpasic/gods v1.18.1
 	github.com/heroiclabs/nakama-common v1.30.0
 	github.com/jackc/pgtype v1.14.0
-	github.com/lib/pq v1.10.7
+	github.com/lib/pq v1.10.9
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nats-io/nats.go v1.31.0
 	github.com/qmuntal/stateless v1.6.8
