@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -56,17 +57,27 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	remain := state.GetRemainCountDown()
+	if state.GetPrecenseBotCount() == state.GetPresenceSize() {
+		// s.Trigger(ctx, triggerIdle)
+		// return nil
+		return presenter.ErrGameFinish
+	}
 	if remain > 0 {
 		return nil
 	}
 
+	log.GetLogger().WithField("count presence", state.GetPresenceSize()).Info("[matching] processing")
 	presenceCount := state.GetPresenceSize()
-	if state.IsReadyToPlay() {
-		s.Trigger(ctx, triggerPresenceReady)
-	} else if presenceCount <= 0 {
+	if presenceCount == state.GetPrecenseBotCount() {
 		s.Trigger(ctx, triggerIdle)
+		return nil
+	}
+	if presenceCount >= state.MinPresences {
+		s.Trigger(ctx, triggerPresenceReady)
+	} else if presenceCount == state.GetPrecenseBotCount() {
+		s.Trigger(ctx, triggerNoOne)
 	} else {
-		// log.GetLogger().Info("state idle presences size %v", presenceCount)
+		s.Trigger(ctx, triggerIdle)
 	}
 
 	return nil

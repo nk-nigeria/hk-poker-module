@@ -57,17 +57,15 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	state := procPkg.GetState()
 	// log.GetLogger().Info("state presences size %v", state.GetPresenceSize())
 
-	if state.GetPresenceSize() > 0 {
+	if state.GetPrecenseNotBotCount() > 0 {
 		s.Trigger(ctx, triggerMatching)
+		return nil
 	}
 
 	if remain := state.GetRemainCountDown(); remain < 0 {
-		// Do finish here
-		//s.Trigger(ctx, triggerFinish)
 		log.GetLogger().Info("[idle] idle timeout => exit")
+		s.Trigger(ctx, triggerNoOne)
 		return presenter.ErrGameFinish
-	} else {
-		// log.GetLogger().Debug("[idle] idle timeout remain %v", remain)
 	}
 
 	return nil
