@@ -252,6 +252,17 @@ func (s *MatchState) GetPrecenseNotBotCount() int {
 	return num
 }
 
+func (s *MatchState) GetPrecenseBotCount() int {
+	num := 0
+	s.Presences.Each(func(key, value interface{}) {
+		p := value.(runtime.Presence)
+		if bot.IsBot(p.GetUserId()) {
+			num++
+		}
+	})
+	return num
+}
+
 func (s *MatchState) GetShowCardCount() int {
 	return len(s.OrganizeCards)
 }

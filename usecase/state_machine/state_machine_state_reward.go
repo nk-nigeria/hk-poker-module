@@ -50,11 +50,10 @@ func (s *StateReward) Exit(ctx context.Context, _ ...interface{}) error {
 func (s *StateReward) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-	if remain := state.GetRemainCountDown(); remain <= 0 {
-		s.Trigger(ctx, triggerRewardTimeout)
-	} else {
-		// log.GetLogger().Info("[reward] not timeout %v", remain)
+	if remain := state.GetRemainCountDown(); remain > 0 {
+		return nil
 	}
+	s.Trigger(ctx, triggerRewardTimeout)
 
 	return nil
 }

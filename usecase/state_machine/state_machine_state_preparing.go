@@ -68,10 +68,10 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	// log.GetLogger().Info("[preparing] processing")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-	if state.GetPrecenseNotBotCount() == 0 {
-		s.Trigger(ctx, triggerPreparingFailed)
-		return nil
-	}
+	// if state.GetPrecenseNotBotCount() == 0 {
+	// 	s.Trigger(ctx, triggerPreparingFailed)
+	// 	return nil
+	// }
 	if remain := state.GetRemainCountDown(); remain > 0 {
 		if state.IsNeedNotifyCountDown() {
 			procPkg.GetProcessor().NotifyUpdateGameState(
