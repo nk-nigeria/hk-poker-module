@@ -14,6 +14,7 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
 	"github.com/ciaolink-game-platform/cgp-common/define"
+	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -125,7 +126,7 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 	// update finish
 	updateFinish := m.engine.Finish(s)
 	m.readJackpotTreasure(ctx, nk, logger, db, dispatcher, s, updateFinish)
-	balanceResult := m.calcRewardForUserPlaying(ctx, nk, logger, db, dispatcher, s, updateFinish)
+	balanceResult, totalFee := m.calcRewardForUserPlaying(ctx, nk, logger, db, dispatcher, s, updateFinish)
 	if balanceResult == nil {
 		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 		logger.
@@ -163,6 +164,9 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 		logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
 		updateFinish, nil, nil, true)
+
+	//report
+	m.report(ctx, logger, nk, balanceResult, totalFee, s)
 	logger.Info("process finish game done %v", updateFinish)
 }
 
@@ -276,7 +280,7 @@ func (m *processor) NotifyUpdateTable(s *entity.MatchState, logger runtime.Logge
 // caculator amount chips user win or lose on this match
 // with amount chip before and after apply reward
 // and add jackpot if user win
-func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) *pb.BalanceResult {
+func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, updateFinish *pb.UpdateFinish) (*pb.BalanceResult, int64) {
 	listUserId := make([]string, 0, len(updateFinish.Results))
 	for _, uf := range updateFinish.Results {
 		listUserId = append(listUserId, uf.UserId)
@@ -292,7 +296,7 @@ func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.Nak
 			WithField("data", string(updateFinishData)).
 			WithField("err", err).
 			Error("read wallet error")
-		return nil
+		return nil, 0
 	}
 	mapUserWallet := make(map[string]entity.Wallet)
 	for _, w := range wallets {
@@ -331,7 +335,11 @@ func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.Nak
 		// logger.Info("update user %v, fee %d change %s", uf.UserId, fee, balance)
 	}
 	cgbdb.AddNewMultiFeeGame(ctx, logger, db, listFeeGame)
-	return &balanceResult
+	totalFee := int64(0)
+	for _, fee := range listFeeGame {
+		totalFee += fee.Fee
+	}
+	return &balanceResult, totalFee
 
 }
 func (m *processor) readWalletUsers(ctx context.Context, nk runtime.NakamaModule, logger runtime.Logger, userIds ...string) ([]entity.Wallet, error) {
@@ -692,6 +700,39 @@ func (m *processor) readJackpotTreasure(
 		updateFinish.JpTreasure = &pb.Jackpot{
 			GameCode: jpTreasure.GetGameCode(),
 			Chips:    jpTreasure.Chips,
+		}
+	}
+}
+
+func (m *processor) report(
+	ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	balanceResult *pb.BalanceResult,
+	totalFee int64,
+	s *entity.MatchState,
+) {
+	report := lib.NewReportGame(ctx)
+	report.AddMatch(&pb.MatchData{
+		GameId:   0,
+		GameCode: s.Label.Code,
+		Mcb:      int64(s.Label.Bet),
+		ChipFee:  totalFee,
+	})
+	for _, b := range balanceResult.Updates {
+		report.AddPlayerData(&pb.PlayerData{
+			UserId:  b.UserId,
+			Chip:    b.AmountChipCurrent,
+			ChipAdd: b.AmountChipCurrent - b.AmountChipBefore,
+		})
+	}
+	data, status, err := report.Commit(ctx, nk)
+	if err != nil || status > 300 {
+		if err != nil {
+			logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
+				report.ReportEndpoint(), s.Label.Code, string(data), status, err.Error())
+		} else {
+			logger.Info("Report game (%s) operatio -> %s successful", s.Label.Code)
 		}
 	}
 }
