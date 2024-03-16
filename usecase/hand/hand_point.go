@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	blc "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/bin_list_card"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
@@ -204,12 +203,12 @@ func CalculatePoint(ch *ChildHand) *HandPoint {
 	bcards := entity.NewBinListCards(ch.Cards)
 	if ch.handType == kFronHand {
 		for _, fn := range HandCheckerFronts {
-			log.GetLogger().Info("check %v, cards %v", fn, bcards)
+			// log.GetLogger().Info("check %v, cards %v", fn, bcards)
 			if handPoint, valid := fn(bcards); valid {
-				log.GetLogger().Info("check ok")
+				// log.GetLogger().Info("check ok")
 				return handPoint
 			}
-			log.GetLogger().Info("check not ok")
+			// log.GetLogger().Info("check not ok")
 		}
 	} else {
 		for _, fn := range HandCheckers {
@@ -217,7 +216,7 @@ func CalculatePoint(ch *ChildHand) *HandPoint {
 				return handPoint
 			}
 		}
-		log.GetLogger().Info("check not ok")
+		// log.GetLogger().Info("check not ok")
 	}
 
 	return nil

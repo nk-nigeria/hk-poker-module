@@ -17,7 +17,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/cgbdb"
@@ -59,46 +58,47 @@ func (m *MatchHandler) GetState() stateless.State {
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
 	logger.Info("match init: %v", params)
-	bet, ok := params["bet"].(int32)
+	// bet, ok := params["bet"].(int32)
+	// if !ok {
+	// 	logger.Error("invalid match init parameter \"bet\"")
+	// 	// return nil, entity.TickRate, ""
+	// 	// bet = 1000
+	// }
+
+	// name, ok := params["name"].(string)
+	// if !ok {
+	// 	logger.Warn("invalid match init parameter \"name\"")
+	// 	//return nil, 0, ""
+	// }
+
+	// password, _ := params["password"].(string)
+	// if len(password) == 0 {
+	// 	logger.Warn("init match with 'password' parameter empty")
+	// }
+
+	// open := int32(1)
+	// if password != "" {
+	// 	open = 0
+	// }
+
+	// mockCodeCard, _ := params["mock_code_card"].(int32)
+	// bots, _ := params["ai"].(int32)
+	// if bots == 0 {
+	// 	bots = 1
+	// }
+	label, ok := params["data"].(string)
 	if !ok {
-		logger.Error("invalid match init parameter \"bet\"")
-		// return nil, entity.TickRate, ""
-		// bet = 1000
+		logger.WithField("params", params).Error("invalid match init parameter \"data\"")
+		return nil, entity.TickRate, ""
 	}
+	matchInfo := &pb.Match{}
+	err := entity.DefaulUnmarshaler.Unmarshal([]byte(label), matchInfo)
+	if err != nil {
+		logger.Error("match init json label failed ", err)
+		return nil, entity.TickRate, ""
+	}
+	labelJSON, err := entity.DefaultMarshaler.Marshal(matchInfo)
 
-	name, ok := params["name"].(string)
-	if !ok {
-		logger.Warn("invalid match init parameter \"name\"")
-		//return nil, 0, ""
-	}
-
-	password, _ := params["password"].(string)
-	if len(password) == 0 {
-		logger.Warn("init match with 'password' parameter empty")
-	}
-
-	open := int32(1)
-	if password != "" {
-		open = 0
-	}
-
-	mockCodeCard, _ := params["mock_code_card"].(int32)
-	bots, _ := params["ai"].(int32)
-	if bots == 0 {
-		bots = 1
-	}
-	label := &entity.MatchLabel{
-		Open:         open,
-		Bet:          bet,
-		Code:         entity.ModuleName,
-		Name:         name,
-		Password:     password,
-		MaxSize:      entity.MaxPresences,
-		MockCodeCard: mockCodeCard,
-		Bots:         bots,
-	}
-
-	labelJSON, err := json.Marshal(label)
 	if err != nil {
 		logger.Error("match init json label failed ", err)
 		return nil, entity.TickRate, ""
@@ -106,7 +106,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	logger.Info("match init label= %s", string(labelJSON))
 
-	matchState := entity.NewMathState(label)
+	matchState := entity.NewMathState(matchInfo)
 	// init jp treasure
 	jpTreasure, _ := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
 	if jpTreasure != nil {

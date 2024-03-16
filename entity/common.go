@@ -8,6 +8,14 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+var DefaultMarshaler = &protojson.MarshalOptions{
+	UseEnumNumbers:  true,
+	EmitUnpopulated: true,
+}
+var DefaulUnmarshaler = &protojson.UnmarshalOptions{
+	DiscardUnknown: false,
+}
+
 const (
 	ModuleName        = "chinese-poker"
 	MaxPresenceCard   = 13
