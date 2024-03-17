@@ -717,6 +717,8 @@ func (m *processor) report(
 		GameCode: s.Label.Name,
 		Mcb:      int64(s.Label.MarkUnit),
 		ChipFee:  totalFee,
+		TableId:  s.Label.TableId,
+		MatchId:  s.Label.MatchId,
 	})
 	for _, b := range balanceResult.Updates {
 		report.AddPlayerData(&pb.PlayerData{
