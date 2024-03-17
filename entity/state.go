@@ -19,20 +19,20 @@ const (
 	MaxPresences = 4
 )
 
-type MatchLabel struct {
-	Open         int32  `json:"open"`
-	Bet          int32  `json:"bet"`
-	Code         string `json:"code"`
-	Name         string `json:"name"`
-	Password     string `json:"password"`
-	MaxSize      int32  `json:"max_size"`
-	MockCodeCard int32  `json:"mock_code_card"`
-	Bots         int32  `json:"bots,omitempty"`
-}
+// type MatchLabel struct {
+// 	Open         int32  `json:"open"`
+// 	Bet          int32  `json:"bet"`
+// 	Code         string `json:"code"`
+// 	Name         string `json:"name"`
+// 	Password     string `json:"password"`
+// 	MaxSize      int32  `json:"max_size"`
+// 	MockCodeCard int32  `json:"mock_code_card"`
+// 	Bots         int32  `json:"bots,omitempty"`
+// }
 
 type MatchState struct {
 	Random       *rand.Rand
-	Label        *MatchLabel
+	Label        *pb.Match
 	MinPresences int
 
 	// Currently connected users, or reserved spaces.
@@ -61,7 +61,7 @@ type MatchState struct {
 	TurnOfBots      []*bot.BotPresence
 }
 
-func NewMathState(label *MatchLabel) MatchState {
+func NewMathState(label *pb.Match) MatchState {
 	m := MatchState{
 		Random:              rand.New(rand.NewSource(time.Now().UnixNano())),
 		Label:               label,
@@ -74,8 +74,8 @@ func NewMathState(label *MatchLabel) MatchState {
 		Bots:                make([]*bot.BotPresence, 0),
 	}
 	// Automatically add bot players
-	if label.Bots > 0 {
-		m.Bots = append(m.Bots, bot.NewBotPresences(int(label.Bots))...)
+	if label.GetNumBot() > 0 {
+		m.Bots = append(m.Bots, bot.NewBotPresences(int(label.GetNumBot()))...)
 	}
 	for _, bot := range m.Bots {
 		m.Presences.Put(bot.GetUserId(), bot)

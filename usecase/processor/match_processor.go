@@ -172,6 +172,7 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 
 func (m *processor) CombineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
 	logger.Info("User %s request combineCard", message.GetUserId())
+	m.removeShowCard(logger, s, message)
 	msg := pb.UpdateGameState{
 		State: pb.GameState_GameStatePlay,
 		ArrangeCard: &pb.ArrangeCard{
@@ -180,12 +181,11 @@ func (m *processor) CombineCard(logger runtime.Logger, dispatcher runtime.MatchD
 		},
 	}
 	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
-	m.removeShowCard(logger, s, message)
 }
 
 func (m *processor) ShowCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
 	logger.Info("User %s request showCard", message.GetUserId())
-
+	m.saveCard(logger, s, message)
 	msg := pb.UpdateGameState{
 		State: pb.GameState_GameStatePlay,
 		ArrangeCard: &pb.ArrangeCard{
@@ -194,7 +194,6 @@ func (m *processor) ShowCard(logger runtime.Logger, dispatcher runtime.MatchDisp
 		},
 	}
 	m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_CARD_STATE), &msg, nil, nil, true)
-	m.saveCard(logger, s, message)
 }
 
 func (m *processor) DeclareCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData) {
@@ -318,8 +317,8 @@ func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.Nak
 		}
 		percentFee := percentFreeGame
 
-		fee := int64(uf.ScoreResult.NumHandWin) * int64(s.Label.Bet) / 100 * int64(percentFee)
-		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.Bet)
+		fee := int64(uf.ScoreResult.NumHandWin) * int64(s.Label.MarkUnit) / 100 * int64(percentFee)
+		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.MarkUnit)
 		if (balance.AmountChipAdd) > 0 {
 			// win
 			balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
@@ -417,7 +416,7 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 	}
 
 	msg := &pb.UpdateTable{
-		Bet:            int64(s.Label.Bet),
+		Bet:            int64(s.Label.MarkUnit),
 		JoinPlayers:    pjoins,
 		LeavePlayers:   pleaves,
 		Players:        players,
@@ -559,7 +558,7 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context,
 		// playing_players.ReadWallet(ctx, nk, logger)
 
 		msg := &pb.UpdateTable{
-			Bet:            int64(s.Label.Bet),
+			Bet:            int64(s.Label.MarkUnit),
 			Players:        players,
 			PlayingPlayers: playing_players,
 			JpTreasure:     s.GetJackpotTreasure(),
@@ -609,10 +608,10 @@ func (m *processor) emitNkEvent(ctx context.Context, eventNk define.NakEvent, nk
 		Timestamp: timestamppb.Now(),
 		Properties: map[string]string{
 			"user_id":        userId,
-			"game_code":      s.Label.Code,
+			"game_code":      s.Label.Name,
 			"end_match_unix": strconv.FormatInt(time.Now().Unix(), 10),
 			"match_id":       matchId,
-			"mcb":            strconv.FormatInt(int64(s.Label.Bet), 10),
+			"mcb":            strconv.FormatInt(int64(s.Label.MarkUnit), 10),
 		},
 	})
 }
@@ -665,7 +664,7 @@ func (m *processor) handlerJackpotProcess(
 	myPrecense := s.GetPresence(updateFinish.Jackpot.UserId).(entity.MyPrecense)
 	// JACKPOT PUSOY
 	// Công thức tính tiền max khi JP: JP = MCB x 100 x hệ số Vip
-	bet := s.Label.Bet
+	bet := s.Label.MarkUnit
 	vipLv := entity.MaxInt64(myPrecense.VipLevel, 1)
 	maxJP := int64(bet) * 100 * vipLv
 	maxJP = entity.MinInt64(maxJP, jackpotTreasure.Chips)
@@ -715,9 +714,11 @@ func (m *processor) report(
 	report := lib.NewReportGame(ctx)
 	report.AddMatch(&pb.MatchData{
 		GameId:   0,
-		GameCode: s.Label.Code,
-		Mcb:      int64(s.Label.Bet),
+		GameCode: s.Label.Name,
+		Mcb:      int64(s.Label.MarkUnit),
 		ChipFee:  totalFee,
+		TableId:  s.Label.TableId,
+		MatchId:  s.Label.MatchId,
 	})
 	for _, b := range balanceResult.Updates {
 		report.AddPlayerData(&pb.PlayerData{
@@ -730,9 +731,9 @@ func (m *processor) report(
 	if err != nil || status > 300 {
 		if err != nil {
 			logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
-				report.ReportEndpoint(), s.Label.Code, string(data), status, err.Error())
+				report.ReportEndpoint(), s.Label.Name, string(data), status, err.Error())
 		} else {
-			logger.Info("Report game (%s) operatio -> %s successful", s.Label.Code)
+			logger.Info("Report game (%s) operatio -> %s successful", s.Label.Name)
 		}
 	}
 }

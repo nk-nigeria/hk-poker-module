@@ -11,7 +11,6 @@ import (
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api"
 	_ "golang.org/x/crypto/bcrypt"
@@ -27,17 +26,10 @@ const (
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	initStart := time.Now()
 
-	marshaler := &protojson.MarshalOptions{
-		UseEnumNumbers:  true,
-		EmitUnpopulated: true,
-	}
-	unmarshaler := &protojson.UnmarshalOptions{
-		DiscardUnknown: false,
-	}
-	message_queue.InitNatsService(logger, constant.NastEndpoint, marshaler)
+	message_queue.InitNatsService(logger, constant.NastEndpoint, entity.DefaultMarshaler)
 	mockcodegame.InitMapMockCodeListCard()
 	if err := initializer.RegisterMatch(entity.ModuleName, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
-		return api.NewMatchHandler(marshaler, unmarshaler), nil
+		return api.NewMatchHandler(entity.DefaultMarshaler, entity.DefaulUnmarshaler), nil
 	}); err != nil {
 		return err
 	}
