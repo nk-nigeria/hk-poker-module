@@ -93,6 +93,41 @@ func (p *processor) ProcessGame(ctx context.Context,
 		case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
 			logger.Info("User %s interact with card", message.GetUserId())
 			s.ResetUserNotInteract(message.GetUserId())
+			if s.LastMoveCardUnix[message.GetUserId()] == 0 {
+				msg := pb.UpdateGameState{
+					State: pb.GameState_GameStatePlay,
+					ArrangeCard: &pb.ArrangeCard{
+						Presence:  message.GetUserId(),
+						CardEvent: pb.CardEvent_MOVE,
+					},
+				}
+				p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_USER_INFO), &msg, nil, nil, true)
+			}
+			s.LastMoveCardUnix[message.GetUserId()] = time.Now().Unix()
+		}
+	}
+	// check and send interact card delay
+	{
+		userMoveCard := make([]string, 0)
+		for _, presence := range s.GetPlayingPresences() {
+			lastMoveCard, exist := s.LastMoveCardUnix[presence.GetUserId()]
+			if !exist {
+				continue
+			}
+			if lastMoveCard > 0 && time.Now().Unix()-lastMoveCard >= 10 {
+				userMoveCard = append(userMoveCard, presence.GetUserId())
+				s.LastMoveCardUnix[presence.GetUserId()] = -1
+			}
+		}
+		if len(userMoveCard) > 0 {
+			msg := pb.UpdateGameState{
+				State: pb.GameState_GameStatePlay,
+				ArrangeCard: &pb.ArrangeCard{
+					Presence:  strings.Join(userMoveCard, ","),
+					CardEvent: pb.CardEvent_MOVE,
+				},
+			}
+			p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_USER_INFO), &msg, nil, nil, true)
 		}
 	}
 }

@@ -54,11 +54,12 @@ type MatchState struct {
 	GameState          pb.GameState
 	// save balance result in state reward
 	// using for send noti to presence join in state reward
-	balanceResult   *pb.BalanceResult
-	jackpotTreasure *pb.Jackpot
-	messages        []runtime.MatchData
-	Bots            []*bot.BotPresence
-	TurnOfBots      []*bot.BotPresence
+	balanceResult    *pb.BalanceResult
+	jackpotTreasure  *pb.Jackpot
+	messages         []runtime.MatchData
+	Bots             []*bot.BotPresence
+	TurnOfBots       []*bot.BotPresence
+	LastMoveCardUnix map[string]int64
 }
 
 func NewMathState(label *pb.Match) MatchState {
@@ -72,6 +73,7 @@ func NewMathState(label *pb.Match) MatchState {
 		PresencesNoInteract: make(map[string]int, 0),
 		balanceResult:       nil,
 		Bots:                make([]*bot.BotPresence, 0),
+		LastMoveCardUnix:    map[string]int64{},
 	}
 	// Automatically add bot players
 	if label.GetNumBot() > 0 {
@@ -86,6 +88,7 @@ func NewMathState(label *pb.Match) MatchState {
 func (s *MatchState) Init() {
 	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
+	s.LastMoveCardUnix = make(map[string]int64)
 	for idx, v := range s.Bots {
 		v.InitTurn(TickRate*9, 1, func() {
 			x := s.Bots[idx]
