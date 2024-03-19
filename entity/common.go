@@ -10,7 +10,7 @@ import (
 
 var DefaultMarshaler = &protojson.MarshalOptions{
 	UseEnumNumbers:  true,
-	EmitUnpopulated: false,
+	EmitUnpopulated: true,
 }
 var DefaulUnmarshaler = &protojson.UnmarshalOptions{
 	DiscardUnknown: false,
