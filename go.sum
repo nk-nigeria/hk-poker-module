@@ -6,8 +6,8 @@ github.com/bits-and-blooms/bitset v1.5.0 h1:NpE8frKRLGHIcEzkR+gZhiioW1+WbYV6fKwD
 github.com/bits-and-blooms/bitset v1.5.0/go.mod h1:gIdJ4wp64HaoK2YrL1Q5/N7Y16edYb8uY+O0FJTyyDA=
 github.com/bwmarrin/snowflake v0.3.0 h1:xm67bEhkKh6ij1790JB83OujPR5CzNe8QuQqAgISZN0=
 github.com/bwmarrin/snowflake v0.3.0/go.mod h1:NdZxfVWX+oR6y2K0o6qAYv6gIOP9rjG0/E9WsDpxqwE=
-github.com/ciaolink-game-platform/cgp-common v0.0.0-20240318160701-54bac68d7b3d h1:aVsN9dCBZy3VnF796q3Rv5Fiapl8NX/a/HkCB8VHDrI=
-github.com/ciaolink-game-platform/cgp-common v0.0.0-20240318160701-54bac68d7b3d/go.mod h1:oeyyErMYJbu+1J9t/z7ZzmRHdw/n+Do+iJ33EZR5rh8=
+github.com/ciaolink-game-platform/cgp-common v0.0.0-20240331084422-c04d0cb84f6e h1:NVbh0ncGlogUy1xzS7jwGdO3h2jIrBlsAmifAJnD5T0=
+github.com/ciaolink-game-platform/cgp-common v0.0.0-20240331084422-c04d0cb84f6e/go.mod h1:oeyyErMYJbu+1J9t/z7ZzmRHdw/n+Do+iJ33EZR5rh8=
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"context"
+	"database/sql"
 	"math/rand"
 	"time"
 
@@ -119,9 +120,9 @@ func (s *MatchState) GetJackpotTreasure() *pb.Jackpot {
 	return s.jackpotTreasure
 }
 
-func (s *MatchState) AddPresence(ctx context.Context, nk runtime.NakamaModule, presences []runtime.Presence) {
+func (s *MatchState) AddPresence(ctx context.Context, db *sql.DB, presences []runtime.Presence) {
 	for _, presence := range presences {
-		m := NewMyPrecense(ctx, nk, presence)
+		m := NewMyPrecense(ctx, db, presence)
 		s.Presences.Put(presence.GetUserId(), m)
 		s.ResetUserNotInteract(presence.GetUserId())
 	}
@@ -378,10 +379,17 @@ func (s *MatchState) Messages() []runtime.MatchData {
 	return msgs
 }
 
-// func (s *MatchState) AutoSortCard(cards []*pb.Card) []*pb.Card {
-// 	// 0:2
-// 	// 3:8
-// 	// 8:14
-// 	ml := NewBinListCards(NewListCard(cards)).ToList()
-// 	return nil
-// }
+//	func (s *MatchState) AutoSortCard(cards []*pb.Card) []*pb.Card {
+//		// 0:2
+//		// 3:8
+//		// 8:14
+//		ml := NewBinListCards(NewListCard(cards)).ToList()
+//		return nil
+//	}
+func (s *MatchState) UpdateLabel() {
+	s.Label.Size = int32(s.GetPresenceSize())
+	s.Label.Players = make([]string, 0)
+	for _, precense := range s.GetPresences() {
+		s.Label.Players = append(s.Label.Players, precense.GetUsername())
+	}
+}

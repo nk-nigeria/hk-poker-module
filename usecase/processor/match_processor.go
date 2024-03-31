@@ -486,6 +486,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 	s *entity.MatchState,
 	presences []runtime.Presence,
 ) {
+	defer s.UpdateLabel()
 	logger.Info("process presences join %v", presences)
 	// update new presence
 	newJoins := make([]runtime.Presence, 0)
@@ -502,7 +503,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 		}
 	}
 
-	s.AddPresence(ctx, nk, newJoins)
+	s.AddPresence(ctx, db, newJoins)
 	s.JoinsInProgress -= len(newJoins)
 	// update match profile user
 	for _, presence := range newJoins {
@@ -552,6 +553,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 }
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	defer s.UpdateLabel()
 	logger.Info("process presences leave %v", presences)
 	s.RemovePresence(presences...)
 	var listUserId []string
@@ -565,6 +567,7 @@ func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Lo
 }
 
 func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	defer s.UpdateLabel()
 	logger.Info("process presences leave pending %v", presences)
 	for _, presence := range presences {
 		_, found := s.PlayingPresences.Get(presence.GetUserId())

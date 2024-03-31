@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/bits-and-blooms/bitset v1.5.0
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/ciaolink-game-platform/cgp-common v0.0.0-20240318160701-54bac68d7b3d
+	github.com/ciaolink-game-platform/cgp-common v0.0.0-20240331084422-c04d0cb84f6e
 	github.com/emirpasic/gods v1.18.1
 	github.com/heroiclabs/nakama-common v1.30.0
 	github.com/jackc/pgtype v1.14.0
