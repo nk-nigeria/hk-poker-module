@@ -32,5 +32,7 @@ func NewMyPrecense(ctx context.Context, db *sql.DB, precense runtime.Presence) M
 	m.AvatarId = p.AvatarId
 	m.Chips = p.AccountChip
 	m.VipLevel = p.VipLevel
+	m.Sid = p.UserSid
+
 	return m
 }
