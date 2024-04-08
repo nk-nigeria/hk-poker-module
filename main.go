@@ -8,6 +8,7 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
+	"github.com/ciaolink-game-platform/cgp-common/bot"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -25,7 +26,7 @@ const (
 // noinspection GoUnusedExportedFunction
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	initStart := time.Now()
-
+	bot.LoadBotsInfo(ctx, nk, db)
 	message_queue.InitNatsService(logger, constant.NastEndpoint, entity.DefaultMarshaler)
 	mockcodegame.InitMapMockCodeListCard()
 	if err := initializer.RegisterMatch(entity.ModuleName, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
