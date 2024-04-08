@@ -2,6 +2,7 @@ package entity
 
 import (
 	"context"
+	"database/sql"
 	"math/rand"
 	"time"
 
@@ -54,11 +55,12 @@ type MatchState struct {
 	GameState          pb.GameState
 	// save balance result in state reward
 	// using for send noti to presence join in state reward
-	balanceResult   *pb.BalanceResult
-	jackpotTreasure *pb.Jackpot
-	messages        []runtime.MatchData
-	Bots            []*bot.BotPresence
-	TurnOfBots      []*bot.BotPresence
+	balanceResult    *pb.BalanceResult
+	jackpotTreasure  *pb.Jackpot
+	messages         []runtime.MatchData
+	Bots             []*bot.BotPresence
+	TurnOfBots       []*bot.BotPresence
+	LastMoveCardUnix map[string]int64
 }
 
 func NewMathState(label *pb.Match) MatchState {
@@ -72,6 +74,7 @@ func NewMathState(label *pb.Match) MatchState {
 		PresencesNoInteract: make(map[string]int, 0),
 		balanceResult:       nil,
 		Bots:                make([]*bot.BotPresence, 0),
+		LastMoveCardUnix:    map[string]int64{},
 	}
 	// Automatically add bot players
 	if label.GetNumBot() > 0 {
@@ -86,6 +89,7 @@ func NewMathState(label *pb.Match) MatchState {
 func (s *MatchState) Init() {
 	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
+	s.LastMoveCardUnix = make(map[string]int64)
 	for idx, v := range s.Bots {
 		v.InitTurn(TickRate*9, 1, func() {
 			x := s.Bots[idx]
@@ -116,9 +120,9 @@ func (s *MatchState) GetJackpotTreasure() *pb.Jackpot {
 	return s.jackpotTreasure
 }
 
-func (s *MatchState) AddPresence(ctx context.Context, nk runtime.NakamaModule, presences []runtime.Presence) {
+func (s *MatchState) AddPresence(ctx context.Context, db *sql.DB, presences []runtime.Presence) {
 	for _, presence := range presences {
-		m := NewMyPrecense(ctx, nk, presence)
+		m := NewMyPrecense(ctx, db, presence)
 		s.Presences.Put(presence.GetUserId(), m)
 		s.ResetUserNotInteract(presence.GetUserId())
 	}
@@ -375,10 +379,17 @@ func (s *MatchState) Messages() []runtime.MatchData {
 	return msgs
 }
 
-// func (s *MatchState) AutoSortCard(cards []*pb.Card) []*pb.Card {
-// 	// 0:2
-// 	// 3:8
-// 	// 8:14
-// 	ml := NewBinListCards(NewListCard(cards)).ToList()
-// 	return nil
-// }
+//	func (s *MatchState) AutoSortCard(cards []*pb.Card) []*pb.Card {
+//		// 0:2
+//		// 3:8
+//		// 8:14
+//		ml := NewBinListCards(NewListCard(cards)).ToList()
+//		return nil
+//	}
+func (s *MatchState) UpdateLabel() {
+	s.Label.Size = int32(s.GetPresenceSize())
+	s.Label.Players = make([]string, 0)
+	for _, precense := range s.GetPresences() {
+		s.Label.Players = append(s.Label.Players, precense.GetUsername())
+	}
+}

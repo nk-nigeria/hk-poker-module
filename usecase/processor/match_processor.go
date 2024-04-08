@@ -93,6 +93,41 @@ func (p *processor) ProcessGame(ctx context.Context,
 		case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
 			logger.Info("User %s interact with card", message.GetUserId())
 			s.ResetUserNotInteract(message.GetUserId())
+			if s.LastMoveCardUnix[message.GetUserId()] == 0 {
+				msg := pb.UpdateGameState{
+					State: pb.GameState_GameStatePlay,
+					ArrangeCard: &pb.ArrangeCard{
+						Presence:  message.GetUserId(),
+						CardEvent: pb.CardEvent_MOVE,
+					},
+				}
+				p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_USER_INFO), &msg, nil, nil, true)
+			}
+			s.LastMoveCardUnix[message.GetUserId()] = time.Now().Unix()
+		}
+	}
+	// check and send interact card delay
+	{
+		userMoveCard := make([]string, 0)
+		for _, presence := range s.GetPlayingPresences() {
+			lastMoveCard, exist := s.LastMoveCardUnix[presence.GetUserId()]
+			if !exist {
+				continue
+			}
+			if lastMoveCard > 0 && time.Now().Unix()-lastMoveCard >= 10 {
+				userMoveCard = append(userMoveCard, presence.GetUserId())
+				s.LastMoveCardUnix[presence.GetUserId()] = -1
+			}
+		}
+		if len(userMoveCard) > 0 {
+			msg := pb.UpdateGameState{
+				State: pb.GameState_GameStatePlay,
+				ArrangeCard: &pb.ArrangeCard{
+					Presence:  strings.Join(userMoveCard, ","),
+					CardEvent: pb.CardEvent_MOVE,
+				},
+			}
+			p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_USER_INFO), &msg, nil, nil, true)
 		}
 	}
 }
@@ -451,6 +486,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 	s *entity.MatchState,
 	presences []runtime.Presence,
 ) {
+	defer s.UpdateLabel()
 	logger.Info("process presences join %v", presences)
 	// update new presence
 	newJoins := make([]runtime.Presence, 0)
@@ -467,7 +503,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 		}
 	}
 
-	s.AddPresence(ctx, nk, newJoins)
+	s.AddPresence(ctx, db, newJoins)
 	s.JoinsInProgress -= len(newJoins)
 	// update match profile user
 	for _, presence := range newJoins {
@@ -517,6 +553,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 }
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	defer s.UpdateLabel()
 	logger.Info("process presences leave %v", presences)
 	s.RemovePresence(presences...)
 	var listUserId []string
@@ -530,6 +567,7 @@ func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Lo
 }
 
 func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
+	defer s.UpdateLabel()
 	logger.Info("process presences leave pending %v", presences)
 	for _, presence := range presences {
 		_, found := s.PlayingPresences.Get(presence.GetUserId())
