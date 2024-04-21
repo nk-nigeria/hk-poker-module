@@ -20,12 +20,13 @@ func NewPlayer(presence runtime.Presence) *pb.Player {
 		p.AvatarId = m.AvatarId
 		p.VipLevel = m.VipLevel
 		p.Wallet = strconv.FormatInt(m.Chips, 10)
+	}
+	if m, ok := presence.(*bot.BotPresence); ok {
+		account := &m.Account
+		profile := ParseProfile(account)
+		// p.VipLevel profile.VipLevel
+		p.Wallet = strconv.FormatInt(profile.AccountChip, 10)
 		p.Sid = m.Sid
-	} else {
-		m, ok := presence.(*bot.BotPresence)
-		if ok {
-			p.Sid = m.GetAccount().Sid
-		}
 	}
 	return &p
 }
