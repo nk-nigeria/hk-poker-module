@@ -335,7 +335,7 @@ func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.Nak
 	mapUserWallet := make(map[string]entity.Wallet)
 	for _, w := range wallets {
 		v := w
-		mapUserWallet[w.UserId] = v
+		mapUserWallet[v.UserId] = v
 	}
 
 	balanceResult := pb.BalanceResult{}
