@@ -13,6 +13,7 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
+	"github.com/ciaolink-game-platform/cgp-common/bot"
 	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -27,6 +28,7 @@ type processor struct {
 	engine      engine.UseCase
 	marshaler   *protojson.MarshalOptions
 	unmarshaler *protojson.UnmarshalOptions
+	emitBot     bool
 }
 
 func NewMatchProcessor(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions, engine engine.UseCase) UseCase {
@@ -38,7 +40,24 @@ func NewMatchProcessor(marshaler *protojson.MarshalOptions, unmarshaler *protojs
 }
 
 // Call when client request or timeout
-func (m *processor) ProcessNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
+func (m *processor) ProcessNewGame(ctx context.Context,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	logger runtime.Logger,
+	dispatcher runtime.MatchDispatcher,
+	s *entity.MatchState) {
+	if !m.emitBot {
+		m.emitBot = true
+		precenses := make([]runtime.Presence, 0)
+		for _, presence := range s.GetPresences() {
+			if bot.IsBot(presence.GetUserId()) {
+				precenses = append(precenses, presence)
+			}
+		}
+		if len(precenses) > 0 {
+			m.ProcessPresencesJoin(ctx, logger, nk, db, dispatcher, s, precenses)
+		}
+	}
 	// clean up game state
 	m.engine.NewGame(s)
 
@@ -334,7 +353,8 @@ func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.Nak
 	}
 	mapUserWallet := make(map[string]entity.Wallet)
 	for _, w := range wallets {
-		mapUserWallet[w.UserId] = w
+		v := w
+		mapUserWallet[v.UserId] = v
 	}
 
 	balanceResult := pb.BalanceResult{}
