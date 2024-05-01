@@ -10,7 +10,7 @@ import (
 )
 
 type UseCase interface {
-	ProcessNewGame(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
+	ProcessNewGame(ctx context.Context, nk runtime.NakamaModule, db *sql.DB, logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
 	ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState)
 	CombineCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)
 	ShowCard(logger runtime.Logger, dispatcher runtime.MatchDispatcher, s *entity.MatchState, message runtime.MatchData)

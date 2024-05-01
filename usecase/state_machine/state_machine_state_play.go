@@ -40,7 +40,11 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	state.SetupMatchPresence()
 
 	// New game here
-	procPkg.GetProcessor().ProcessNewGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
+	procPkg.GetProcessor().ProcessNewGame(procPkg.GetContext(),
+		procPkg.GetNK(),
+		procPkg.GetDb(),
+		procPkg.GetLogger(),
+		procPkg.GetDispatcher(), state)
 
 	return nil
 }
