@@ -495,7 +495,7 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 	}
 	msg.JpTreasure = s.GetJackpotTreasure()
 	msg.RemainTime = int64(s.GetRemainCountDown())
-	msg.GameState = s.GameState
+	msg.GameState = s.Label.GameState
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
 
@@ -550,7 +550,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 		}
 	}
 	// send update wallet for new user join
-	switch s.GameState {
+	switch s.Label.GameState {
 	case pb.GameState_GameStateReward:
 		{
 			balanceResult := s.GetBalanceResult()

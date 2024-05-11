@@ -52,7 +52,7 @@ type MatchState struct {
 
 	CountDownReachTime time.Time
 	LastCountDown      int
-	GameState          pb.GameState
+	// GameState          pb.GameState
 	// save balance result in state reward
 	// using for send noti to presence join in state reward
 	balanceResult    *pb.BalanceResult
