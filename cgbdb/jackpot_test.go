@@ -77,7 +77,7 @@ func TestIncChipJackpot(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := IncChipJackpot(tt.args.ctx, tt.args.logger, tt.args.db, tt.args.game, tt.args.chips); (err != nil) != tt.wantErr {
+			if _, err := incChipJackpot(tt.args.ctx, tt.args.logger, tt.args.db, tt.args.game, tt.args.chips); (err != nil) != tt.wantErr {
 				t.Errorf("IncChipJackpot() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
