@@ -4,6 +4,12 @@ import pb "github.com/ciaolink-game-platform/cgp-common/proto"
 
 type ListCard []Card
 
+func (lc ListCard) Clone() ListCard {
+	newCard := make(ListCard, len(lc))
+	copy(newCard, lc)
+	return newCard
+}
+
 func NewListCard(list []*pb.Card) ListCard {
 	newList := ListCard{}
 	for _, card := range list {
