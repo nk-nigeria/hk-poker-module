@@ -3,6 +3,7 @@ package hand
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -241,4 +242,114 @@ func (h *Hand) GetPointResult() *pb.PointResult {
 
 func (h *Hand) IsJackpot() bool {
 	return h.jackpot
+}
+
+func (h *Hand) AutoSortForBest() {
+	cards := h.cards.Clone()
+	// srt from A->2
+	sort.Slice(cards, func(i, j int) bool {
+		return cards[i].GetRank() > cards[j].GetRank()
+	})
+	trackCardTake := make(map[entity.Card]struct{})
+	// tần suất lá bài xuất hiện
+	cardsCount := make(map[entity.Card]int)
+	for _, c := range cards {
+		cardsCount[c]++
+	}
+	// xóa lá bài chỉ xuất hiện 1 lần
+	for k, v := range cardsCount {
+		if v <= 1 {
+			delete(cardsCount, k)
+		}
+	}
+	// handCard := make([]entity.ListCard, 0)
+	// tìm lá bài cùng màu, đồng chất
+	fnFindStraighFlush := func() []entity.ListCard {
+		cardsSameColor := make(map[uint8]entity.ListCard)
+		for _, c := range cards {
+			if _, exist := trackCardTake[c]; exist {
+				continue
+			}
+			list := cardsSameColor[c.GetRank()]
+			list = append(list, c)
+			cardsSameColor[c.GetRank()] = list
+		}
+		// remove card same color <5 card
+		listStraighFlush := make([]entity.ListCard, 0)
+		for _, v := range cardsSameColor {
+			if len(v) < 5 {
+				continue
+			}
+			for i := 0; i < len(v)-5; i++ {
+				ml := v[:5+i]
+				binCards := entity.NewBinListCards(ml)
+				_, ok := CheckStraightFlush(binCards)
+				if !ok {
+					continue
+				}
+				listStraighFlush = append(listStraighFlush, ml)
+			}
+		}
+		return listStraighFlush
+	}
+
+	// Năm lá bài cùng màu, đồng chất nhưng không cùng một chuỗi số
+	fnFindFlush := func() []entity.ListCard {
+		cardsSameColor := make(map[uint8]entity.ListCard)
+		for _, c := range cards {
+			if _, exist := trackCardTake[c]; exist {
+				continue
+			}
+			list := cardsSameColor[c.GetRank()]
+			list = append(list, c)
+			cardsSameColor[c.GetRank()] = list
+		}
+		// remove card same color <5 card
+		listFlush := make([]entity.ListCard, 0)
+		for _, v := range cardsSameColor {
+			if len(v) < 5 {
+				continue
+			}
+			for i := 0; i < len(v)-5; i++ {
+				ml := v[:5+i]
+				binCards := entity.NewBinListCards(ml)
+				_, ok := CheckFlush(binCards)
+				if !ok {
+					continue
+				}
+				listFlush = append(listFlush, ml)
+			}
+		}
+		return listFlush
+	}
+
+	// ưu tiên lấy list card  ko chưa card có thể tạo đôi
+	fnSelect := func(ml []entity.ListCard) entity.ListCard {
+		if len(ml) == 0 {
+			return nil
+		}
+		if len(ml) == 1 {
+			return ml[0]
+		}
+		// ưu tiên straigh flush ko chứa card tạo đôi
+		listMin := ml[0]
+		minCount := 0
+		for _, ml := range ml {
+			count := 0
+			for _, c := range ml {
+				count += cardsCount[c]
+			}
+			if count == 0 {
+				return ml
+			}
+			if count < minCount {
+				listMin = ml
+				minCount = count
+			}
+		}
+		return listMin
+	}
+	_ = fnFindStraighFlush()
+	_ = fnSelect(nil)
+	_ = fnFindFlush()
 }
