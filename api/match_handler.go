@@ -89,7 +89,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		})
 	}
 	// fire idle event
-	procPkg := packager.NewProcessorPackage(&matchState, m.processor, logger, nil, nil, nil, nil, nil)
+	procPkg := packager.NewProcessorPackage(&matchState, m.processor, logger, nk, db, nil, nil, ctx)
 	m.machine.TriggerIdle(packager.GetContextWithProcessorPackager(procPkg))
 
 	return &matchState, entity.TickRate, string(labelJSON)
