@@ -169,10 +169,7 @@ func (c *Engine) AISortCard(cards []*pb.Card) []*pb.Card {
 	newCards := h.GetCards()
 	newCardsPb := make([]*pb.Card, 0)
 	for _, card := range newCards {
-		newCardsPb = append(newCardsPb, &pb.Card{
-			Rank: pb.CardRank(card.GetRank()),
-			Suit: pb.CardSuit(card.GetSuit()),
-		})
+		newCardsPb = append(newCardsPb, card.ToPB())
 	}
 	return newCardsPb
 }

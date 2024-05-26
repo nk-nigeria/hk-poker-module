@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	"github.com/stretchr/testify/assert"
-
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/stretchr/testify/assert"
 )
 
 func mockHand1() (*Hand, error) {
@@ -1783,4 +1782,37 @@ func TestCompareHighCardVsHighCardHigher(t *testing.T) {
 	assert.Equal(t, int(1), point)
 }
 
-//
+func TestHand_AutoOrgCards(t *testing.T) {
+	name := "TestHand_AutoOrgCards"
+	cards := &pb.ListCard{
+		Cards: make([]*pb.Card, 0),
+	}
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_2, Suit: 4})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_8, Suit: 1})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_6, Suit: 1})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_4, Suit: 1})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_10, Suit: 4})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_5, Suit: 3})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_A, Suit: 4})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_7, Suit: 1})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_J, Suit: 4})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_9, Suit: 4})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_4, Suit: 3})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_7, Suit: 3})
+	cards.Cards = append(cards.Cards, &pb.Card{Rank: pb.CardRank_RANK_6, Suit: 2})
+
+	t.Run(name, func(t *testing.T) {
+		h, err := NewHandFromPb(cards)
+		assert.NoError(t, err)
+		h.AutoOrgCards()
+		newCards := h.GetCards()
+		newCardsPb := make([]*pb.Card, 0)
+		for _, card := range newCards {
+			newCardsPb = append(newCardsPb, card.ToPB())
+		}
+		same := !entity.IsSameListCard(entity.NewListCard(cards.Cards), entity.NewListCard(newCardsPb))
+		assert.Equal(t, true, same)
+		// panic("")
+	})
+
+}
