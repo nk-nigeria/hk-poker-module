@@ -145,6 +145,29 @@ var mapSuits = map[pb.CardSuit]uint8{
 	pb.CardSuit_SUIT_HEARTS:   SuitHearts,
 }
 
+var mapRanksPb = map[uint8]pb.CardRank{
+	Rank2:  pb.CardRank_RANK_2,
+	Rank3:  pb.CardRank_RANK_3,
+	Rank4:  pb.CardRank_RANK_4,
+	Rank5:  pb.CardRank_RANK_5,
+	Rank6:  pb.CardRank_RANK_6,
+	Rank7:  pb.CardRank_RANK_7,
+	Rank8:  pb.CardRank_RANK_8,
+	Rank9:  pb.CardRank_RANK_9,
+	Rank10: pb.CardRank_RANK_10,
+	RankJ:  pb.CardRank_RANK_J,
+	RankQ:  pb.CardRank_RANK_Q,
+	RankK:  pb.CardRank_RANK_K,
+	RankA:  pb.CardRank_RANK_A,
+}
+
+var mapSuitsPb = map[uint8]pb.CardSuit{
+	SuitSpades:   pb.CardSuit_SUIT_SPADES,
+	SuitClubs:    pb.CardSuit_SUIT_CLUBS,
+	SuitDiamonds: pb.CardSuit_SUIT_DIAMONDS,
+	SuitHearts:   pb.CardSuit_SUIT_HEARTS,
+}
+
 var mapStringRanks = map[uint8]string{
 	Rank2:  "Rank2",
 	Rank3:  "Rank3",
@@ -196,4 +219,11 @@ func (c Card) GetRank() uint8 {
 
 func (c Card) GetSuit() uint8 {
 	return uint8(c & 0x0F)
+}
+
+func (c Card) ToPB() *pb.Card {
+	pbCard := &pb.Card{}
+	pbCard.Rank = mapRanksPb[c.GetRank()]
+	pbCard.Suit = mapSuitsPb[c.GetSuit()]
+	return pbCard
 }

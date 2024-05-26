@@ -8,7 +8,7 @@ import (
 
 type AutoHand struct {
 	cards         entity.ListCard
-	cardsCount    map[entity.Card]int
+	cardsCount    map[uint8]int
 	trackCardTake map[entity.Card]struct{}
 }
 
@@ -16,7 +16,7 @@ func NewAutoHand(cards entity.ListCard) *AutoHand {
 
 	h := &AutoHand{
 		cards:         cards.Clone(),
-		cardsCount:    make(map[entity.Card]int),
+		cardsCount:    make(map[uint8]int),
 		trackCardTake: make(map[entity.Card]struct{}),
 	}
 	sort.Slice(h.cards, func(i, j int) bool {
@@ -24,7 +24,7 @@ func NewAutoHand(cards entity.ListCard) *AutoHand {
 	})
 	// tần suất lá bài xuất hiện
 	for _, c := range h.cards {
-		h.cardsCount[c]++
+		h.cardsCount[c.GetRank()]++
 	}
 	// xóa lá bài chỉ xuất hiện 1 lần
 	for k, v := range h.cardsCount {
@@ -42,7 +42,8 @@ func (h *AutoHand) FindStraighFlush() []entity.ListCard {
 			continue
 		}
 		list := cardsSameColor[c.GetRank()]
-		list = append(list, c)
+		v := c
+		list = append(list, v)
 		cardsSameColor[c.GetRank()] = list
 	}
 	// remove card same color <5 card
@@ -71,7 +72,8 @@ func (h *AutoHand) FindStraigh() []entity.ListCard {
 			continue
 		}
 		list := cardsSameColor[c.GetRank()]
-		list = append(list, c)
+		v := c
+		list = append(list, v)
 		cardsSameColor[c.GetRank()] = list
 	}
 	// remove card same color <5 card
@@ -86,6 +88,12 @@ func (h *AutoHand) FindStraigh() []entity.ListCard {
 }
 func (h *AutoHand) FindFullHouse() []entity.ListCard {
 	threeKinds := h.FindThreeKind()
+	tempTrack := make(map[entity.Card]struct{})
+	for _, cards := range threeKinds {
+		for _, card := range cards {
+			tempTrack[card] = struct{}{}
+		}
+	}
 	for _, threeKind := range threeKinds {
 		doubles := h.FindPair()
 		for _, double := range doubles {
@@ -105,7 +113,8 @@ func (h *AutoHand) FindFlush() []entity.ListCard {
 			continue
 		}
 		list := cardsSameSuit[c.GetSuit()]
-		list = append(list, c)
+		v := c
+		list = append(list, v)
 		cardsSameSuit[c.GetSuit()] = list
 	}
 	// remove card same suit <5 card
@@ -134,7 +143,8 @@ func (h *AutoHand) FindFourKind() []entity.ListCard {
 			continue
 		}
 		list := cardsSameRank[c.GetRank()]
-		list = append(list, c)
+		v := c
+		list = append(list, v)
 		cardsSameRank[c.GetRank()] = list
 	}
 	list := make([]entity.ListCard, 0)
@@ -154,7 +164,8 @@ func (h *AutoHand) FindThreeKind() []entity.ListCard {
 			continue
 		}
 		list := cardsSameRank[c.GetRank()]
-		list = append(list, c)
+		v := c
+		list = append(list, v)
 		cardsSameRank[c.GetRank()] = list
 	}
 	list := make([]entity.ListCard, 0)
@@ -174,7 +185,8 @@ func (h *AutoHand) FindTwoPair() []entity.ListCard {
 			continue
 		}
 		list := cardsSameRank[c.GetRank()]
-		list = append(list, c)
+		v := c
+		list = append(list, v)
 		cardsSameRank[c.GetRank()] = list
 	}
 	list := make([]entity.ListCard, 0)
@@ -196,7 +208,8 @@ func (h *AutoHand) FindPair() []entity.ListCard {
 			continue
 		}
 		list := cardsSameRank[c.GetRank()]
-		list = append(list, c)
+		v := c
+		list = append(list, v)
 		cardsSameRank[c.GetRank()] = list
 	}
 	list := make([]entity.ListCard, 0)
@@ -209,15 +222,25 @@ func (h *AutoHand) FindPair() []entity.ListCard {
 	return list
 }
 
-func (h *AutoHand) FindHighCard() []entity.ListCard {
-	list := make(entity.ListCard, 0)
+func (h *AutoHand) FindHighCard() entity.ListCard {
+	cardsSameRank := make(map[uint8]entity.ListCard)
 	for _, c := range h.cards {
 		if _, exist := h.trackCardTake[c]; exist {
 			continue
 		}
-		list = append(list, c)
+		list := cardsSameRank[c.GetRank()]
+		v := c
+		list = append(list, v)
+		cardsSameRank[c.GetRank()] = list
 	}
-	return []entity.ListCard{list}
+	list := make(entity.ListCard, 0)
+	for _, v := range cardsSameRank {
+		if len(v) >= 2 {
+			continue
+		}
+		list = append(list, v...)
+	}
+	return list
 }
 func (h *AutoHand) TakeCard(cards ...entity.Card) {
 	for _, card := range cards {
@@ -237,8 +260,8 @@ func (h *AutoHand) PreferCardsNotTakeDouble(ml ...entity.ListCard) entity.ListCa
 	for _, list := range ml {
 		count := 0
 		for _, c := range list {
-			if h.cardsCount[c] >= 2 {
-				count += h.cardsCount[c]
+			if h.cardsCount[c.GetRank()] >= 2 {
+				count += h.cardsCount[c.GetRank()]
 			}
 		}
 		if count == 0 {

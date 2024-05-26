@@ -95,6 +95,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 		// sort cat of bot
 		listCard := s.Cards[bot.GetUserId()]
 		cards := p.engine.AISortCard(listCard.Cards)
+		logger.WithField("card before", listCard.Cards).WithField("after", cards).Info("AI Sort")
 		s.FakeDeclardCards(bot, cards)
 	}
 
@@ -284,8 +285,11 @@ func (m *processor) saveCard(logger runtime.Logger, s *entity.MatchState, messag
 	}
 	// check card send by client is the same card in server
 	if !entity.IsSameListCard(entity.NewListCard(cards.GetCards()), entity.NewListCard(cardsByClient.GetCards())) {
-		logger.Error("cards from client not the same card in server, invalid action",
-			len(cardsByClient.GetCards()), len(cards.GetCards()))
+		logger.WithField("userId", message.GetUserId()).
+			WithField("cards", cardsByClient.GetCards()).
+			WithField("cards server", cards.GetCards()).
+			Error("cards from client not the same card in server, invalid action",
+				len(cardsByClient.GetCards()), len(cards.GetCards()))
 		return
 	}
 

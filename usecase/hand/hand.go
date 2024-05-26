@@ -250,24 +250,96 @@ func (h *Hand) AutoOrgCards() {
 	}
 	// priority
 	// Straight Flush -> Four of a Kind -> Full House -> Flush -> Straight -> Three of a Kind -> Two Pair -> One Pair -> High Card
-	currentHand := h.backHand
+	// currentHand := h.backHand
 	autoHand := NewAutoHand(h.cards)
-	handIndex := 0
+	handIndex := kBackHand
 	handArr := []*ChildHand{h.backHand, h.middleHand, h.frontHand}
 	type FnF func() []entity.ListCard
 	fn := make([]FnF, 0)
-	listFn := append(fn, autoHand.FindStraighFlush, autoHand.FindFourKind, autoHand.FindFullHouse, autoHand.FindFlush, autoHand.FindStraigh, autoHand.FindThreeKind, autoHand.FindTwoPair, autoHand.FindPair, autoHand.FindHighCard, autoHand.FindHighCard, autoHand.FindHighCard)
+	listFn := append(fn, autoHand.FindStraighFlush, autoHand.FindFourKind, autoHand.FindFullHouse, autoHand.FindFlush, autoHand.FindStraigh)
 	for _, fn := range listFn {
-		if handIndex == 3 {
+		if handIndex < 0 {
 			break
 		}
 		list := autoHand.PreferCardsNotTakeDouble(fn()...)
 		if list != nil {
-			newHand := NewChildHand(list, kBackHand)
-			*currentHand = *newHand
-			handIndex++
-			currentHand = handArr[handIndex]
+			handArr[handIndex] = NewChildHand(list, handIndex)
+
 			autoHand.TakeCard(list...)
+			handIndex--
+			// if handIndex <= 0 {
+			// 	currentHand = handArr[handIndex]
+			// }
+		}
+	}
+	// three of a kind
+	if handIndex > 0 {
+		threeOfKind := autoHand.PreferCardsNotTakeDouble(autoHand.FindThreeKind()...)
+		if len(threeOfKind) > 0 {
+			highcard := autoHand.FindHighCard()
+			sort.Slice(h.cards, func(i, j int) bool {
+				return h.cards[i].GetRank() < h.cards[j].GetRank()
+			})
+			list := append(threeOfKind, highcard[:2]...)
+			handArr[handIndex] = NewChildHand(list, handIndex)
+			autoHand.TakeCard(list...)
+			handIndex--
+		}
+	}
+	// two pair
+	if handIndex > 0 {
+		twoPair := autoHand.FindTwoPair()
+		if len(twoPair) > 0 {
+			highcard := autoHand.FindHighCard()
+			sort.Slice(h.cards, func(i, j int) bool {
+				return h.cards[i].GetRank() < h.cards[j].GetRank()
+			})
+			list := make([]entity.Card, 0)
+			for _, pair := range twoPair {
+				list = append(list, pair...)
+			}
+			list = append(list, highcard[:1]...)
+			handArr[handIndex] = NewChildHand(list, handIndex)
+			autoHand.TakeCard(list...)
+			handIndex--
+		}
+	}
+	// pair
+	if handIndex >= 0 {
+		pair := autoHand.PreferCardsNotTakeDouble(autoHand.FindPair()...)
+		if len(pair) > 0 {
+			highcard := autoHand.FindHighCard()
+			sort.Slice(h.cards, func(i, j int) bool {
+				return h.cards[i].GetRank() < h.cards[j].GetRank()
+			})
+			numMoreCard := 3
+			if handIndex == kFronHand {
+				numMoreCard = 1
+			}
+			if len(highcard) >= numMoreCard {
+				list := append(pair, highcard[:numMoreCard]...)
+				handArr[handIndex] = NewChildHand(list, handIndex)
+				autoHand.TakeCard(list...)
+				handIndex--
+			}
+		}
+	}
+	highCards := autoHand.FindHighCard()
+	if len(highCards) > 0 {
+		if handIndex == kBackHand && len(highCards) >= 5 {
+			h.backHand = NewChildHand(highCards[:5], 2)
+			handIndex--
+		}
+
+		if handIndex == kMidHand && len(highCards) >= 5 {
+			h.middleHand = NewChildHand(highCards[:5], 1)
+			highCards = highCards[5:]
+			handIndex--
+		}
+		if handIndex == kFronHand && len(highCards) >= 3 {
+			h.frontHand = NewChildHand(highCards[:3], 0)
+			// highCards = highCards[3:]
+			// handIndex--
 		}
 	}
 	h.cards = make(entity.ListCard, 0)
