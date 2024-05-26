@@ -74,9 +74,9 @@ type Hand struct {
 	cards   entity.ListCard
 	ranking pb.HandRanking
 
-	frontHand  *ChildHand
-	middleHand *ChildHand
-	backHand   *ChildHand
+	frontHand  *ChildHand // :3
+	middleHand *ChildHand // 3:8
+	backHand   *ChildHand // 8:13
 
 	naturalPoint *HandPoint
 	pointType    pb.PointType
@@ -242,6 +242,38 @@ func (h *Hand) GetPointResult() *pb.PointResult {
 
 func (h *Hand) IsJackpot() bool {
 	return h.jackpot
+}
+
+func (h *Hand) AutoOrgCards() {
+	if h.IsNatural() {
+		return
+	}
+	// priority
+	// Straight Flush -> Four of a Kind -> Full House -> Flush -> Straight -> Three of a Kind -> Two Pair -> One Pair -> High Card
+	currentHand := h.backHand
+	autoHand := NewAutoHand(h.cards)
+	handIndex := 0
+	handArr := []*ChildHand{h.backHand, h.middleHand, h.frontHand}
+	type FnF func() []entity.ListCard
+	fn := make([]FnF, 0)
+	listFn := append(fn, autoHand.FindStraighFlush, autoHand.FindFourKind, autoHand.FindFullHouse, autoHand.FindFlush, autoHand.FindStraigh, autoHand.FindThreeKind, autoHand.FindTwoPair, autoHand.FindPair, autoHand.FindHighCard, autoHand.FindHighCard, autoHand.FindHighCard)
+	for _, fn := range listFn {
+		if handIndex == 3 {
+			break
+		}
+		list := autoHand.PreferCardsNotTakeDouble(fn()...)
+		if list != nil {
+			newHand := NewChildHand(list, kBackHand)
+			*currentHand = *newHand
+			handIndex++
+			currentHand = handArr[handIndex]
+			autoHand.TakeCard(list...)
+		}
+	}
+	h.cards = make(entity.ListCard, 0)
+	h.cards = append(h.cards, h.frontHand.Cards...)
+	h.cards = append(h.cards, h.middleHand.Cards...)
+	h.cards = append(h.cards, h.backHand.Cards...)
 }
 
 func (h *Hand) AutoSortForBest() {

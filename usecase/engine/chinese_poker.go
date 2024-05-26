@@ -2,8 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
@@ -162,48 +160,19 @@ func (c *Engine) Finish(s *entity.MatchState) *pb.UpdateFinish {
 }
 
 func (c *Engine) AISortCard(cards []*pb.Card) []*pb.Card {
-	// listCard := make(entity.ListCard, 0, len(cards))
-	// // deep copy card
-	// for _, c := range cards {
-	// 	listCard = append(listCard, entity.NewCardFromPb(c.GetRank(), c.GetSuit()))
-	// }
-	maxPoint := uint64(0)
-	cardsMaxPoint := cards
-	for i := 0; i < 1000; i++ {
-		h, err := hand.NewHandFromPb(&pb.ListCard{Cards: cards})
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-		h.CalculatePoint()
-		_, natural := hand.CheckNaturalCards(h)
-		if natural {
-			break
-		}
-
-		if hand.IsMisSets(h) {
-			r := rand.New(rand.NewSource(time.Now().UnixNano()))
-			r.Shuffle(len(cards), func(i, j int) {
-				cards[i], cards[j] = cards[j], cards[i]
-			})
-			continue
-		}
-
-		totalPoint := uint64(0)
-		result := h.GetPointResult()
-		totalPoint = result.Front.Point + result.Middle.Point + result.Back.Point
-		totalPoint += result.Front.Lpoint + result.Middle.Lpoint + result.Back.Lpoint
-
-		if totalPoint > uint64(maxPoint) {
-			cardsMaxPoint = make([]*pb.Card, 0)
-			for _, c := range cards {
-				cardsMaxPoint = append(cardsMaxPoint, &pb.Card{
-					Rank:   c.Rank,
-					Suit:   c.Suit,
-					Status: c.Status,
-				})
-			}
-		}
+	h, err := hand.NewHandFromPb(&pb.ListCard{Cards: cards})
+	if err != nil {
+		fmt.Println(err)
+		return cards
 	}
-	return cardsMaxPoint
+	h.AutoOrgCards()
+	newCards := h.GetCards()
+	newCardsPb := make([]*pb.Card, 0)
+	for _, card := range newCards {
+		newCardsPb = append(newCardsPb, &pb.Card{
+			Rank: pb.CardRank(card.GetRank()),
+			Suit: pb.CardSuit(card.GetSuit()),
+		})
+	}
+	return newCardsPb
 }
