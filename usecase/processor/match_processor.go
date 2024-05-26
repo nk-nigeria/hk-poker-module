@@ -123,6 +123,8 @@ func (p *processor) ProcessGame(ctx context.Context,
 				p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_USER_INFO), &msg, nil, nil, true)
 			}
 			s.LastMoveCardUnix[message.GetUserId()] = time.Now().Unix()
+		case pb.OpCodeRequest_OPCODE_REQUEST_SYNC_TABLE:
+			p.handlerSyncData(ctx, logger, nk, db, dispatcher, s, s.GetPresence(message.GetUserId()))
 		}
 	}
 	// check and send interact card delay
@@ -495,7 +497,7 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 	}
 	msg.JpTreasure = s.GetJackpotTreasure()
 	msg.RemainTime = int64(s.GetRemainCountDown())
-	msg.GameState = s.GameState
+	msg.GameState = s.Label.GameState
 	m.NotifyUpdateTable(s, logger, dispatcher, msg)
 }
 
@@ -529,47 +531,32 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 	for _, presence := range newJoins {
 		m.emitNkEvent(ctx, define.NakEventMatchJoin, nk, presence.GetUserId(), s)
 	}
-	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
-	//send cards for player rejoin
-	for _, presence := range presences {
-		if _, found := s.PlayingPresences.Get(presence.GetUserId()); found {
-			card := s.Cards[presence.GetUserId()]
-			if card == nil {
-				continue
-			}
-			buf, _ := m.marshaler.Marshal(&pb.UpdateDeal{
-				PresenceCard: &pb.PresenceCards{
-					Presence: presence.GetUserId(),
-					Cards:    card.Cards,
-				},
-			})
+	// m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+	// //send cards for player rejoin
+	// for _, presence := range presences {
+	// 	if _, found := s.PlayingPresences.Get(presence.GetUserId()); found {
+	// 		card := s.Cards[presence.GetUserId()]
+	// 		if card == nil {
+	// 			continue
+	// 		}
+	// 		buf, _ := m.marshaler.Marshal(&pb.UpdateDeal{
+	// 			PresenceCard: &pb.PresenceCards{
+	// 				Presence: presence.GetUserId(),
+	// 				Cards:    card.Cards,
+	// 			},
+	// 		})
 
-			_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_DEAL),
-				buf, []runtime.Presence{presence.(runtime.Presence)}, nil, true)
+	// 		_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_DEAL),
+	// 			buf, []runtime.Presence{presence.(runtime.Presence)}, nil, true)
 
-		}
-	}
-	// send update wallet for new user join
-	switch s.GameState {
-	case pb.GameState_GameStateReward:
-		{
-			balanceResult := s.GetBalanceResult()
-			if balanceResult != nil {
-				m.broadcastMessage(
-					logger,
-					dispatcher,
-					int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET),
-					balanceResult,
-					presences,
-					nil,
-					true,
-				)
-			}
-		}
-	default:
-		{
-		}
-	}
+	// 	}
+	// }
+	// // send update wallet for new user join
+	// if s.Label.GameState == pb.GameState_GameStateReward {
+	// 	if balanceResult := s.GetBalanceResult(); balanceResult != nil {
+	// 		m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET), balanceResult, presences, nil, true)
+	// 	}
+	// }
 }
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
@@ -792,6 +779,41 @@ func (m *processor) report(
 				report.ReportEndpoint(), s.Label.Name, string(data), status, err.Error())
 		} else {
 			logger.Info("Report game (%s) operatio -> %s successful", s.Label.Name)
+		}
+	}
+}
+
+func (m *processor) handlerSyncData(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule, db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	s *entity.MatchState,
+	presences ...runtime.Presence,
+) {
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+	//send cards for player rejoin
+	for _, presence := range presences {
+		if _, found := s.PlayingPresences.Get(presence.GetUserId()); found {
+			card := s.Cards[presence.GetUserId()]
+			if card == nil {
+				continue
+			}
+			buf, _ := m.marshaler.Marshal(&pb.UpdateDeal{
+				PresenceCard: &pb.PresenceCards{
+					Presence: presence.GetUserId(),
+					Cards:    card.Cards,
+				},
+			})
+
+			_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_DEAL),
+				buf, []runtime.Presence{presence.(runtime.Presence)}, nil, true)
+
+		}
+	}
+	// send update wallet for new user join
+	if s.Label.GameState == pb.GameState_GameStateReward {
+		if balanceResult := s.GetBalanceResult(); balanceResult != nil {
+			m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET), balanceResult, presences, nil, true)
 		}
 	}
 }

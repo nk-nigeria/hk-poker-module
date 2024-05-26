@@ -4,19 +4,20 @@ import (
 	"context"
 	"time"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/qmuntal/stateless"
 )
 
 const (
-	stateInit      = "Init" // Only for initialize
-	stateIdle      = "Idle"
-	stateMatching  = "Matching"
-	statePreparing = "Preparing"
-	statePlay      = "Play"
-	stateReward    = "Reward"
-	stateFinish    = "Finish"
+	StateInitType      = pb.GameState_GameStateUnknown // Only for initialize
+	StateIdleType      = pb.GameState_GameStateIdle
+	StateMatchingType  = pb.GameState_GameStateMatching
+	StatePreparingType = pb.GameState_GameStatePreparing
+	StatePlayType      = pb.GameState_GameStatePlay
+	StateRewardType    = pb.GameState_GameStateReward
+	StateFinishType    = pb.GameState_GameStateFinish
 )
 
 const (
@@ -50,85 +51,66 @@ func (m *Machine) configure() {
 	fireCtx := m.state.FireCtx
 
 	// init state
-	m.state.Configure(stateInit).
-		Permit(triggerIdle, stateIdle)
+	m.state.Configure(StateInitType).
+		Permit(triggerIdle, StateIdleType)
 	m.state.OnTransitioning(func(ctx context.Context, t stateless.Transition) {
 		procPkg := packager.GetProcessorPackagerFromContext(ctx)
 		state := procPkg.GetState()
-		switch t.Destination {
-		case stateInit:
-			state.GameState = pb.GameState_GameStateIdle
-		case stateIdle:
-			{
-				state.GameState = pb.GameState_GameStateIdle
-			}
-		case stateMatching:
-			{
-				state.GameState = pb.GameState_GameStateMatching
-			}
-		case statePreparing:
-			{
-				state.GameState = pb.GameState_GameStatePreparing
-			}
-		case statePlay:
-			{
-				state.GameState = pb.GameState_GameStatePlay
-			}
-		case stateReward:
-			{
-				state.GameState = pb.GameState_GameStateReward
-			}
-		case stateFinish:
-			{
-				state.GameState = pb.GameState_GameStateFinish
-			}
+		var ok bool
+		state.Label.GameState, ok = t.Destination.(pb.GameState)
+		if !ok {
+			return
+		}
+		if procPkg.GetDispatcher() != nil {
+			labelJson, _ := entity.DefaultMarshaler.Marshal(state.Label)
+			procPkg.GetDispatcher().MatchLabelUpdate(string(labelJson))
 		}
 	})
 
 	// idle state: wait for first user, check no one and timeout
 	idle := NewIdleState(fireCtx)
-	m.state.Configure(stateIdle).
+	m.state.Configure(StateIdleType).
 		OnEntry(idle.Enter).
 		OnExit(idle.Exit).
 		InternalTransition(triggerProcess, idle.Process).
-		Permit(triggerMatching, stateMatching).
-		Permit(triggerNoOne, stateFinish)
+		Permit(triggerMatching, StateMatchingType).
+		Permit(triggerNoOne, StateFinishType)
 
 	// matching state: wait for reach min user => switch to preparing, check no one and timeout => switch to idle
 	matching := NewStateMatching(fireCtx)
-	m.state.Configure(stateMatching).
+	m.state.Configure(StateMatchingType).
 		OnEntry(matching.Enter).
 		OnExit(matching.Exit).
 		InternalTransition(triggerProcess, matching.Process).
-		Permit(triggerPresenceReady, statePreparing).
-		Permit(triggerIdle, stateIdle)
+		Permit(triggerPresenceReady, StatePreparingType).
+		Permit(triggerIdle, StateIdleType)
 
 	// preparing state: wait for reach min user in duration => switch to play, check not enough and timeout => switch to idle
 	preparing := NewStatePreparing(fireCtx)
-	m.state.Configure(statePreparing).
+	m.state.Configure(StatePreparingType).
 		OnEntry(preparing.Enter).
 		OnExit(preparing.Exit).
 		InternalTransition(triggerProcess, preparing.Process).
-		Permit(triggerPreparingDone, statePlay).
-		Permit(triggerPreparingFailed, stateMatching)
+		Permit(triggerPreparingDone, StatePlayType).
+		Permit(triggerPreparingFailed, StateMatchingType)
 
 	// playing state: wait for all user show card or timeout =>
 	//  switch to reward
 	play := NewStatePlay(fireCtx)
-	m.state.Configure(statePlay).
+	m.state.Configure(StatePlayType).
 		OnEntry(play.Enter).
 		OnExit(play.Exit).
 		InternalTransition(triggerProcess, play.Process).
-		Permit(triggerPlayTimeout, stateReward).
-		Permit(triggerPlayCombineAll, stateReward)
+		Permit(triggerPlayTimeout, StateRewardType).
+		Permit(triggerPlayCombineAll, StateRewardType)
 
 	// reward state: wait for reward timeout => switch to
 	reward := NewStateReward(fireCtx)
-	m.state.Configure(stateReward).
+	m.state.Configure(StateRewardType).
 		OnEntry(reward.Enter).
 		OnExit(reward.Exit).
 		InternalTransition(triggerProcess, reward.Process).
-		Permit(triggerRewardTimeout, stateMatching)
+		Permit(triggerRewardTimeout, StateMatchingType)
 
 	m.state.ToGraph()
 }
@@ -143,15 +125,15 @@ func (m *Machine) MustState() stateless.State {
 
 func (m *Machine) GetPbState() pb.GameState {
 	switch m.state.MustState() {
-	case stateIdle:
+	case StateIdleType:
 		return pb.GameState_GameStateIdle
-	case stateMatching:
+	case StateMatchingType:
 		return pb.GameState_GameStateMatching
-	case statePreparing:
+	case StatePreparingType:
 		return pb.GameState_GameStatePreparing
-	case statePlay:
+	case StatePlayType:
 		return pb.GameState_GameStatePlay
-	case stateReward:
+	case StateRewardType:
 		return pb.GameState_GameStateReward
 	default:
 		return pb.GameState_GameStateUnknown
@@ -160,7 +142,7 @@ func (m *Machine) GetPbState() pb.GameState {
 
 func NewGameStateMachine() UseCase {
 	gs := &Machine{
-		state: stateless.NewStateMachine(stateInit),
+		state: stateless.NewStateMachine(StateInitType),
 	}
 
 	gs.configure()
@@ -169,11 +151,11 @@ func NewGameStateMachine() UseCase {
 }
 
 func (m *Machine) IsPlayingState() bool {
-	return m.MustState() == statePlay
+	return m.MustState() == StatePlayType
 }
 
 func (m *Machine) IsReward() bool {
-	return m.MustState() == stateReward
+	return m.MustState() == StateRewardType
 }
 
 func (m *Machine) Trigger(ctx context.Context, trigger stateless.Trigger, args ...interface{}) error {

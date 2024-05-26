@@ -2,12 +2,13 @@ package api
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
-	"testing"
-	"time"
 )
 
 func TestMatch(t *testing.T) {
@@ -35,7 +36,7 @@ func TestMatch(t *testing.T) {
 
 	logger := log.GetLogger()
 	dispatcher := mock.MockDispatcher{}
-	nk := mock.MockModule{}
+	nkMock := &mock.MockModule{}
 	s, _, _ := m.MatchInit(nil, logger, nil, nil, params)
 
 	ctx := context.TODO()
@@ -47,7 +48,7 @@ func TestMatch(t *testing.T) {
 		for i := 0; i < 2*120; i++ {
 			t.Logf("log %d", i)
 			time.Sleep(time.Millisecond * 500)
-			m.MatchLoop(ctx, logger, nil, nk, dispatcher, 0, s, nil)
+			m.MatchLoop(ctx, logger, nil, nkMock, dispatcher, 0, s, nil)
 		}
 
 		t.Logf("current state %v", m.GetState())
@@ -62,14 +63,14 @@ func TestMatch(t *testing.T) {
 			UserId: "user1",
 		}
 
-		m.MatchJoin(nil, logger, nil, nk, dispatcher, 0, s, presences)
+		m.MatchJoin(nil, logger, nil, nkMock, dispatcher, 0, s, presences)
 
 		time.Sleep(time.Second * 2)
 		presences = make([]runtime.Presence, 1)
 		presences[0] = &mock.MockPresence{
 			UserId: "user2",
 		}
-		m.MatchJoin(nil, logger, nil, nk, dispatcher, 0, s, presences)
+		m.MatchJoin(nil, logger, nil, nkMock, dispatcher, 0, s, presences)
 	}()
 
 	t.Logf("wait for finish")
