@@ -1,6 +1,8 @@
 package hand
 
 import (
+	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
@@ -1812,6 +1814,52 @@ func TestHand_AutoOrgCards(t *testing.T) {
 		}
 		same := !entity.IsSameListCard(entity.NewListCard(cards.Cards), entity.NewListCard(newCardsPb))
 		assert.Equal(t, true, same)
+		// panic("")
+	})
+}
+
+func TestHand_AutoOrgCards_2(t *testing.T) {
+	name := "TestHand_AutoOrgCards"
+
+	t.Run(name, func(t *testing.T) {
+		for i := 0; i < 100000; i++ {
+			deck := entity.NewDeck()
+			deck.Shuffle()
+			cards, err := deck.Deal(entity.MaxPresenceCard)
+			assert.NoError(t, err)
+			h, err := NewHandFromPb(cards)
+			assert.NoError(t, err)
+			autoHand := h.AutoOrgCards()
+			_ = autoHand
+			newCards := h.GetCards()
+			newCardsPb := make([]*pb.Card, 0)
+			for _, card := range newCards {
+				newCardsPb = append(newCardsPb, card.ToPB())
+			}
+			same := entity.IsSameListCard(entity.NewListCard(cards.Cards), entity.NewListCard(newCardsPb))
+			assert.Equal(t, true, same)
+			if !same {
+				c1 := entity.NewListCard(cards.Cards)
+				sort.Slice(c1, func(i, j int) bool {
+					return c1[i].GetRank() < c1[j].GetRank()
+				})
+				c2 := entity.NewListCard(newCardsPb)
+				c2Clone := c2.Clone()
+				_ = c2Clone
+				sort.Slice(c2, func(i, j int) bool {
+					return c2[i].GetRank() < c2[j].GetRank()
+				})
+				fmt.Printf("source: %v\r\n", c1)
+				fmt.Printf("target: %v\r\n", c2)
+				h2, err := NewHandFromPb(cards)
+				assert.NoError(t, err)
+				autoiHand2 := h2.AutoOrgCards()
+				_ = autoiHand2
+				cc1 := h2.GetCards()
+				_ = cc1
+				break
+			}
+		}
 		// panic("")
 	})
 
