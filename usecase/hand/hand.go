@@ -244,216 +244,146 @@ func (h *Hand) IsJackpot() bool {
 	return h.jackpot
 }
 
-func (h *Hand) AutoOrgCards() {
+func (h *Hand) AutoOrgCards() *autoHand {
 	if h.IsNatural() {
-		return
+		return nil
 	}
 	// priority
 	// Straight Flush -> Four of a Kind -> Full House -> Flush -> Straight -> Three of a Kind -> Two Pair -> One Pair -> High Card
 	// currentHand := h.backHand
 	autoHand := NewAutoHand(h.cards)
 	handIndex := kBackHand
-	handArr := []*ChildHand{h.backHand, h.middleHand, h.frontHand}
+	// handArr := []*ChildHand{h.backHand, h.middleHand, h.frontHand}
 	type FnF func() []entity.ListCard
-	fn := make([]FnF, 0)
-	listFn := append(fn, autoHand.FindStraighFlush, autoHand.FindFourKind, autoHand.FindFullHouse, autoHand.FindFlush, autoHand.FindStraigh)
-	for _, fn := range listFn {
-		if handIndex < 0 {
-			break
-		}
-		list := autoHand.PreferCardsNotTakeDouble(fn()...)
-		if list != nil {
-			handArr[handIndex] = NewChildHand(list, handIndex)
-
-			autoHand.TakeCard(list...)
-			handIndex--
-			// if handIndex <= 0 {
-			// 	currentHand = handArr[handIndex]
-			// }
-		}
-	}
-	// three of a kind
-	if handIndex > 0 {
-		threeOfKind := autoHand.PreferCardsNotTakeDouble(autoHand.FindThreeKind()...)
-		if len(threeOfKind) > 0 {
-			highcard := autoHand.FindHighCard()
-			sort.Slice(h.cards, func(i, j int) bool {
-				return h.cards[i].GetRank() < h.cards[j].GetRank()
-			})
-			list := append(threeOfKind, highcard[:2]...)
-			handArr[handIndex] = NewChildHand(list, handIndex)
-			autoHand.TakeCard(list...)
-			handIndex--
-		}
-	}
-	// two pair
-	if handIndex > 0 {
-		twoPair := autoHand.FindTwoPair()
-		if len(twoPair) > 0 {
-			highcard := autoHand.FindHighCard()
-			sort.Slice(h.cards, func(i, j int) bool {
-				return h.cards[i].GetRank() < h.cards[j].GetRank()
-			})
-			list := make([]entity.Card, 0)
-			for _, pair := range twoPair {
-				list = append(list, pair...)
+	listFn := make([]FnF, 0)
+	listFn = append(listFn, autoHand.FindStraighFlush, autoHand.FindFourKind, autoHand.FindFullHouse, autoHand.FindFlush, autoHand.FindStraigh)
+	for i := 0; i < 2; i++ {
+		for _, fn := range listFn {
+			if handIndex < 0 {
+				break
 			}
-			list = append(list, highcard[:1]...)
-			handArr[handIndex] = NewChildHand(list, handIndex)
-			autoHand.TakeCard(list...)
-			handIndex--
-		}
-	}
-	// pair
-	if handIndex >= 0 {
-		pair := autoHand.PreferCardsNotTakeDouble(autoHand.FindPair()...)
-		if len(pair) > 0 {
-			highcard := autoHand.FindHighCard()
-			sort.Slice(h.cards, func(i, j int) bool {
-				return h.cards[i].GetRank() < h.cards[j].GetRank()
-			})
-			numMoreCard := 3
-			if handIndex == kFronHand {
-				numMoreCard = 1
-			}
-			if len(highcard) >= numMoreCard {
-				list := append(pair, highcard[:numMoreCard]...)
-				handArr[handIndex] = NewChildHand(list, handIndex)
+			list := autoHand.PreferCardsNotTakeDouble(fn()...)
+			if list != nil {
+				// handArr[handIndex] = NewChildHand(list, handIndex)
+				if len(list) == 4 {
+					// highcard := autoHand.FindHighCard()
+					// sort.Slice(h.cards, func(i, j int) bool {
+					// 	return h.cards[i].GetRank() < h.cards[j].GetRank()
+					// })
+					highcard := autoHand.GetHighCardWithCond(1, list...)
+					list = append(list, highcard[:1]...)
+				}
+				h.setHand(list, handIndex)
 				autoHand.TakeCard(list...)
 				handIndex--
+				continue
+				// if handIndex <= 0 {
+				// 	currentHand = handArr[handIndex]
+				// }
 			}
 		}
 	}
-	highCards := autoHand.FindHighCard()
-	if len(highCards) > 0 {
-		if handIndex == kBackHand && len(highCards) >= 5 {
-			h.backHand = NewChildHand(highCards[:5], 2)
-			handIndex--
-		}
 
-		if handIndex == kMidHand && len(highCards) >= 5 {
-			h.middleHand = NewChildHand(highCards[:5], 1)
-			highCards = highCards[5:]
-			handIndex--
+	for i := 0; i < 3; i++ {
+		if handIndex < 0 {
+			break
+		} // three of a kind
+		if handIndex > 0 {
+			threeOfKind := autoHand.PreferCardsNotTakeDouble(autoHand.FindThreeKind()...)
+			if len(threeOfKind) > 0 {
+				list := make(entity.ListCard, 0)
+				list = append(list, threeOfKind...)
+				highcard := autoHand.GetHighCardWithCond(2, list...)
+				sort.Slice(h.cards, func(i, j int) bool {
+					return h.cards[i].GetRank() < h.cards[j].GetRank()
+				})
+				if len(highcard) < 2 {
+					panic(h.cards)
+				}
+				list = append(list, highcard[:2]...)
+				// handArr[handIndex] = NewChildHand(list, handIndex)
+				h.setHand(list, handIndex)
+				autoHand.TakeCard(list...)
+				handIndex--
+				continue
+			}
 		}
-		if handIndex == kFronHand && len(highCards) >= 3 {
-			h.frontHand = NewChildHand(highCards[:3], 0)
-			// highCards = highCards[3:]
-			// handIndex--
+		// two pair
+		if handIndex > 0 {
+			twoPair := autoHand.FindTwoPair()
+			if len(twoPair) > 0 {
+				list := make([]entity.Card, 0)
+				for _, pair := range twoPair {
+					list = append(list, pair...)
+				}
+				highcard := autoHand.GetHighCardWithCond(1, list...)
+				if len(highcard) < 1 {
+					panic(h.cards)
+				}
+				list = append(list, highcard[:1]...)
+				// handArr[handIndex] = NewChildHand(list, handIndex)
+				h.setHand(list, handIndex)
+				autoHand.TakeCard(list...)
+				handIndex--
+				continue
+			}
+		}
+		// pair
+		if handIndex >= 0 {
+			pair := autoHand.PreferCardsNotTakeDouble(autoHand.FindPair()...)
+			if len(pair) > 0 {
+				numMoreCard := 3
+				if handIndex == kFronHand {
+					numMoreCard = 1
+				}
+				list := make(entity.ListCard, 0)
+				list = append(list, pair...)
+				highcard := autoHand.GetHighCardWithCond(numMoreCard, list...)
+				if len(highcard) >= numMoreCard {
+					list = append(list, highcard[:numMoreCard]...)
+					// handArr[handIndex] = NewChildHand(list, handIndex)
+					h.setHand(list, handIndex)
+					autoHand.TakeCard(list...)
+					handIndex--
+					continue
+				}
+			}
 		}
 	}
+
+	if handIndex == kBackHand {
+		highCards := autoHand.GetHighCardWithCond(5)
+		h.backHand = NewChildHand(highCards[:5], 2)
+		autoHand.TakeCard(highCards[:5]...)
+		handIndex--
+	}
+	if handIndex == kMidHand {
+		highCards := autoHand.GetHighCardWithCond(5)
+		h.middleHand = NewChildHand(highCards[:5], 1)
+		autoHand.TakeCard(highCards[:5]...)
+		handIndex--
+	}
+	if handIndex == kFronHand {
+		highCards := autoHand.GetHighCardWithCond(3)
+		h.frontHand = NewChildHand(highCards[:3], 0)
+		autoHand.TakeCard(highCards[:3]...)
+		// handIndex--
+	}
+
 	h.cards = make(entity.ListCard, 0)
 	h.cards = append(h.cards, h.frontHand.Cards...)
 	h.cards = append(h.cards, h.middleHand.Cards...)
 	h.cards = append(h.cards, h.backHand.Cards...)
+	return autoHand
 }
 
-func (h *Hand) AutoSortForBest() {
-	cards := h.cards.Clone()
-	// srt from A->2
-	sort.Slice(cards, func(i, j int) bool {
-		return cards[i].GetRank() > cards[j].GetRank()
-	})
-	trackCardTake := make(map[entity.Card]struct{})
-	// tần suất lá bài xuất hiện
-	cardsCount := make(map[entity.Card]int)
-	for _, c := range cards {
-		cardsCount[c]++
+func (h *Hand) setHand(ml entity.ListCard, handType int) {
+	switch handType {
+	case kFronHand:
+		h.frontHand = NewChildHand(ml, handType)
+	case kMidHand:
+		h.middleHand = NewChildHand(ml, handType)
+	case kBackHand:
+		h.backHand = NewChildHand(ml, handType)
 	}
-	// xóa lá bài chỉ xuất hiện 1 lần
-	for k, v := range cardsCount {
-		if v <= 1 {
-			delete(cardsCount, k)
-		}
-	}
-	// handCard := make([]entity.ListCard, 0)
-	// tìm lá bài cùng màu, đồng chất
-	fnFindStraighFlush := func() []entity.ListCard {
-		cardsSameColor := make(map[uint8]entity.ListCard)
-		for _, c := range cards {
-			if _, exist := trackCardTake[c]; exist {
-				continue
-			}
-			list := cardsSameColor[c.GetRank()]
-			list = append(list, c)
-			cardsSameColor[c.GetRank()] = list
-		}
-		// remove card same color <5 card
-		listStraighFlush := make([]entity.ListCard, 0)
-		for _, v := range cardsSameColor {
-			if len(v) < 5 {
-				continue
-			}
-			for i := 0; i < len(v)-5; i++ {
-				ml := v[:5+i]
-				binCards := entity.NewBinListCards(ml)
-				_, ok := CheckStraightFlush(binCards)
-				if !ok {
-					continue
-				}
-				listStraighFlush = append(listStraighFlush, ml)
-			}
-		}
-		return listStraighFlush
-	}
-
-	// Năm lá bài cùng màu, đồng chất nhưng không cùng một chuỗi số
-	fnFindFlush := func() []entity.ListCard {
-		cardsSameColor := make(map[uint8]entity.ListCard)
-		for _, c := range cards {
-			if _, exist := trackCardTake[c]; exist {
-				continue
-			}
-			list := cardsSameColor[c.GetRank()]
-			list = append(list, c)
-			cardsSameColor[c.GetRank()] = list
-		}
-		// remove card same color <5 card
-		listFlush := make([]entity.ListCard, 0)
-		for _, v := range cardsSameColor {
-			if len(v) < 5 {
-				continue
-			}
-			for i := 0; i < len(v)-5; i++ {
-				ml := v[:5+i]
-				binCards := entity.NewBinListCards(ml)
-				_, ok := CheckFlush(binCards)
-				if !ok {
-					continue
-				}
-				listFlush = append(listFlush, ml)
-			}
-		}
-		return listFlush
-	}
-
-	// ưu tiên lấy list card  ko chưa card có thể tạo đôi
-	fnSelect := func(ml []entity.ListCard) entity.ListCard {
-		if len(ml) == 0 {
-			return nil
-		}
-		if len(ml) == 1 {
-			return ml[0]
-		}
-		// ưu tiên straigh flush ko chứa card tạo đôi
-		listMin := ml[0]
-		minCount := 0
-		for _, ml := range ml {
-			count := 0
-			for _, c := range ml {
-				count += cardsCount[c]
-			}
-			if count == 0 {
-				return ml
-			}
-			if count < minCount {
-				listMin = ml
-				minCount = count
-			}
-		}
-		return listMin
-	}
-	_ = fnFindStraighFlush()
-	_ = fnSelect(nil)
-	_ = fnFindFlush()
 }
