@@ -99,7 +99,8 @@ func (h *autoHand) FindFullHouse() []entity.ListCard {
 	// }
 	for _, threeKind := range threeKinds {
 		doubles := h.FindPair()
-		for _, double := range doubles {
+		for i := len(doubles) - 1; i >= 0; i-- {
+			double := doubles[i]
 			if double[0].GetRank() == threeKind[0].GetRank() {
 				continue
 			}
@@ -178,6 +179,9 @@ func (h *autoHand) FindThreeKind() []entity.ListCard {
 		}
 		list = append(list, v.Clone())
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i][0].GetRank() > list[j][0].GetRank()
+	})
 	return list
 }
 
@@ -198,9 +202,12 @@ func (h *autoHand) FindTwoPair() []entity.ListCard {
 			continue
 		}
 		list = append(list, v.Clone())
-		if len(list) == 2 {
-			return list
-		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i][0].GetRank() > list[j][0].GetRank()
+	})
+	if len(list) >= 2 {
+		return list
 	}
 	return nil
 }
@@ -222,6 +229,9 @@ func (h *autoHand) FindPair() []entity.ListCard {
 		}
 		list = append(list, v.Clone())
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i][0].GetRank() > list[j][0].GetRank()
+	})
 	return list
 }
 
@@ -244,6 +254,9 @@ func (h *autoHand) FindHighCard() entity.ListCard {
 		}
 		list = append(list, v...)
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].GetRank() > list[j].GetRank()
+	})
 	return list
 }
 func (h *autoHand) TakeCard(cards ...entity.Card) {
@@ -264,22 +277,22 @@ func (h *autoHand) PreferCardsNotTakeDouble(ml ...entity.ListCard) entity.ListCa
 	}
 	// ưu tiên straigh flush ko chứa card tạo đôi
 	listMin := ml[0]
-	// minCount := 0
-	// for _, list := range ml {
-	// 	count := 0
-	// 	for _, c := range list {
-	// 		if h.cardsCount[c.GetRank()] >= 2 {
-	// 			count += h.cardsCount[c.GetRank()]
-	// 		}
-	// 	}
-	// 	if count == 0 {
-	// 		return list
-	// 	}
-	// 	if count < minCount {
-	// 		listMin = list
-	// 		minCount = count
-	// 	}
-	// }
+	minCount := 0
+	for _, list := range ml {
+		count := 0
+		for _, c := range list {
+			if h.cardsCount[c.GetRank()] >= 2 {
+				count += h.cardsCount[c.GetRank()]
+			}
+		}
+		if count == 0 {
+			return list
+		}
+		if count < minCount {
+			listMin = list
+			minCount = count
+		}
+	}
 	return listMin
 }
 

@@ -1812,7 +1812,7 @@ func TestHand_AutoOrgCards(t *testing.T) {
 		for _, card := range newCards {
 			newCardsPb = append(newCardsPb, card.ToPB())
 		}
-		same := !entity.IsSameListCard(entity.NewListCard(cards.Cards), entity.NewListCard(newCardsPb))
+		same := entity.IsSameListCard(entity.NewListCard(cards.Cards), entity.NewListCard(newCardsPb))
 		assert.Equal(t, true, same)
 		// panic("")
 	})
