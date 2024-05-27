@@ -1,6 +1,8 @@
 package entity
 
-import pb "github.com/ciaolink-game-platform/cgp-common/proto"
+import (
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+)
 
 type ListCard []Card
 

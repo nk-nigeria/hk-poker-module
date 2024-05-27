@@ -289,16 +289,17 @@ func (h *Hand) AutoOrgCards() *autoHand {
 			break
 		} // three of a kind
 		if handIndex > 0 {
-			threeOfKind := autoHand.PreferCardsNotTakeDouble(autoHand.FindThreeKind()...)
+			threeOfKind := autoHand.FindThreeKind()
 			if len(threeOfKind) > 0 {
 				list := make(entity.ListCard, 0)
-				list = append(list, threeOfKind...)
+				list = append(list, threeOfKind[0]...)
 				highcard := autoHand.GetHighCardWithCond(2, list...)
 				sort.Slice(h.cards, func(i, j int) bool {
 					return h.cards[i].GetRank() < h.cards[j].GetRank()
 				})
 				if len(highcard) < 2 {
-					panic(h.cards)
+					// panic(h.cards)
+					return autoHand
 				}
 				list = append(list, highcard[:2]...)
 				// handArr[handIndex] = NewChildHand(list, handIndex)
@@ -311,14 +312,17 @@ func (h *Hand) AutoOrgCards() *autoHand {
 		// two pair
 		if handIndex > 0 {
 			twoPair := autoHand.FindTwoPair()
-			if len(twoPair) > 0 {
+			if len(twoPair) >= 2 {
 				list := make([]entity.Card, 0)
-				for _, pair := range twoPair {
-					list = append(list, pair...)
-				}
+				// for _, pair := range twoPair[:2] {
+				// 	list = append(list, pair...)
+				// }
+				list = append(list, twoPair[0]...)
+				list = append(list, twoPair[len(twoPair)-1]...)
 				highcard := autoHand.GetHighCardWithCond(1, list...)
 				if len(highcard) < 1 {
-					panic(h.cards)
+					// panic(h.cards)
+					return autoHand
 				}
 				list = append(list, highcard[:1]...)
 				// handArr[handIndex] = NewChildHand(list, handIndex)
