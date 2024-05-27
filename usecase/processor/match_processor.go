@@ -101,33 +101,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 
 	// append bot messages
 	messages = append(messages, s.Messages()...)
-	for _, message := range messages {
-		switch pb.OpCodeRequest(message.GetOpCode()) {
-		case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
-			p.CombineCard(logger, dispatcher, s, message)
-		case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
-			p.ShowCard(logger, dispatcher, s, message)
-		case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
-			p.DeclareCard(logger, dispatcher, s, message)
-			s.ResetUserNotInteract(message.GetUserId())
-		case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
-			logger.Info("User %s interact with card", message.GetUserId())
-			s.ResetUserNotInteract(message.GetUserId())
-			if s.LastMoveCardUnix[message.GetUserId()] == 0 {
-				msg := pb.UpdateGameState{
-					State: pb.GameState_GameStatePlay,
-					ArrangeCard: &pb.ArrangeCard{
-						Presence:  message.GetUserId(),
-						CardEvent: pb.CardEvent_MOVE,
-					},
-				}
-				p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_USER_INFO), &msg, nil, nil, true)
-			}
-			s.LastMoveCardUnix[message.GetUserId()] = time.Now().Unix()
-		case pb.OpCodeRequest_OPCODE_REQUEST_SYNC_TABLE:
-			p.handlerSyncData(ctx, logger, nk, db, dispatcher, s, s.GetPresence(message.GetUserId()))
-		}
-	}
+	p.ProcessMessageUser(ctx, logger, nk, db, dispatcher, messages, s)
 	// check and send interact card delay
 	{
 		userMoveCard := make([]string, 0)
@@ -153,7 +127,48 @@ func (p *processor) ProcessGame(ctx context.Context,
 		}
 	}
 }
-
+func (p *processor) ProcessMessageUser(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	messages []runtime.MatchData,
+	s *entity.MatchState,
+) {
+	for _, message := range messages {
+		if s.Label.GameState == pb.GameState_GameStatePlay {
+			switch pb.OpCodeRequest(message.GetOpCode()) {
+			case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
+				p.CombineCard(logger, dispatcher, s, message)
+			case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
+				p.ShowCard(logger, dispatcher, s, message)
+			case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
+				p.DeclareCard(logger, dispatcher, s, message)
+				s.ResetUserNotInteract(message.GetUserId())
+			case pb.OpCodeRequest_OPCODE_USER_INTERACT_CARDS:
+				logger.Info("User %s interact with card", message.GetUserId())
+				s.ResetUserNotInteract(message.GetUserId())
+				if s.LastMoveCardUnix[message.GetUserId()] == 0 {
+					msg := pb.UpdateGameState{
+						State: pb.GameState_GameStatePlay,
+						ArrangeCard: &pb.ArrangeCard{
+							Presence:  message.GetUserId(),
+							CardEvent: pb.CardEvent_MOVE,
+						},
+					}
+					p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_USER_INFO), &msg, nil, nil, true)
+				}
+				s.LastMoveCardUnix[message.GetUserId()] = time.Now().Unix()
+			case pb.OpCodeRequest_OPCODE_REQUEST_SYNC_TABLE:
+				p.handlerSyncData(ctx, logger, nk, db, dispatcher, s, s.GetPresence(message.GetUserId()))
+			}
+		} else if s.Label.GameState == lib.StatePreparing {
+			if message.GetOpCode() == int64(pb.OpCodeRequest_OPCODE_REQUEST_SYNC_TABLE) {
+				p.handlerSyncData(ctx, logger, nk, db, dispatcher, s, s.GetPresence(message.GetUserId()))
+			}
+		}
+	}
+}
 func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState) {
 	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
@@ -795,6 +810,9 @@ func (m *processor) handlerSyncData(ctx context.Context,
 	presences ...runtime.Presence,
 ) {
 	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+	if s.Label.GameState == lib.StatePreparing {
+		return
+	}
 	//send cards for player rejoin
 	for _, presence := range presences {
 		if _, found := s.PlayingPresences.Get(presence.GetUserId()); found {

@@ -72,6 +72,15 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	// 	s.Trigger(ctx, triggerPreparingFailed)
 	// 	return nil
 	// }
+	msgs := procPkg.GetMessages()
+	if len(msgs) > 0 {
+		procPkg.GetProcessor().ProcessMessageUser(procPkg.GetContext(),
+			procPkg.GetLogger(),
+			procPkg.GetNK(),
+			procPkg.GetDb(),
+			procPkg.GetDispatcher(),
+			msgs, state)
+	}
 	if remain := state.GetRemainCountDown(); remain >= 1 {
 		if state.IsNeedNotifyCountDown() {
 			procPkg.GetProcessor().NotifyUpdateGameState(
