@@ -9,6 +9,7 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
 	"github.com/ciaolink-game-platform/cgp-common/bot"
+	"github.com/ciaolink-game-platform/cgp-common/define"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -38,6 +39,7 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	if err := api.RegisterSessionEvents(db, nk, initializer); err != nil {
 		return err
 	}
+	entity.BotLoader = bot.NewBotLoader(db, define.GapleDomino.String(), 100000)
 
 	logger.Info("Plugin loaded in '%d' msec.", time.Now().Sub(initStart).Milliseconds())
 	return nil

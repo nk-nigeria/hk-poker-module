@@ -13,7 +13,6 @@ import (
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
-	"github.com/ciaolink-game-platform/cgp-common/bot"
 	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -50,7 +49,7 @@ func (m *processor) ProcessNewGame(ctx context.Context,
 		m.emitBot = true
 		precenses := make([]runtime.Presence, 0)
 		for _, presence := range s.GetPresences() {
-			if bot.IsBot(presence.GetUserId()) {
+			if entity.BotLoader.IsBot(presence.GetUserId()) {
 				precenses = append(precenses, presence)
 			}
 		}
@@ -662,6 +661,7 @@ func (m *processor) ProcessMatchTerminate(ctx context.Context,
 ) {
 	for _, presence := range s.GetPresences() {
 		m.emitNkEvent(ctx, define.NakEventMatchEnd, nk, presence.GetUserId(), s)
+		entity.BotLoader.FreeBot(presence.GetUserId())
 	}
 }
 

@@ -3,6 +3,7 @@ package entity
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
+
+var BotLoader = bot.NewBotLoader(nil, "", 0)
 
 const (
 	TickRate = 2
@@ -75,6 +78,11 @@ func NewMathState(label *pb.Match) MatchState {
 		balanceResult:       nil,
 		Bots:                make([]*bot.BotPresence, 0),
 		LastMoveCardUnix:    map[string]int64{},
+	}
+	if bots, err := BotLoader.GetFreeBot(int(label.GetNumBot())); err == nil {
+		m.Bots = bots
+	} else {
+		fmt.Printf("\r\n load bot failed %s  \r\n", err.Error())
 	}
 	// Automatically add bot players
 	if label.GetNumBot() > 0 {
@@ -238,7 +246,7 @@ func (s *MatchState) GetPlayingNotBotCount() int {
 	num := s.PlayingPresences.Size()
 	s.PlayingPresences.Each(func(key, value interface{}) {
 		p := value.(runtime.Presence)
-		if bot.IsBot(p.GetUserId()) {
+		if BotLoader.IsBot(p.GetUserId()) {
 			num--
 		}
 	})
@@ -249,7 +257,7 @@ func (s *MatchState) GetPrecenseNotBotCount() int {
 	num := s.Presences.Size()
 	s.Presences.Each(func(key, value interface{}) {
 		p := value.(runtime.Presence)
-		if bot.IsBot(p.GetUserId()) {
+		if BotLoader.IsBot(p.GetUserId()) {
 			num--
 		}
 	})
@@ -260,7 +268,7 @@ func (s *MatchState) GetPrecenseBotCount() int {
 	num := 0
 	s.Presences.Each(func(key, value interface{}) {
 		p := value.(runtime.Presence)
-		if bot.IsBot(p.GetUserId()) {
+		if BotLoader.IsBot(p.GetUserId()) {
 			num++
 		}
 	})
