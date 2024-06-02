@@ -17,14 +17,14 @@ var (
 	}
 
 	mapBonusPoint = map[pb.HandBonusType]int{
-		pb.HandBonusType_BonusThreeOfAKindFrontHand: 3,
-		pb.HandBonusType_BonusFullHouseMidHand:      2,
-		pb.HandBonusType_BonusFourOfAKindMidHand:    8,
-		pb.HandBonusType_BonusStraightFlushMidHand:  10,
-		pb.HandBonusType_BonusFourOfAKindBackHand:   4,
-		pb.HandBonusType_BonusStraightFlushBackHand: 5,
+		pb.HandBonusType_BonusFullHouseMidHand:      1, // Cù lũ chi 2
+		pb.HandBonusType_BonusThreeOfAKindFrontHand: 2, //Xám chi 1
+		pb.HandBonusType_BonusFourOfAKindBackHand:   3, //Tứ quý chi 3
+		pb.HandBonusType_BonusStraightFlushBackHand: 4, //TPS chi 3
+		pb.HandBonusType_BonusFourOfAKindMidHand:    6, // Tứ quý chi 2
+		pb.HandBonusType_BonusStraightFlushMidHand:  8, //TPS chi 2
 
-		pb.HandBonusType_MisSet: 6,
+		pb.HandBonusType_MisSet: 5,
 		pb.HandBonusType_Scoop:  3,
 		// pb.HandBonusType_ScoopAll: 6,
 	}
@@ -33,7 +33,7 @@ var (
 	// 	// pb.HandBonusType_Scoop:    2,
 	// 	pb.HandBonusType_ScoopAll: 4,
 	// }
-	ratioScoopApp = []int64{1, 1, 2, 3}
+	ratioScoopApp = []int64{1, 1, 1, 2}
 
 	baseHandPoint = 1
 )

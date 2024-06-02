@@ -2,7 +2,9 @@ package state_machine
 
 import (
 	"context"
+	"time"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -38,7 +40,7 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	)
 	// Setup match presences
 	state.SetupMatchPresence()
-
+	state.DelayForDeclare.Setup(1*time.Second, entity.TickRate)
 	// New game here
 	procPkg.GetProcessor().ProcessNewGame(procPkg.GetContext(),
 		procPkg.GetNK(),
@@ -58,17 +60,16 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	// log.GetLogger().Info("[play] processing")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-	if remain := state.GetRemainCountDown(); remain > 0 {
-		// log.GetLogger().Info("[play] not timeout %v, message %v", remain, procPkg.GetMessages())
+	remain := state.GetRemainCountDown()
+	if remain > 0 || !state.DelayForDeclare.Timeout() {
 		messages := procPkg.GetMessages()
 		processor := procPkg.GetProcessor()
 		logger := procPkg.GetLogger()
 		dispatcher := procPkg.GetDispatcher()
-		processor.ProcessGame(procPkg.GetContext(),
-			logger, procPkg.GetNK(), procPkg.GetDb(),
-			dispatcher, messages, state)
-
-		// log.GetLogger().Info("[play] not timeout show %v, play %v", state.GetShowCardCount(), state.GetPlayingCount())
+		processor.ProcessGame(procPkg.GetContext(), logger, procPkg.GetNK(), procPkg.GetDb(), dispatcher, messages, state)
+		if remain <= 0 {
+			state.DelayForDeclare.Loop()
+		}
 		// Check all user show card
 		if state.GetShowCardCount() >= state.GetPlayingCount() {
 			s.Trigger(ctx, triggerPlayCombineAll)

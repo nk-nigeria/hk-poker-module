@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ciaolink-game-platform/cgp-common/bot"
+	"github.com/ciaolink-game-platform/cgp-common/lib"
 
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
@@ -64,6 +65,7 @@ type MatchState struct {
 	Bots             []*bot.BotPresence
 	TurnOfBots       []*bot.BotPresence
 	LastMoveCardUnix map[string]int64
+	DelayForDeclare  *lib.TickCountDown
 }
 
 func NewMathState(label *pb.Match) MatchState {
@@ -78,6 +80,7 @@ func NewMathState(label *pb.Match) MatchState {
 		balanceResult:       nil,
 		Bots:                make([]*bot.BotPresence, 0),
 		LastMoveCardUnix:    map[string]int64{},
+		DelayForDeclare:     &lib.TickCountDown{},
 	}
 	if bots, err := BotLoader.GetFreeBot(int(label.GetNumBot())); err == nil {
 		m.Bots = bots
