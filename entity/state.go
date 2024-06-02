@@ -85,9 +85,9 @@ func NewMathState(label *pb.Match) MatchState {
 		fmt.Printf("\r\n load bot failed %s  \r\n", err.Error())
 	}
 	// Automatically add bot players
-	if label.GetNumBot() > 0 {
-		m.Bots = append(m.Bots, bot.NewBotPresences(int(label.GetNumBot()))...)
-	}
+	// if label.GetNumBot() > 0 {
+	// 	m.Bots = append(m.Bots, bot.NewBotPresences(int(label.GetNumBot()))...)
+	// }
 	for _, bot := range m.Bots {
 		m.Presences.Put(bot.GetUserId(), bot)
 	}
