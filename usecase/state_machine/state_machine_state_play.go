@@ -28,7 +28,15 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	state := procPkg.GetState()
 	// Setup count down
 	state.SetUpCountDown(playTimeout)
+	state.SetupMatchPresence()
+	procPkg.GetProcessor().ProcessNewGame(procPkg.GetContext(),
+		procPkg.GetNK(),
+		procPkg.GetDb(),
+		procPkg.GetLogger(),
+		procPkg.GetDispatcher(), state)
 
+	time.Sleep(time.Millisecond * 200)
+	state.DelayForDeclare.Setup(1*time.Second, entity.TickRate)
 	procPkg.GetProcessor().NotifyUpdateGameState(
 		state,
 		procPkg.GetLogger(),
@@ -38,16 +46,6 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 			CountDown: int64(state.GetRemainCountDown()),
 		},
 	)
-	// Setup match presences
-	state.SetupMatchPresence()
-	state.DelayForDeclare.Setup(1*time.Second, entity.TickRate)
-	// New game here
-	procPkg.GetProcessor().ProcessNewGame(procPkg.GetContext(),
-		procPkg.GetNK(),
-		procPkg.GetDb(),
-		procPkg.GetLogger(),
-		procPkg.GetDispatcher(), state)
-
 	return nil
 }
 
