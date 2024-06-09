@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api/presenter"
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -26,7 +27,7 @@ func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 	// setup idle timeout
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
-	state.SetUpCountDown(idleTimeout)
+	state.SetUpCountDown(entity.GameStateDuration[state.GetGameState()])
 
 	dispatcher := procPkg.GetDispatcher()
 	if dispatcher == nil {

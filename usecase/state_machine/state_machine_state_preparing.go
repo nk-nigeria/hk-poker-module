@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -26,7 +27,7 @@ func (s *StatePreparing) Enter(ctx context.Context, args ...interface{}) error {
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
 	log.GetLogger().Info("state %v", state.Presences)
-	state.SetUpCountDown(preparingTimeout)
+	state.SetUpCountDown(entity.GameStateDuration[state.GetGameState()])
 	// remove all user not interact 2 game continue
 	listPrecense := state.GetPresenceNotInteract(1)
 	if len(listPrecense) > 0 {

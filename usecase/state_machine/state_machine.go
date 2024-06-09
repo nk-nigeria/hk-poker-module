@@ -2,7 +2,6 @@ package state_machine
 
 import (
 	"context"
-	"time"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
@@ -32,15 +31,6 @@ const (
 	triggerNoOne           = "GameNoOne"
 
 	triggerProcess = "GameProcess"
-)
-
-const (
-	idleTimeout      = time.Second * 15
-	preparingTimeout = time.Second * 10
-	playTimeout      = time.Second * 40
-	//playTimeout      = time.Second * 10
-	rewardTimeout = time.Second * 30
-	//rewardTimeout    = time.Second * 10
 )
 
 type Machine struct {

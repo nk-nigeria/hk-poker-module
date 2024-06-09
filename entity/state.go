@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ciaolink-game-platform/cgp-common/bot"
+	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -16,6 +17,7 @@ import (
 )
 
 var BotLoader = bot.NewBotLoader(nil, "", 0)
+var GameStateDuration = lib.GetGameStateDurationByGameCode(define.ChinesePoker)
 
 const (
 	TickRate = 2
@@ -23,17 +25,6 @@ const (
 	MinPresences = 2
 	MaxPresences = 4
 )
-
-// type MatchLabel struct {
-// 	Open         int32  `json:"open"`
-// 	Bet          int32  `json:"bet"`
-// 	Code         string `json:"code"`
-// 	Name         string `json:"name"`
-// 	Password     string `json:"password"`
-// 	MaxSize      int32  `json:"max_size"`
-// 	MockCodeCard int32  `json:"mock_code_card"`
-// 	Bots         int32  `json:"bots,omitempty"`
-// }
 
 type MatchState struct {
 	Random       *rand.Rand
@@ -101,8 +92,9 @@ func (s *MatchState) Init() {
 	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
 	s.LastMoveCardUnix = make(map[string]int64)
+	playtimeout := GameStateDuration[pb.GameState_GameStatePlay].Seconds()
 	for idx, v := range s.Bots {
-		v.InitTurn(TickRate*9, 1, func() {
+		v.InitTurn(int(playtimeout-playtimeout/3)*TickRate, 1, func() {
 			x := s.Bots[idx]
 			s.BotTurn(x)
 		})
@@ -408,4 +400,8 @@ func (s *MatchState) UpdateLabel() {
 			UserSid:  player.Sid,
 		})
 	}
+}
+
+func (s *MatchState) GetGameState() pb.GameState {
+	return s.Label.GameState
 }
