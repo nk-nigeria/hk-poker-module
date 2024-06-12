@@ -474,7 +474,7 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	}
 }
 
-func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence) {
+func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, joins, leaves []runtime.Presence, loadWallet bool) {
 	players := entity.NewListPlayer(s.GetPresences())
 	// players.ReadProfile(ctx, nk, logger)
 
@@ -490,6 +490,19 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 		pleaves = entity.NewListPlayer(leaves)
 	}
 
+	walletByUser := make(map[string]lib.Wallet, 0)
+	{
+		userIds := make([]string, 0)
+		for _, precense := range s.GetPresences() {
+			userIds = append(userIds, precense.GetUserId())
+		}
+		wallets, _ := lib.ReadWalletUsers(ctx, nk, logger, userIds...)
+		for _, wallet := range wallets {
+			v := wallet
+			walletByUser[wallet.UserId] = v
+		}
+	}
+
 	msg := &pb.UpdateTable{
 		Bet:            int64(s.Label.MarkUnit),
 		JoinPlayers:    pjoins,
@@ -500,18 +513,51 @@ func (m *processor) notifyUpdateTable(ctx context.Context, logger runtime.Logger
 	{
 		// mapPlayging := make(map[string]bool, 0)
 
-		for _, p := range msg.Players {
+		for _, player := range msg.Players {
 			// check playing
 			mapUserPlaying := s.PlayingPresences
-			_, p.IsPlaying = mapUserPlaying.Get(p.GetId())
+			_, player.IsPlaying = mapUserPlaying.Get(player.GetId())
 			// status hold card
-			if _, exist := s.OrganizeCards[p.GetId()]; exist {
-				p.CardStatus = pb.CardStatus(pb.CardEvent_DECLARE)
+			if _, exist := s.OrganizeCards[player.GetId()]; exist {
+				player.CardStatus = pb.CardStatus(pb.CardEvent_DECLARE)
 				// p.Cards = s.OrganizeCards[p.GetId()]
 			} else {
-				p.CardStatus = pb.CardStatus(pb.CardEvent_COMBINE)
+				player.CardStatus = pb.CardStatus(pb.CardEvent_COMBINE)
 			}
+			w, exist := walletByUser[player.GetId()]
+			if !exist {
+				continue
+			}
+			player.Wallet = strconv.FormatInt(w.Chips, 10)
 		}
+	}
+	for _, player := range msg.LeavePlayers {
+		w, exist := walletByUser[player.GetId()]
+		if !exist {
+			continue
+		}
+		player.Wallet = strconv.FormatInt(w.Chips, 10)
+	}
+	for _, player := range msg.JoinPlayers {
+		w, exist := walletByUser[player.GetId()]
+		if !exist {
+			continue
+		}
+		player.Wallet = strconv.FormatInt(w.Chips, 10)
+	}
+	for _, player := range msg.Players {
+		w, exist := walletByUser[player.GetId()]
+		if !exist {
+			continue
+		}
+		player.Wallet = strconv.FormatInt(w.Chips, 10)
+	}
+	for _, player := range msg.PlayingPlayers {
+		w, exist := walletByUser[player.GetId()]
+		if !exist {
+			continue
+		}
+		player.Wallet = strconv.FormatInt(w.Chips, 10)
 	}
 	msg.JpTreasure = s.GetJackpotTreasure()
 	msg.RemainTime = int64(s.GetRemainCountDown())
@@ -575,6 +621,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 	// 		m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET), balanceResult, presences, nil, true)
 	// 	}
 	// }
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences, true)
 }
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
@@ -588,7 +635,7 @@ func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Lo
 	}
 	// cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
 
-	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences)
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences, false)
 }
 
 func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
@@ -600,7 +647,7 @@ func (m *processor) ProcessPresencesLeavePending(ctx context.Context, logger run
 			s.AddLeavePresence(presence)
 		} else {
 			s.RemovePresence(presence)
-			m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, []runtime.Presence{presence})
+			m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, []runtime.Presence{presence}, false)
 		}
 	}
 }
@@ -809,7 +856,7 @@ func (m *processor) handlerSyncData(ctx context.Context,
 	s *entity.MatchState,
 	presences ...runtime.Presence,
 ) {
-	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil)
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil, false)
 	if s.Label.GameState == lib.StatePreparing {
 		return
 	}
