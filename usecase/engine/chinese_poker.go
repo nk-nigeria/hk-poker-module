@@ -28,22 +28,22 @@ func (c *Engine) NewGame(s *entity.MatchState) error {
 func (c *Engine) Deal(s *entity.MatchState) error {
 	c.deck = entity.NewDeck()
 	c.deck.Shuffle()
-	if list, exist := mockcodegame.MapMockCodeListCard[int(s.Label.MockCodeCard)]; exist {
-		if len(list) >= s.PlayingPresences.Size() {
-			log.GetLogger().Debug("[MockCard] Match has label mock code card %d " +
-				"Init card for player from mock")
-			idx := 0
-			for _, k := range s.PlayingPresences.Keys() {
-				userId := k.(string)
-				s.Cards[userId] = list[idx]
-				idx++
-			}
-			return nil
-		} else {
-			log.GetLogger().Debug("[MockCard] Match has label mock code card %d "+
-				"but list card in mock smaller than size playert join game, fallback to normal", s.Label.MockCodeCard)
-		}
-	}
+	// if list, exist := mockcodegame.MapMockCodeListCard[int(s.Label.MockCodeCard)]; exist {
+	// 	if len(list) >= s.PlayingPresences.Size() {
+	// 		log.GetLogger().Debug("[MockCard] Match has label mock code card %d " +
+	// 			"Init card for player from mock")
+	// 		idx := 0
+	// 		for _, k := range s.PlayingPresences.Keys() {
+	// 			userId := k.(string)
+	// 			s.Cards[userId] = list[idx]
+	// 			idx++
+	// 		}
+	// 		return nil
+	// 	} else {
+	// 		log.GetLogger().Debug("[MockCard] Match has label mock code card %d "+
+	// 			"but list card in mock smaller than size playert join game, fallback to normal", s.Label.MockCodeCard)
+	// 	}
+	// }
 
 	hasMock := false
 	// loop on userid in match
@@ -51,10 +51,14 @@ func (c *Engine) Deal(s *entity.MatchState) error {
 		userId := k.(string)
 		if !hasMock && !entity.BotLoader.IsBot(userId) {
 			hasMock = true
-			cards := mockcodegame.MapMockCodeListCard[s.MatchCount%8+1]
-			s.Cards[userId] = &pb.ListCard{Cards: cards}
-			c.deck.TakenCard(cards...)
-			continue
+			id := s.MatchCount % 8
+			fmt.Printf("############# %d #############\n", id)
+			cards, exist := mockcodegame.MapMockCodeListCard[id]
+			if exist {
+				s.Cards[userId] = &pb.ListCard{Cards: cards}
+				c.deck.TakenCard(cards...)
+				continue
+			}
 		}
 		cards, err := c.deck.Deal(entity.MaxPresenceCard)
 		if err == nil {

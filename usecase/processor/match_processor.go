@@ -96,6 +96,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 		cards := p.engine.AISortCard(listCard.Cards)
 		logger.WithField("card before", listCard.Cards).WithField("after", cards).Info("AI Sort")
 		s.FakeDeclardCards(bot, cards)
+		s.ResetUserNotInteract(bot.GetUserId())
 	}
 
 	// append bot messages
