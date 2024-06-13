@@ -26,6 +26,7 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 	log.GetLogger().Info("[play] enter")
 	procPkg := packager.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetState()
+	state.MatchCount++
 	// Setup count down
 	state.SetUpCountDown(entity.GameStateDuration[state.GetGameState()])
 	state.SetupMatchPresence()

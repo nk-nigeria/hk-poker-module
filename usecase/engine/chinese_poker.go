@@ -45,9 +45,17 @@ func (c *Engine) Deal(s *entity.MatchState) error {
 		}
 	}
 
+	hasMock := false
 	// loop on userid in match
 	for _, k := range s.PlayingPresences.Keys() {
 		userId := k.(string)
+		if !hasMock && !entity.BotLoader.IsBot(userId) {
+			hasMock = true
+			cards := mockcodegame.MapMockCodeListCard[s.MatchCount%8+1]
+			s.Cards[userId] = &pb.ListCard{Cards: cards}
+			c.deck.TakenCard(cards...)
+			continue
+		}
 		cards, err := c.deck.Deal(entity.MaxPresenceCard)
 		if err == nil {
 			s.Cards[userId] = cards
@@ -55,7 +63,6 @@ func (c *Engine) Deal(s *entity.MatchState) error {
 			return err
 		}
 	}
-
 	return nil
 }
 

@@ -1,57 +1,79 @@
 package mockcodegame
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
-var MapMockCodeListCard = make(map[int][]*pb.ListCard)
+var MapMockCodeListCard = make(map[int][]*pb.Card)
 
 func InitMapMockCodeListCard() {
-	// path := "./mock_in_game"
-	// files, err := ioutil.ReadDir(path)
-	// if err != nil {
-	// 	return
-	// }
-	listUrlMock := []string{
-		"http://103.226.250.195:9000/chinese-poker-mock/1.json",
-		"http://103.226.250.195:9000/chinese-poker-mock/2.json",
-		"http://103.226.250.195:9000/chinese-poker-mock/3.json",
-		"http://103.226.250.195:9000/chinese-poker-mock/4.json",
+	// 1. Sảnh đồng chất AKQJ 10,9,8,7,6,5,4,3,2
+	{
+		cards := []*pb.Card{
+			{Rank: pb.CardRank_RANK_2, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_CLUBS},
+			{Rank: pb.CardRank_RANK_9, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_CLUBS},
+			{Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_CLUBS},
+		}
+		MapMockCodeListCard[1] = cards
 	}
-	for _, urlStr := range listUrlMock {
-		// if f.IsDir() {
-		// 	continue
-		// }
-		// nameFile := f.Name()
-		// if !strings.HasSuffix(nameFile, ".json") {
-		// 	continue
-		// }
-		// fileMock := filepath.Join(path, f.Name())
-		// data, err := os.ReadFile(fileMock) // just pass the file name
-		data, err := downloadFile(urlStr)
-		if err != nil {
-			return
+	// 2. Sảnh rồng AKQJ rô -10 tépm 98765 cơ 432 tép
+	{
+		cards := []*pb.Card{
+			{Rank: pb.CardRank_RANK_2, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_SPADES},
+			{Rank: pb.CardRank_RANK_9, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_HEARTS},
+			{Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_DIAMONDS},
 		}
-		cpMock := &entity.ChinsePokerMock{}
-		err = json.Unmarshal(data, &cpMock)
-		if err != nil {
-			return
-		}
-		for _, u := range cpMock.Input.Cards {
-			listCard := &pb.ListCard{
-				Cards: entity.ParseListCard(u.Card),
-			}
-			MapMockCodeListCard[cpMock.Id] = append(MapMockCodeListCard[cpMock.Id], listCard)
-		}
+		MapMockCodeListCard[1] = cards
 	}
-	fmt.Printf("init map mock code card, len = %d \r\n", len(MapMockCodeListCard))
+	// 3. 6 đôi:  5 rô 6 tép 6 rô 7 tép 7 rô, 3 cơ 3 rô 4 cơ 4 rô 5 tép, 2 cơ 2 rô, 8 rô
+	{
+		cards := []*pb.Card{
+			{Rank: pb.CardRank_RANK_2, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_2, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_DIAMONDS},
+			{Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_SPADES},
+			{Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_DIAMONDS},
+		}
+		MapMockCodeListCard[1] = cards
+	}
+	// 4. 3 sảnh AKQJ10 tépm 87654 bích 4 rô 3 tép 2 tép
+	{
+		cards := []*pb.Card{
+			{Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_HEARTS},
+			{Rank: pb.CardRank_RANK_9, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_CLUBS},
+			{Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_SPADES},
+		}
+		MapMockCodeListCard[1] = cards
+	}
+	// 5. Same color 2,3,5,6,8 cơ 78910 rô QKJ cơ
+	{
+		cards := []*pb.Card{
+			{Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_HEARTS},
+			{Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_9, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_DIAMONDS},
+			{Rank: pb.CardRank_RANK_2, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_HEARTS},
+		}
+		MapMockCodeListCard[1] = cards
+	}
+	// 6. 3 bộ đồng chất A,4,6,8,10 tép, 3,5,7,9,j rô JQK tép
+	{
+		cards := []*pb.Card{
+			{Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_SPADES},
+			{Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_9, Suit: pb.CardSuit_SUIT_DIAMONDS}, {Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_DIAMONDS},
+			{Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_SPADES},
+		}
+		MapMockCodeListCard[1] = cards
+	}
+	// 7. Thùng phá sảnh 5,4,3,2,A bích | 5,4,3,2 cơ A tép, 7,8,9 bích
+	{
+		cards := []*pb.Card{
+			{Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_CLUBS}, {Rank: pb.CardRank_RANK_9, Suit: pb.CardSuit_SUIT_CLUBS},
+			{Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_SPADES},
+			{Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_2, Suit: pb.CardSuit_SUIT_SPADES},
+		}
+		MapMockCodeListCard[1] = cards
+	}
 }
 
 func downloadFile(url string) ([]byte, error) {

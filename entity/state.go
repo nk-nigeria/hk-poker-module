@@ -57,6 +57,7 @@ type MatchState struct {
 	TurnOfBots       []*bot.BotPresence
 	LastMoveCardUnix map[string]int64
 	DelayForDeclare  *lib.TickCountDown
+	MatchCount       int
 }
 
 func NewMathState(label *pb.Match) MatchState {

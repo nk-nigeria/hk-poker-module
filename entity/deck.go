@@ -10,8 +10,9 @@ import (
 const MaxCard = 52
 
 type Deck struct {
-	Cards *pb.ListCard
-	Dealt int
+	Cards      *pb.ListCard
+	Dealt      int
+	CardsTaken map[Card]struct{}
 }
 
 func NewDeck() *Deck {
@@ -56,6 +57,7 @@ func NewDeck() *Deck {
 
 // Shuffle the deck
 func (d *Deck) Shuffle() {
+	d.CardsTaken = make(map[Card]struct{})
 	for i := 1; i < len(d.Cards.Cards); i++ {
 		// Create a random int up to the number of Cards
 		r := rand.Intn(i + 1)
@@ -76,11 +78,23 @@ func (d *Deck) Deal(n int) (*pb.ListCard, error) {
 
 	var cards pb.ListCard
 	for i := 0; i < n; i++ {
+		card := d.Cards.Cards[d.Dealt]
+		c := NewCard(uint8(card.Rank), uint8(card.Suit))
+		if _, taken := d.CardsTaken[c]; taken {
+			continue
+		}
 		cards.Cards = append(cards.Cards, d.Cards.Cards[d.Dealt])
 		d.Dealt++
 	}
 
 	return &cards, nil
+}
+
+func (d *Deck) TakenCard(cards ...*pb.Card) {
+	for _, card := range cards {
+		c := NewCard(uint8(card.Rank), uint8(card.Suit))
+		d.CardsTaken[c] = struct{}{}
+	}
 }
 
 // Shuffle any hand
