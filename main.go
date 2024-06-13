@@ -39,7 +39,7 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	if err := api.RegisterSessionEvents(db, nk, initializer); err != nil {
 		return err
 	}
-	entity.BotLoader = bot.NewBotLoader(db, define.GapleDomino.String(), 100000)
+	entity.BotLoader = bot.NewBotLoader(db, define.GapleDomino.String(), 100000000)
 
 	logger.Info("Plugin loaded in '%d' msec.", time.Now().Sub(initStart).Milliseconds())
 	return nil
