@@ -242,3 +242,57 @@ func TestIsMisSets(t *testing.T) {
 	mis = IsMisSets(h1)
 	assert.Equal(t, false, mis)
 }
+
+func TestIsMisSetsWithRankALow(t *testing.T) {
+	name := "TestIsMisSetsWithRankA"
+	t.Run(name, func(t *testing.T) {
+		hand, err := NewHand(entity.ListCard{
+			entity.CardQD,
+			entity.Card10C,
+			entity.Card6C,
+
+			entity.Card2C,
+			entity.Card3C,
+			entity.Card4H,
+			entity.Card5C,
+			entity.CardAD,
+
+			entity.Card8D,
+			entity.Card9H,
+			entity.Card10C,
+			entity.CardJS,
+			entity.CardQC,
+		})
+		assert.NoError(t, err)
+		hand.CalculatePoint()
+		misset := hand.IsMisSet()
+		assert.Equal(t, misset, false)
+	})
+}
+
+func TestIsMisSetsWithRankAHigh(t *testing.T) {
+	name := "TestIsMisSetsWithRankA"
+	t.Run(name, func(t *testing.T) {
+		hand, err := NewHand(entity.ListCard{
+			entity.CardQD,
+			entity.Card10C,
+			entity.Card6C,
+
+			entity.CardJC,
+			entity.CardQC,
+			entity.CardKH,
+			entity.Card10C,
+			entity.CardAD,
+
+			entity.Card8D,
+			entity.Card9H,
+			entity.Card10C,
+			entity.CardJS,
+			entity.CardQC,
+		})
+		assert.NoError(t, err)
+		hand.CalculatePoint()
+		misset := hand.IsMisSet()
+		assert.Equal(t, misset, true)
+	})
+}

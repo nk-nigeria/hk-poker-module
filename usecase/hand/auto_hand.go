@@ -9,14 +9,14 @@ import (
 
 type autoHand struct {
 	cards         entity.ListCard
-	cardsCount    map[uint8]int
+	cardsCount    map[entity.Rank]int
 	trackCardTake map[entity.Card]int
 }
 
 func NewAutoHand(cards entity.ListCard) *autoHand {
 	h := &autoHand{
 		cards:         cards.Clone(),
-		cardsCount:    make(map[uint8]int),
+		cardsCount:    make(map[entity.Rank]int),
 		trackCardTake: make(map[entity.Card]int),
 	}
 	sort.Slice(h.cards, func(i, j int) bool {
@@ -36,7 +36,7 @@ func NewAutoHand(cards entity.ListCard) *autoHand {
 }
 
 func (h *autoHand) FindStraighFlush() []entity.ListCard {
-	cardsSameColor := make(map[uint8]entity.ListCard)
+	cardsSameColor := make(map[entity.Rank]entity.ListCard)
 	for _, c := range h.cards {
 		if h.trackCardTake[c] > 0 {
 			continue
@@ -66,7 +66,7 @@ func (h *autoHand) FindStraighFlush() []entity.ListCard {
 }
 
 func (h *autoHand) FindStraigh() []entity.ListCard {
-	cardsSameRank := make(map[uint8]entity.ListCard)
+	cardsSameRank := make(map[entity.Rank]entity.ListCard)
 	for _, c := range h.cards {
 		if h.trackCardTake[c] > 0 {
 			continue
@@ -141,7 +141,7 @@ func (h *autoHand) FindFlush() []entity.ListCard {
 }
 
 func (h *autoHand) FindFourKind() []entity.ListCard {
-	cardsSameRank := make(map[uint8]entity.ListCard)
+	cardsSameRank := make(map[entity.Rank]entity.ListCard)
 	for _, c := range h.cards {
 		if h.trackCardTake[c] > 0 {
 			continue
@@ -162,7 +162,7 @@ func (h *autoHand) FindFourKind() []entity.ListCard {
 }
 
 func (h *autoHand) FindThreeKind() []entity.ListCard {
-	cardsSameRank := make(map[uint8]entity.ListCard)
+	cardsSameRank := make(map[entity.Rank]entity.ListCard)
 	for _, c := range h.cards {
 		if h.trackCardTake[c] > 0 {
 			continue
@@ -186,7 +186,7 @@ func (h *autoHand) FindThreeKind() []entity.ListCard {
 }
 
 func (h *autoHand) FindTwoPair() []entity.ListCard {
-	cardsSameRank := make(map[uint8]entity.ListCard)
+	cardsSameRank := make(map[entity.Rank]entity.ListCard)
 	for _, c := range h.cards {
 		if h.trackCardTake[c] > 0 {
 			continue
@@ -212,7 +212,7 @@ func (h *autoHand) FindTwoPair() []entity.ListCard {
 	return nil
 }
 func (h *autoHand) FindPair() []entity.ListCard {
-	cardsSameRank := make(map[uint8]entity.ListCard)
+	cardsSameRank := make(map[entity.Rank]entity.ListCard)
 	for _, c := range h.cards {
 		if h.trackCardTake[c] > 0 {
 			continue
@@ -236,7 +236,7 @@ func (h *autoHand) FindPair() []entity.ListCard {
 }
 
 func (h *autoHand) FindHighCard() entity.ListCard {
-	cardsSameRank := make(map[uint8]entity.ListCard)
+	cardsSameRank := make(map[entity.Rank]entity.ListCard)
 	for _, c := range h.cards {
 		if h.trackCardTake[c] > 0 {
 			continue
@@ -300,7 +300,7 @@ func (h *autoHand) GetHighCardWithCond(num int, excludeCards ...entity.Card) ent
 	if num == 0 {
 		return nil
 	}
-	excludeCardsMap := make(map[uint8]struct{})
+	excludeCardsMap := make(map[entity.Rank]struct{})
 	for _, c := range excludeCards {
 		excludeCardsMap[c.GetRank()] = struct{}{}
 	}

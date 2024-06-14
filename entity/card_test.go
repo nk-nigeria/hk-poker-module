@@ -26,7 +26,7 @@ func TestCard_NewCard(t *testing.T) {
 func TestCard_ToPB(t *testing.T) {
 	name := "TestCard_ToPB"
 	t.Run(name, func(t *testing.T) {
-		card := NewCard(Rank10, SuitSpades)
+		card := NewCard(uint8(Rank10), SuitSpades)
 		pbCard := card.ToPB()
 		cCard := NewCardFromPb(pbCard.GetRank(), pbCard.GetSuit())
 		assert.Equal(t, cCard.GetRank(), card.GetRank())

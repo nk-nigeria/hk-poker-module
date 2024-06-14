@@ -111,8 +111,15 @@ func (s service) lookupStraight(b *entity.BinListCard) (uint, entity.ListCard) {
 			}
 		}
 	}
-
-	return 1, b.ToList()
+	list := b.ToList()
+	if len(list) == 5 && list[len(list)-1].GetRank() == entity.RankA {
+		if list[0].GetRank() == entity.Rank2 {
+			// A5432 -> 5432A
+			ml := append(list[len(list)-1:], list[:len(list)-1]...)
+			list = ml
+		}
+	}
+	return 1, list
 }
 
 func (s service) lookupFlush(b *entity.BinListCard) (uint, entity.ListCard) {

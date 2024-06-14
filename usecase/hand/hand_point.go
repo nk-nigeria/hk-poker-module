@@ -93,7 +93,11 @@ func createPointFromList(ranking pb.HandRanking, t uint8, cards entity.ListCard)
 
 	} else if len(cards) >= 5 {
 		point |= uint64(t) << (5 * 8)
-		point |= uint64(cards[4].GetRank()) << (4 * 8)
+		rank4 := cards[4].GetRank()
+		if cards[0].GetRank() == entity.RankA {
+			rank4 = entity.Rank(entity.RankStep)
+		}
+		point |= uint64(rank4) << (4 * 8)
 		point |= uint64(cards[3].GetRank()) << (3 * 8)
 		point |= uint64(cards[2].GetRank()) << (2 * 8)
 		point |= uint64(cards[1].GetRank()) << (1 * 8)
@@ -232,17 +236,17 @@ func CheckHighCard(bcards *entity.BinListCard) (*HandPoint, bool) {
 // Năm lá bài cùng màu, đồng chất, cùng một chuỗi số
 // Là Flush, có cùng chuỗi
 func CheckStraightFlush(bcards *entity.BinListCard) (*HandPoint, bool) {
-	_, valid := CheckStraight(bcards)
+	count, sortedCard := blc.NewChinesePokerBinList().GetChain(bcards, blc.CombineStraight)
+	if count <= 0 {
+		return nil, false
+	}
+
+	_, valid := CheckFlush(bcards)
 	if !valid {
 		return nil, false
 	}
 
-	_, valid = CheckFlush(bcards)
-	if !valid {
-		return nil, false
-	}
-
-	hp := createPointFromList(pb.HandRanking_StraightFlush, ScorePointStraightFlush, bcards.ToList())
+	hp := createPointFromList(pb.HandRanking_StraightFlush, ScorePointStraightFlush, sortedCard)
 	return hp, true
 }
 
