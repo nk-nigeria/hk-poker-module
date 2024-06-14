@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/hand"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -45,22 +44,22 @@ func (c *Engine) Deal(s *entity.MatchState) error {
 	// 	}
 	// }
 
-	hasMock := false
+	// hasMock := false
 	// loop on userid in match
 	for _, k := range s.PlayingPresences.Keys() {
 		userId := k.(string)
-		if !hasMock && !entity.BotLoader.IsBot(userId) {
-			hasMock = true
-			id := s.MatchCount % 8
-			fmt.Printf("############# %d #############\n", id)
-			cards, exist := mockcodegame.MapMockCodeListCard[id]
-			if exist {
-				// cards = bot.ShuffleSlice(cards)
-				s.Cards[userId] = &pb.ListCard{Cards: cards}
-				c.deck.TakenCard(cards...)
-				continue
-			}
-		}
+		// if !hasMock && !entity.BotLoader.IsBot(userId) {
+		// 	hasMock = true
+		// 	id := s.MatchCount % 8
+		// 	fmt.Printf("############# %d #############\n", id)
+		// 	cards, exist := mockcodegame.MapMockCodeListCard[id]
+		// 	if exist {
+		// 		// cards = bot.ShuffleSlice(cards)
+		// 		s.Cards[userId] = &pb.ListCard{Cards: cards}
+		// 		c.deck.TakenCard(cards...)
+		// 		continue
+		// 	}
+		// }
 		cards, err := c.deck.Deal(entity.MaxPresenceCard)
 		if err == nil {
 			s.Cards[userId] = cards
