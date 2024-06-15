@@ -176,11 +176,11 @@ func CompareHandPoint(p1, p2 *HandPoint) int {
 }
 
 func (h *HandPoint) IsStraight() bool {
-	return h.rankingType == pb.HandRanking_Straight
+	return h.rankingType == pb.HandRanking_Straight || h.rankingType == pb.HandRanking_StraightFlush
 }
 
 func (h *HandPoint) IsFlush() bool {
-	return h.rankingType == pb.HandRanking_Flush
+	return h.rankingType == pb.HandRanking_Flush || h.rankingType == pb.HandRanking_StraightFlush
 }
 
 type HandCheckFunc func(*entity.BinListCard) (*HandPoint, bool)

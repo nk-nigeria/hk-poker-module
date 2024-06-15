@@ -1,6 +1,7 @@
 package hand
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"testing"
@@ -1863,4 +1864,34 @@ func TestHand_AutoOrgCards_2(t *testing.T) {
 		// panic("")
 	})
 
+}
+
+func TestHand_Dragon_Normal(t *testing.T) {
+	name := "TestHand_Dragon_Normal"
+
+	t.Run(name, func(t *testing.T) {
+		dragonHand, err := NewHand(entity.NewListCard(mockDragon()))
+		assert.NoError(t, err)
+		normalHand, err := mockHandDontMissets()
+		assert.NoError(t, err)
+		result := CompareHand(context.TODO(), dragonHand, normalHand)
+		// assert.NotNil(t, result)
+		assert.Equal(t, len(result.bonuses), 1)
+		assert.Equal(t, result.bonuses[0].Type, pb.HandBonusType_BonusNaturalDragon)
+	})
+}
+
+func TestHand_3Flush_Normal(t *testing.T) {
+	name := "TestHand_Dragon_Normal"
+
+	t.Run(name, func(t *testing.T) {
+		natureHand, err := NewHand(entity.NewListCard(mock3Flush()))
+		assert.NoError(t, err)
+		normalHand, err := mockHandDontMissets()
+		assert.NoError(t, err)
+		result := CompareHand(context.TODO(), natureHand, normalHand)
+		assert.NotNil(t, result)
+		assert.Equal(t, len(result.bonuses), 1)
+		assert.Equal(t, result.bonuses[0].Type, pb.HandBonusType_BonusNaturalThreeOfFlushes)
+	})
 }
