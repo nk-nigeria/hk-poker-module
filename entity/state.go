@@ -95,7 +95,8 @@ func (s *MatchState) Init() {
 	s.LastMoveCardUnix = make(map[string]int64)
 	playtimeout := GameStateDuration[pb.GameState_GameStatePlay].Seconds()
 	for idx, v := range s.Bots {
-		v.InitTurn(int(playtimeout-playtimeout/3)*TickRate, 1, func() {
+		opt := bot.TurnOpt{MinTick: 5 * TickRate, MaxTick: int(playtimeout-playtimeout/3) * TickRate, MaxOccur: 1}
+		v.InitTurnWithOption(opt, func() {
 			x := s.Bots[idx]
 			s.BotTurn(x)
 		})

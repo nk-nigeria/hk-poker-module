@@ -197,10 +197,16 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 
 	// update finish
 	updateFinish := m.engine.Finish(s)
-	m.readJackpotTreasure(ctx, nk, logger, db, dispatcher, s, updateFinish)
+	// reset activity user win natural
+	for _, v := range updateFinish.Results {
+		if v.ScoreResult.NaturalFactor > 0 {
+			s.ResetUserNotInteract(v.UserId)
+		}
+	}
+	updateFinish.JpTreasure = m.readJackpotTreasure(ctx, nk, logger, db, dispatcher, s)
 	balanceResult, totalFee := m.calcRewardForUserPlaying(ctx, nk, logger, db, dispatcher, s, updateFinish)
+	matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 	if balanceResult == nil {
-		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 		logger.
 			WithField("jackpot game", entity.ModuleName).
 			WithField("match id", matchId).
@@ -211,9 +217,9 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 	m.handlerJackpotProcess(ctx, logger, nk, db, s, updateFinish, balanceResult)
 	balanceResult.Jackpot = updateFinish.Jackpot
 	// read new treasure after update chips win to jp treasure
-	m.readJackpotTreasure(ctx, nk, logger, db, dispatcher, s, updateFinish)
+	updateFinish.JpTreasure = m.readJackpotTreasure(ctx, nk, logger, db, dispatcher, s)
 	s.SetJackpotTreasure(updateFinish.JpTreasure)
-	m.updateChipByResultGameFinish(ctx, logger, nk, balanceResult) // summary balance ủe
+
 	// summary balance user if win jackpot
 	if updateFinish.Jackpot != nil {
 		for _, b := range balanceResult.GetUpdates() {
@@ -224,6 +230,7 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 			}
 		}
 	}
+	m.updateChipByResultGameFinish(ctx, logger, nk, balanceResult) // summary balance ủe
 	s.SetBalanceResult(balanceResult)
 	m.broadcastMessage(
 		logger,
@@ -380,6 +387,10 @@ func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.Nak
 
 	balanceResult := pb.BalanceResult{}
 	listFeeGame := make([]entity.FeeGame, 0)
+	// {
+	// 	data, _ := entity.DefaultMarshaler.Marshal(updateFinish)
+	// 	logger.Info("############ data %v", string(data))
+	// }
 	for _, uf := range updateFinish.Results {
 		balance := &pb.BalanceUpdate{
 			UserId:           uf.UserId,
@@ -393,21 +404,23 @@ func (m *processor) calcRewardForUserPlaying(ctx context.Context, nk runtime.Nak
 		}
 		percentFee := percentFreeGame
 
-		fee := int64(uf.ScoreResult.NumHandWin) * int64(s.Label.MarkUnit) / 100 * int64(percentFee)
-		balance.AmountChipAdd = uf.ScoreResult.TotalFactor * int64(s.Label.MarkUnit)
-		if (balance.AmountChipAdd) > 0 {
+		// fee := int64(uf.ScoreResult.NumHandWin) * int64(s.Label.MarkUnit) / 100 * int64(percentFee)
+		chipWin := uf.ScoreResult.TotalFactor * int64(s.Label.MarkUnit)
+		if (chipWin) > 0 {
 			// win
-			balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd - fee
+			fee := chipWin / 100 * int64(percentFee)
+			balance.AmountChipAdd = chipWin - fee
+			balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd
 			listFeeGame = append(listFeeGame, entity.FeeGame{
 				UserID: balance.UserId,
 				Fee:    fee,
 			})
 		} else {
 			// lose
+			balance.AmountChipAdd = chipWin
 			balance.AmountChipCurrent = balance.AmountChipBefore + balance.AmountChipAdd
 		}
 		balanceResult.Updates = append(balanceResult.Updates, balance)
-		// logger.Info("update user %v, fee %d change %s", uf.UserId, fee, balance)
 	}
 	cgbdb.AddNewMultiFeeGame(ctx, logger, db, listFeeGame)
 	totalFee := int64(0)
@@ -425,7 +438,10 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	logger.Info("updateChipByResultGameFinish %v", balanceResult)
 	walletUpdates := make([]*runtime.WalletUpdate, 0, len(balanceResult.Updates))
 	for _, result := range balanceResult.Updates {
-		amountChip := result.AmountChipCurrent - result.AmountChipBefore
+		amountChip := result.AmountChipAdd
+		if amountChip == 0 {
+			continue
+		}
 		changeset := map[string]int64{
 			"chips": amountChip, // Substract amountChip coins to the user's wallet.
 		}
@@ -448,7 +464,7 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	}
 
 	// add chip for user win jackpot
-	if jp := balanceResult.Jackpot; jp != nil && jp.UserId != "" {
+	if jp := balanceResult.Jackpot; jp != nil && jp.UserId != "" && jp.Chips > 0 {
 		changeset := map[string]int64{
 			"chips": jp.Chips, // Substract amountChip coins to the user's wallet.
 		}
@@ -662,20 +678,17 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context,
 ) {
 	pendingLeaves := s.GetLeavePresences()
 	defer func() {
-		players := entity.NewListPlayer(s.GetPresences())
-		// players.ReadWallet(ctx, nk, logger)
+		// players := entity.NewListPlayer(s.GetPresences())
+		// playing_players := entity.NewListPlayer(s.GetPlayingPresences())
+		// msg := &pb.UpdateTable{
+		// 	Bet:            int64(s.Label.MarkUnit),
+		// 	Players:        players,
+		// 	PlayingPlayers: playing_players,
+		// 	JpTreasure:     s.GetJackpotTreasure(),
+		// }
 
-		playing_players := entity.NewListPlayer(s.GetPlayingPresences())
-		// playing_players.ReadWallet(ctx, nk, logger)
-
-		msg := &pb.UpdateTable{
-			Bet:            int64(s.Label.MarkUnit),
-			Players:        players,
-			PlayingPlayers: playing_players,
-			JpTreasure:     s.GetJackpotTreasure(),
-		}
-
-		m.NotifyUpdateTable(s, logger, dispatcher, msg)
+		// m.NotifyUpdateTable(s, logger, dispatcher, msg)
+		m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, nil, false)
 	}()
 	if len(pendingLeaves) == 0 {
 		return
@@ -803,16 +816,14 @@ func (m *processor) readJackpotTreasure(
 	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
 	s *entity.MatchState,
-	updateFinish *pb.UpdateFinish,
-) {
-	updateFinish.JpTreasure = &pb.Jackpot{}
-	jpTreasure, _ := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
-	if jpTreasure != nil {
-		updateFinish.JpTreasure = &pb.Jackpot{
-			GameCode: jpTreasure.GetGameCode(),
-			Chips:    jpTreasure.Chips,
-		}
+) *pb.Jackpot {
+	jpTreasure, err := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
+	if err != nil {
+		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+		jpTreasure = &pb.Jackpot{}
+		logger.WithField("jackpot game", entity.ModuleName).WithField("match id", matchId).Error("read jp treasure failed")
 	}
+	return jpTreasure
 }
 
 func (m *processor) report(
