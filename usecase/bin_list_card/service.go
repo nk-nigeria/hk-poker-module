@@ -11,17 +11,17 @@ var (
 )
 
 var (
-	BitSetRankMap map[uint8]*bitset.BitSet
+	BitSetRankMap map[entity.Rank]*bitset.BitSet
 	BitSetSuitMap map[uint8]*bitset.BitSet
 	BitSetColor   map[uint8]*bitset.BitSet
 )
 
 func init() {
-	BitSetRankMap = make(map[uint8]*bitset.BitSet)
+	BitSetRankMap = make(map[entity.Rank]*bitset.BitSet)
 	for _, rank := range entity.Ranks {
 		BitSet := bitset.New(4)
 		for _, suit := range entity.Suits {
-			BitSet.Set(uint(entity.NewCard(rank, suit)))
+			BitSet.Set(uint(entity.NewCard(uint8(rank), suit)))
 		}
 
 		BitSetRankMap[rank] = BitSet
@@ -31,7 +31,7 @@ func init() {
 	for _, suit := range entity.Suits {
 		BitSet := bitset.New(16)
 		for _, rank := range entity.Ranks {
-			BitSet.Set(uint(entity.NewCard(rank, suit)))
+			BitSet.Set(uint(entity.NewCard(uint8(rank), suit)))
 		}
 		BitSetSuitMap[suit] = BitSet
 	}

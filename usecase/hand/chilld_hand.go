@@ -30,10 +30,12 @@ func (ch *ChildHand) calculatePoint() {
 
 func NewChildHand(cards entity.ListCard, handType int) *ChildHand {
 	child := ChildHand{
-		Cards:    cards[:],
 		handType: handType,
 	}
-
+	// deep copy, break ref
+	deepCopy := make(entity.ListCard, len(cards))
+	copy(deepCopy, cards)
+	child.Cards = deepCopy
 	return &child
 }
 

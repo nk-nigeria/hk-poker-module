@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+
 	"github.com/bits-and-blooms/bitset"
 )
 
@@ -35,7 +36,8 @@ func (b BinListCard) String() string {
 }
 
 func (b BinListCard) ToList() ListCard {
-	return BitSetToListCard(b.b)
+	list := BitSetToListCard(b.b)
+	return list
 }
 
 func BitSetToListCard(b *bitset.BitSet) ListCard {

@@ -8,12 +8,12 @@ import (
 
 var (
 	mapNaturalPoint = map[pb.HandBonusType]int{
-		pb.HandBonusType_BonusNaturalCleanDragon:    60,
-		pb.HandBonusType_BonusNaturalDragon:         50,
+		pb.HandBonusType_BonusNaturalCleanDragon:    50,
+		pb.HandBonusType_BonusNaturalDragon:         30,
 		pb.HandBonusType_BonusNaturalFullColors:     25,
-		pb.HandBonusType_BonusNaturalSixPairs:       15,
-		pb.HandBonusType_BonusNaturalThreeStraights: 15,
-		pb.HandBonusType_BonusNaturalThreeOfFlushes: 10,
+		pb.HandBonusType_BonusNaturalSixPairs:       12,
+		pb.HandBonusType_BonusNaturalThreeStraights: 10,
+		pb.HandBonusType_BonusNaturalThreeOfFlushes: 8,
 	}
 
 	mapBonusPoint = map[pb.HandBonusType]int{

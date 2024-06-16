@@ -17,19 +17,15 @@ func init() {
 	randinst = rand.New(sourceRand)
 }
 
-func mockDragon() []*pb.Card {
+func mockCleanDragon() []*pb.Card {
 	cards := []*pb.Card{
 		{
-			Rank: pb.CardRank_RANK_A,
-			Suit: pb.CardSuit_SUIT_SPADES,
-		},
-		{
 			Rank: pb.CardRank_RANK_2,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_3,
-			Suit: pb.CardSuit_SUIT_SPADES,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_4,
@@ -37,40 +33,124 @@ func mockDragon() []*pb.Card {
 		},
 		{
 			Rank: pb.CardRank_RANK_5,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_6,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_7,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_8,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_9,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_10,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_J,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_Q,
-			Suit: pb.CardSuit_SUIT_HEARTS,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_K,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_A,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+	}
+	return cards
+}
+
+func mockDragon() []*pb.Card {
+	cards := []*pb.Card{
+		{
+			Rank: pb.CardRank_RANK_A,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_2,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_3,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+
+		{
+			Rank: pb.CardRank_RANK_5,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_6,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_7,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_8,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_9,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_10,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_4,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_J,
+			Suit: pb.CardSuit_SUIT_CLUBS,
+		},
+		{
+			Rank: pb.CardRank_RANK_Q,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_K,
 			Suit: pb.CardSuit_SUIT_HEARTS,
 		},
+	}
+	return cards
+}
+
+func mock3Flush() []*pb.Card {
+	cards := []*pb.Card{
+		{Rank: pb.CardRank_RANK_8, Suit: pb.CardSuit_SUIT_CLUBS},
+		{Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_CLUBS},
+		{Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_CLUBS},
+
+		{Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_DIAMONDS},
+		{Rank: pb.CardRank_RANK_9, Suit: pb.CardSuit_SUIT_DIAMONDS},
+		{Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_DIAMONDS},
+		{Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_DIAMONDS},
+		{Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_DIAMONDS},
+
+		{Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_CLUBS},
+		{Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_CLUBS},
+		{Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_CLUBS},
+		{Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_CLUBS},
+		{Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_CLUBS},
 	}
 	return cards
 }
@@ -179,14 +259,14 @@ func mockJackpot() []*pb.Card {
 	return cards
 }
 func TestIsDragonSuccess(t *testing.T) {
-	listCard := entity.NewListCard(mockDragon())
+	listCard := entity.NewListCard(mockCleanDragon())
 	handCard, isDragon := CheckDragon(entity.NewBinListCards(listCard))
 	assert.Equal(t, true, isDragon)
 	assert.NotNil(t, handCard)
 }
 
 func TestIsDragonFail(t *testing.T) {
-	cards := mockDragon()
+	cards := mockCleanDragon()
 	cards[4].Rank = pb.CardRank_RANK_K
 	listCard := entity.NewListCard(cards)
 	handCard, isDragon := CheckDragon(entity.NewBinListCards(listCard))
@@ -195,7 +275,7 @@ func TestIsDragonFail(t *testing.T) {
 }
 
 func TestIsCleanDragonSuccess(t *testing.T) {
-	cards := mockDragon()
+	cards := mockCleanDragon()
 	for idx, _ := range cards {
 		cards[idx].Suit = pb.CardSuit_SUIT_HEARTS
 	}
@@ -206,7 +286,7 @@ func TestIsCleanDragonSuccess(t *testing.T) {
 }
 
 func TestIsCleanDragonFailed(t *testing.T) {
-	cards := mockDragon()
+	cards := mockCleanDragon()
 	listCard := entity.NewListCard(cards)
 	handCard, isCleanDragon := CheckCleanDragon(entity.NewBinListCards(listCard))
 	assert.Equal(t, false, isCleanDragon)
@@ -214,7 +294,7 @@ func TestIsCleanDragonFailed(t *testing.T) {
 }
 
 func TestIsFullColoredSuccess(t *testing.T) {
-	cards := mockDragon()
+	cards := mockCleanDragon()
 	for idx, _ := range cards {
 		cards[idx].Suit = pb.CardSuit_SUIT_HEARTS
 	}
@@ -226,7 +306,7 @@ func TestIsFullColoredSuccess(t *testing.T) {
 }
 
 func TestIsFullColoredFailed(t *testing.T) {
-	cards := mockDragon()
+	cards := mockCleanDragon()
 
 	cards[10].Rank = pb.CardRank_RANK_2
 	listCard := entity.NewListCard(cards)
