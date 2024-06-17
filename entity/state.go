@@ -58,6 +58,7 @@ type MatchState struct {
 	LastMoveCardUnix map[string]int64
 	DelayForDeclare  *lib.TickCountDown
 	MatchCount       int
+	CardEvent        map[string]pb.CardEvent
 }
 
 func NewMathState(label *pb.Match) MatchState {
@@ -73,6 +74,7 @@ func NewMathState(label *pb.Match) MatchState {
 		Bots:                make([]*bot.BotPresence, 0),
 		LastMoveCardUnix:    map[string]int64{},
 		DelayForDeclare:     &lib.TickCountDown{},
+		CardEvent:           map[string]pb.CardEvent{},
 	}
 	if bots, err := BotLoader.GetFreeBot(int(label.GetNumBot())); err == nil {
 		m.Bots = bots
@@ -101,7 +103,7 @@ func (s *MatchState) Init() {
 			s.BotTurn(x)
 		})
 	}
-
+	s.CardEvent = make(map[string]pb.CardEvent)
 }
 
 func (s *MatchState) GetBalanceResult() *pb.BalanceResult {

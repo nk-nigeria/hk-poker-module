@@ -67,6 +67,7 @@ func (m *processor) ProcessNewGame(ctx context.Context,
 					Presence: k,
 					Cards:    v.Cards,
 				},
+				CardEvent: s.CardEvent,
 			})
 
 			if err != nil {
@@ -318,6 +319,20 @@ func (m *processor) saveCard(logger runtime.Logger, s *entity.MatchState, messag
 	logger.Info("update save card %v, %v", message.GetUserId(), cardsByClient)
 
 	m.engine.Organize(s, message.GetUserId(), cardsByClient)
+	{
+		event := pb.CardEvent_MOVE
+		switch pb.OpCodeRequest(message.GetOpCode()) {
+		case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
+			event = pb.CardEvent_COMBINE
+		case pb.OpCodeRequest_OPCODE_REQUEST_SHOW_CARDS:
+			event = pb.CardEvent_SHOW
+		case pb.OpCodeRequest_OPCODE_REQUEST_DECLARE_CARDS:
+			event = pb.CardEvent_DECLARE
+		}
+		if event != pb.CardEvent_MOVE {
+			s.CardEvent[message.GetUserId()] = event
+		}
+	}
 }
 
 func (m *processor) removeShowCard(logger runtime.Logger, s *entity.MatchState, message runtime.MatchData) {
@@ -884,6 +899,7 @@ func (m *processor) handlerSyncData(ctx context.Context,
 					Presence: presence.GetUserId(),
 					Cards:    card.Cards,
 				},
+				CardEvent: s.CardEvent,
 			})
 
 			_ = dispatcher.BroadcastMessage(int64(pb.OpCodeUpdate_OPCODE_UPDATE_DEAL),
