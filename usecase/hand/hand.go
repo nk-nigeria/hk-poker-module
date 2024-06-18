@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/bits-and-blooms/bitset"
 	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	blc "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/bin_list_card"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
@@ -236,8 +238,27 @@ func (h *Hand) GetPointResult() *pb.PointResult {
 		}
 	}
 	result.Type = h.pointType
-	h.jackpot = CheckJackpot(h.middleHand) || CheckJackpot(h.backHand)
+	h.jackpot = h.CheckJackpot()
 	return result
+}
+
+func (h *Hand) CheckJackpot() bool {
+	bcards := entity.NewBinListCards(h.cards)
+	var (
+		black  *bitset.BitSet
+		red    *bitset.BitSet
+		kRed   = uint8(0)
+		kBlack = uint8(1)
+	)
+	red = bcards.GetBitSet().Intersection(blc.BitSetColor[kRed])
+	black = bcards.GetBitSet().Intersection(blc.BitSetColor[kBlack])
+	if red.Count() >= 13 {
+		return true
+	}
+	if black.Count() >= 13 {
+		return true
+	}
+	return false
 }
 
 func (h *Hand) IsJackpot() bool {

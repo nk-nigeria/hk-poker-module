@@ -134,22 +134,3 @@ func CheckThreeFlushes(hand *Hand) (*HandPoint, bool) {
 
 	return nil, false
 }
-
-func CheckJackpot(childHand *ChildHand) bool {
-	if len(childHand.Cards) != 5 {
-		return false
-	}
-	card := SortCard(childHand.Cards)
-	if card[0].GetRank() != entity.Rank10 {
-		return false
-	}
-	if card[0].GetSuit() != entity.SuitSpades {
-		return false
-	}
-	bcards := entity.NewBinListCards(childHand.Cards)
-	_, isStraightFlush := CheckStraightFlush(bcards)
-	if !isStraightFlush {
-		return false
-	}
-	return true
-}

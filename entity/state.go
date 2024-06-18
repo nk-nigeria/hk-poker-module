@@ -22,9 +22,20 @@ var GameStateDuration = lib.GetGameStateDurationByGameCode(define.ChinesePoker)
 const (
 	TickRate = 2
 
-	MinPresences = 2
-	MaxPresences = 4
+	MinPresences  = 2
+	MaxPresences  = 4
+	MinJpTreasure = 250 * 1000 * 1000
 )
+
+var RatioJpByVip = func(vipLv int64) float64 {
+	if vipLv <= 1 {
+		return 1
+	}
+	if vipLv <= 4 {
+		return 2
+	}
+	return 2.5
+}
 
 type MatchState struct {
 	Random       *rand.Rand

@@ -238,6 +238,9 @@ func mockJackpot() []*pb.Card {
 		{
 			Rank: pb.CardRank_RANK_A,
 			Suit: pb.CardSuit_SUIT_SPADES,
+		}, {
+			Rank: pb.CardRank_RANK_A,
+			Suit: pb.CardSuit_SUIT_CLUBS,
 		},
 		{
 			Rank: pb.CardRank_RANK_J,
@@ -253,6 +256,34 @@ func mockJackpot() []*pb.Card {
 		},
 		{
 			Rank: pb.CardRank_RANK_K,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_2,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_3,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_4,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_5,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_6,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_7,
+			Suit: pb.CardSuit_SUIT_SPADES,
+		},
+		{
+			Rank: pb.CardRank_RANK_8,
 			Suit: pb.CardSuit_SUIT_SPADES,
 		},
 	}
@@ -339,28 +370,13 @@ func TestIsSixPairFailed(t *testing.T) {
 }
 
 func TestCheckJackpot(t *testing.T) {
-	type args struct {
-		childHand *ChildHand
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		// TODO: Add test cases.
-		{
-			name: "TestCheckJackpot",
-			args: args{
-				childHand: NewChildHand(entity.NewListCard(mockJackpot()), kMidHand),
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := CheckJackpot(tt.args.childHand); got != tt.want {
-				t.Errorf("CheckJackpot() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	name := "TestCheckJackpot"
+	hand, _ := NewHandFromPb(&pb.ListCard{
+		Cards: mockJackpot(),
+	})
+	t.Run(name, func(t *testing.T) {
+		jsJp := hand.CheckJackpot()
+		assert.Equal(t, true, jsJp)
+	})
+
 }

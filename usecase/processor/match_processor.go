@@ -804,11 +804,15 @@ func (m *processor) handlerJackpotProcess(
 	myPrecense := s.GetPresence(updateFinish.Jackpot.UserId).(entity.MyPrecense)
 	// JACKPOT PUSOY
 	// Công thức tính tiền max khi JP: JP = MCB x 100 x hệ số Vip
-	bet := s.Label.MarkUnit
-	vipLv := entity.MaxInt64(myPrecense.VipLevel, 1)
-	maxJP := int64(bet) * 100 * vipLv
-	maxJP = entity.MinInt64(maxJP, jackpotTreasure.Chips)
-	err = cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, -maxJP)
+	jackpotChips := int64(0)
+	{
+		bet := s.Label.MarkUnit
+		vipLv := entity.MaxInt64(myPrecense.VipLevel, 1)
+		rationJp := entity.RatioJpByVip(vipLv)
+		jackpotChips = int64(bet) * int64(100.0*rationJp)
+		jackpotChips = entity.MinInt64(jackpotChips, jackpotTreasure.Chips)
+	}
+	err = cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, -jackpotChips)
 	if err != nil {
 		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 		logger.
@@ -817,7 +821,7 @@ func (m *processor) handlerJackpotProcess(
 			WithField("err", err.Error()).Error("update jackpot treasure error")
 		return
 	}
-	updateFinish.Jackpot.Chips = maxJP
+	updateFinish.Jackpot.Chips = jackpotChips
 	cgbdb.AddJackpotHistoryUserWin(ctx, logger, db, updateFinish.Jackpot.GameCode,
 		updateFinish.Jackpot.UserId, -updateFinish.Jackpot.Chips)
 
@@ -837,6 +841,9 @@ func (m *processor) readJackpotTreasure(
 		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 		jpTreasure = &pb.Jackpot{}
 		logger.WithField("jackpot game", entity.ModuleName).WithField("match id", matchId).Error("read jp treasure failed")
+	}
+	if jpTreasure.Chips <= entity.MinJpTreasure {
+		jpTreasure.Chips = entity.MinJpTreasure
 	}
 	return jpTreasure
 }
