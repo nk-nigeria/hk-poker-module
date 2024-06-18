@@ -115,6 +115,9 @@ func (s *MatchState) Init() {
 		})
 	}
 	s.CardEvent = make(map[string]pb.CardEvent)
+	for _, precense := range s.GetPresences() {
+		s.CardEvent[precense.GetUserId()] = pb.CardEvent_COMBINE
+	}
 }
 
 func (s *MatchState) GetBalanceResult() *pb.BalanceResult {
