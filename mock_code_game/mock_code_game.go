@@ -92,10 +92,10 @@ func InitMapMockCodeListCard() {
 		}
 		MapMockCodeListCard[2] = cards
 	}
-	// AkQJ10 bich 76543 nhép 654
+	// AkQJ10 cơ 76543 nhép 654
 	{
 		cards := []*pb.Card{
-			{Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_DIAMONDS},
+			{Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_DIAMONDS},
 			{Rank: pb.CardRank_RANK_7, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_6, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_5, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_4, Suit: pb.CardSuit_SUIT_SPADES}, {Rank: pb.CardRank_RANK_3, Suit: pb.CardSuit_SUIT_SPADES},
 			{Rank: pb.CardRank_RANK_10, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_J, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_Q, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_K, Suit: pb.CardSuit_SUIT_HEARTS}, {Rank: pb.CardRank_RANK_A, Suit: pb.CardSuit_SUIT_HEARTS},
 		}
