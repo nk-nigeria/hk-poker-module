@@ -84,6 +84,23 @@ func incChipJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game
 	return rowsAffectedCount, nil
 }
 
+func SetJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string, chips int64) (int64, error) {
+	query := "UPDATE " + JackpotTableName +
+		" SET chips= $2," +
+		" update_time=now()" +
+		" WHERE game=$1"
+	result, err := db.ExecContext(ctx, query, game, chips)
+	if err != nil {
+		logger.WithField("game", game).WithField("err", err.Error()).Error("Error when update jackpot")
+		return 0, status.Error(codes.Internal, "Error update jackpot")
+	}
+	rowsAffectedCount, _ := result.RowsAffected()
+	if rowsAffectedCount != 1 {
+		return 0, status.Error(codes.Internal, "Error update not effect")
+	}
+	return rowsAffectedCount, nil
+}
+
 func GetJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string) (*pb.Jackpot, error) {
 	query := "SELECT id, game, chips, create_time FROM " + JackpotTableName +
 		" WHERE game=$1"

@@ -783,15 +783,16 @@ func (m *processor) handlerJackpotProcess(
 		// no user win
 		return
 	}
-	jackpotTreasure, err := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
-	if err != nil {
-		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-		logger.
-			WithField("jackpot game", entity.ModuleName).
-			WithField("match id", matchId).
-			WithField("err", err.Error()).Error("get jackpot treasure error")
-		return
-	}
+	// jackpotTreasure, err := cgbdb.GetJackpot(ctx, logger, db, entity.ModuleName)
+	// if err != nil {
+	// 	matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+	// 	logger.
+	// 		WithField("jackpot game", entity.ModuleName).
+	// 		WithField("match id", matchId).
+	// 		WithField("err", err.Error()).Error("get jackpot treasure error")
+	// 	return
+	// }
+	jackpotTreasure := updateFinish.JpTreasure
 	if jackpotTreasure.Chips <= 0 {
 		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 		logger.
@@ -812,7 +813,7 @@ func (m *processor) handlerJackpotProcess(
 		jackpotChips = int64(bet) * int64(100.0*rationJp)
 		jackpotChips = entity.MinInt64(jackpotChips, jackpotTreasure.Chips)
 	}
-	err = cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, -jackpotChips)
+	err := cgbdb.AddOrUpdateChipJackpot(ctx, logger, db, entity.ModuleName, -jackpotChips)
 	if err != nil {
 		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 		logger.
@@ -844,6 +845,7 @@ func (m *processor) readJackpotTreasure(
 	}
 	if jpTreasure.Chips <= define.MinJpTreasure {
 		jpTreasure.Chips = define.MinJpTreasure
+		cgbdb.SetJackpot(ctx, logger, db, entity.ModuleName, jpTreasure.Chips)
 	}
 	return jpTreasure
 }
