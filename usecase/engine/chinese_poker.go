@@ -55,6 +55,7 @@ func (c *Engine) Deal(s *entity.MatchState) error {
 			fmt.Printf("############# %d #############\n", id)
 			cards, exist := mockcodegame.MapMockCodeListCard[id]
 			if exist {
+				// cards = bot.ShuffleSlice(cards)
 				s.Cards[userId] = &pb.ListCard{Cards: cards}
 				c.deck.TakenCard(cards...)
 				continue

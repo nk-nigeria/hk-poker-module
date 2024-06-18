@@ -8,12 +8,12 @@ import (
 
 var (
 	mapNaturalPoint = map[pb.HandBonusType]int{
-		pb.HandBonusType_BonusNaturalCleanDragon:    50,
-		pb.HandBonusType_BonusNaturalDragon:         30,
-		pb.HandBonusType_BonusNaturalFullColors:     25,
-		pb.HandBonusType_BonusNaturalSixPairs:       12,
-		pb.HandBonusType_BonusNaturalThreeStraights: 10,
-		pb.HandBonusType_BonusNaturalThreeOfFlushes: 8,
+		pb.HandBonusType_BonusNaturalCleanDragon:    108,
+		pb.HandBonusType_BonusNaturalDragon:         36,
+		pb.HandBonusType_BonusNaturalFullColors:     30,
+		pb.HandBonusType_BonusNaturalSixPairs:       20,
+		pb.HandBonusType_BonusNaturalThreeStraights: 16,
+		pb.HandBonusType_BonusNaturalThreeOfFlushes: 18,
 	}
 
 	mapBonusPoint = map[pb.HandBonusType]int{
@@ -21,11 +21,11 @@ var (
 		pb.HandBonusType_BonusThreeOfAKindFrontHand: 2, //Xám chi 1
 		pb.HandBonusType_BonusFourOfAKindBackHand:   3, //Tứ quý chi 3
 		pb.HandBonusType_BonusStraightFlushBackHand: 4, //TPS chi 3
-		pb.HandBonusType_BonusFourOfAKindMidHand:    6, // Tứ quý chi 2
-		pb.HandBonusType_BonusStraightFlushMidHand:  8, //TPS chi 2
+		pb.HandBonusType_BonusFourOfAKindMidHand:    7, // Tứ quý chi 2
+		pb.HandBonusType_BonusStraightFlushMidHand:  9, //TPS chi 2
 
-		pb.HandBonusType_MisSet: 5,
-		pb.HandBonusType_Scoop:  3,
+		pb.HandBonusType_MisSet: 6,
+		pb.HandBonusType_Scoop:  2,
 		// pb.HandBonusType_ScoopAll: 6,
 	}
 
