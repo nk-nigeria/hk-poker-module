@@ -22,9 +22,8 @@ var GameStateDuration = lib.GetGameStateDurationByGameCode(define.ChinesePoker)
 const (
 	TickRate = 2
 
-	MinPresences  = 2
-	MaxPresences  = 4
-	MinJpTreasure = 250 * 1000 * 1000
+	MinPresences = 2
+	MaxPresences = 4
 )
 
 var RatioJpByVip = func(vipLv int64) float64 {

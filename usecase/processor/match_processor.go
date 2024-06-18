@@ -842,8 +842,8 @@ func (m *processor) readJackpotTreasure(
 		jpTreasure = &pb.Jackpot{}
 		logger.WithField("jackpot game", entity.ModuleName).WithField("match id", matchId).Error("read jp treasure failed")
 	}
-	if jpTreasure.Chips <= entity.MinJpTreasure {
-		jpTreasure.Chips = entity.MinJpTreasure
+	if jpTreasure.Chips <= define.MinJpTreasure {
+		jpTreasure.Chips = define.MinJpTreasure
 	}
 	return jpTreasure
 }
