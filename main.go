@@ -5,16 +5,16 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/constant"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/message_queue"
-	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
-	"github.com/ciaolink-game-platform/cgp-common/bot"
-	"github.com/ciaolink-game-platform/cgp-common/define"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/constant"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/message_queue"
+	mockcodegame "github.com/nakamaFramework/cgp-chinese-poker-module/mock_code_game"
+	"github.com/nakamaFramework/cgp-common/bot"
+	"github.com/nakamaFramework/cgp-common/define"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/api"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/api"
 	_ "golang.org/x/crypto/bcrypt"
 )
 

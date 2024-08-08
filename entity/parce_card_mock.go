@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 func ParseCard(str string) *pb.Card {

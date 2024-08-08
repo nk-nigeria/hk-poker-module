@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	processor_interface "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/processor"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	processor_interface "github.com/nakamaFramework/cgp-chinese-poker-module/usecase/processor"
 )
 
 const processorKey = "pd"

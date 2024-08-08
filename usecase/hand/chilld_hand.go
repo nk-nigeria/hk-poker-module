@@ -3,8 +3,8 @@ package hand
 import (
 	"fmt"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 type ChildHand struct {

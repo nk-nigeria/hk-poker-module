@@ -3,12 +3,12 @@ package engine
 import (
 	"fmt"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	mockcodegame "github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock_code_game"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/hand"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	combinations "github.com/mxschmitt/golang-combinations"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	mockcodegame "github.com/nakamaFramework/cgp-chinese-poker-module/mock_code_game"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/usecase/hand"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 type Engine struct {

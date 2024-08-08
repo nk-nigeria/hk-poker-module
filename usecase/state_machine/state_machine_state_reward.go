@@ -3,9 +3,9 @@ package state_machine
 import (
 	"context"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
 )
 
 type StateReward struct {

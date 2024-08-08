@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
 	"github.com/heroiclabs/nakama-common/runtime"
 	_ "github.com/lib/pq"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
 )
 
 func TestAddNewFeeGame(t *testing.T) {

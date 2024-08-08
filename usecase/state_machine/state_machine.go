@@ -3,9 +3,9 @@ package state_machine
 import (
 	"context"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 	"github.com/qmuntal/stateless"
 )
 

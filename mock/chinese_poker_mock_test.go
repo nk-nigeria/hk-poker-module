@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/engine"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/usecase/engine"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

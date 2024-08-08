@@ -3,8 +3,8 @@ package hand
 import (
 	"testing"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

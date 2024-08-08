@@ -2,7 +2,7 @@ package bin_list_card
 
 import (
 	"github.com/bits-and-blooms/bitset"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
 )
 
 func (s service) lookupFullColor(b *entity.BinListCard) (uint, entity.ListCard) {

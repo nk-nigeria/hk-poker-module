@@ -1,7 +1,7 @@
 package hand
 
 import (
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

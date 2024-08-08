@@ -1,8 +1,8 @@
 package mock
 
 import (
-	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/heroiclabs/nakama-common/runtime"
+	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
 )
 
 type MockDispatcher struct {

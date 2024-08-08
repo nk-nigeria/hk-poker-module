@@ -3,9 +3,9 @@ package hand
 import (
 	"fmt"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	blc "github.com/ciaolink-game-platform/cgp-chinese-poker-module/usecase/bin_list_card"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	blc "github.com/nakamaFramework/cgp-chinese-poker-module/usecase/bin_list_card"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 //  				t1		s1		s2		s3		s4		s5

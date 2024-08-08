@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/mock"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/mock"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

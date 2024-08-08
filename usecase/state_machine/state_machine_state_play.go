@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/entity"
-	log "github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/log"
-	"github.com/ciaolink-game-platform/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
+	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 type StatePlay struct {

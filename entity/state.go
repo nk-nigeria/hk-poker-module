@@ -7,13 +7,13 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgp-common/bot"
-	"github.com/ciaolink-game-platform/cgp-common/define"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nakamaFramework/cgp-common/bot"
+	"github.com/nakamaFramework/cgp-common/define"
+	"github.com/nakamaFramework/cgp-common/lib"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"github.com/heroiclabs/nakama-common/runtime"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 var BotLoader = bot.NewBotLoader(nil, "", 0)

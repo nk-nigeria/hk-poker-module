@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 var MapMockCodeListCard = make(map[int][]*pb.Card)

@@ -1,4 +1,4 @@
-PROJECT_NAME=github.com/ciaolink-game-platform/cgp-chinese-poker-module
+PROJECT_NAME=github.com/nakamaFramework/cgp-chinese-poker-module
 APP_NAME=chinese-poker.so
 APP_PATH=$(PWD)
 
@@ -9,13 +9,13 @@ update-submodule-dev:
 	git submodule update --init
 	git submodule update --remote
 	cd ./cgp-common && git checkout develop && git pull origin develop && cd ..
-	go get github.com/ciaolink-game-platform/cgp-common@develop
+	go get github.com/nakamaFramework/cgp-common@develop
 update-submodule-stg:
 	git checkout staging && git pull origin staging
 	git submodule update --init
 	git submodule update --remote
 	cd ./cgp-common && git checkout staging && git pull origin staging && cd ..
-	go get github.com/ciaolink-game-platform/cgp-common@staging
+	go get github.com/nakamaFramework/cgp-common@staging
 
 build:
 	# ./sync_pkg_3.11.sh
