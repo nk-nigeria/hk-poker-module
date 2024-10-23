@@ -23,8 +23,10 @@ build:
 	go mod vendor
 	docker run --rm -w "/app" -v "${APP_PATH}:/app" "heroiclabs/nakama-pluginbuilder:${NAKAMA_VER}" build -buildvcs=false --trimpath --buildmode=plugin -o ./bin/${APP_NAME}
 
+cpdev:
+	scp ./bin/${APP_NAME} nakama:/root/cgp-server-dev/dist/data/modules/
 syncdev:
-	rsync -aurv --delete ./bin/${APP_NAME} root@cgpdev:/root/cgp-server-dev/dist/data/modules/bin/
+	rsync -aurv --delete ./bin/${APP_NAME} root@cgpdev:/root/cgp-server-dev/dist/data/modules/
 	ssh root@cgpdev 'cd /root/cgp-server-dev && docker restart nakama_dev'
 
 syncstg:

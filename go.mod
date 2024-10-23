@@ -1,16 +1,16 @@
 module github.com/nakamaFramework/cgp-chinese-poker-module
 
-go 1.21
+go 1.21.0
 
 require (
 	github.com/bits-and-blooms/bitset v1.5.0
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/nakamaFramework/cgp-common v0.0.0-20240618155617-3969fde51981
 	github.com/emirpasic/gods v1.18.1
 	github.com/heroiclabs/nakama-common v1.30.0
 	github.com/jackc/pgtype v1.14.0
 	github.com/lib/pq v1.10.9
 	github.com/mxschmitt/golang-combinations v1.2.0
+	github.com/nakamaFramework/cgp-common v0.0.0-20240829034007-4e53913ff929
 	github.com/nats-io/nats.go v1.31.0
 	github.com/qmuntal/stateless v1.6.8
 	github.com/stretchr/testify v1.8.4
