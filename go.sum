@@ -104,8 +104,8 @@ github.com/mattn/go-isatty v0.0.7/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hd
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mxschmitt/golang-combinations v1.2.0 h1:V5E7MncIK8Yr1SL/SpdqMuSquFsfoIs5auI7Y3n8z14=
 github.com/mxschmitt/golang-combinations v1.2.0/go.mod h1:RCm5eR03B+JrBOMRDLsKZWShluXdrHu+qwhPEJ0miBM=
-github.com/nakamaFramework/cgp-common v0.0.0-20240829034007-4e53913ff929 h1:8YGhSCBAcq1G+lKux9o+ROxiX8ZvZQ+OQVlslCtXMX0=
-github.com/nakamaFramework/cgp-common v0.0.0-20240829034007-4e53913ff929/go.mod h1:AywxeXZubIFPeOJ5gxYDsDZBVKGWxkiOryt29t4bXZc=
+github.com/nakamaFramework/cgp-common v0.0.0-20250213045023-ff2ce795e5c1 h1:1l601CfC9is94l5TzpBdEtXpr+oo9jf4YMSs21KHdfo=
+github.com/nakamaFramework/cgp-common v0.0.0-20250213045023-ff2ce795e5c1/go.mod h1:TJd3xJ9ZwSXQ97tD0iSM3/pOOartioM5zetspmTqp24=
 github.com/nats-io/nats.go v1.31.0 h1:/WFBHEc/dOKBF6qf1TZhrdEfTmOZ5JzdJ+Y3m6Y/p7E=
 github.com/nats-io/nats.go v1.31.0/go.mod h1:di3Bm5MLsoB4Bx61CBTsxuarI36WbhAwOm8QrW39+i8=
 github.com/nats-io/nkeys v0.4.5 h1:Zdz2BUlFm4fJlierwvGK+yl20IAKUm7eV6AAZXEhkPk=

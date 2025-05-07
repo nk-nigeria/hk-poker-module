@@ -14,6 +14,7 @@ import (
 )
 
 const JackpotTableName = "jackpot"
+const JackpotHistoryTableName = "jackpothistory"
 
 // CREATE TABLE
 //   public.jackpot (
@@ -123,4 +124,35 @@ func GetJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game str
 		CreateTimeUnix: dbCreateTime.Time.Unix(),
 	}
 	return jackpot, nil
+}
+
+func GetListHitJackpot(ctx context.Context, logger runtime.Logger, db *sql.DB, game string) ([]*pb.HitJackpotHistory, error) {
+	query := "SELECT UserName, chips, create_time FROM " + JackpotHistoryTableName +
+		" WHERE game=$1"
+	jackpotHistory := make([]*pb.HitJackpotHistory, 0)
+	rows, err := db.Query(query, game)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			return jackpotHistory, nil
+		}
+		return nil, status.Error(codes.Internal, "Query jackpot error")
+	}
+	defer rows.Close()
+
+	var dbUserName string
+	var dbChips int64
+	var dbCreateTime pgtype.Timestamptz
+	for rows.Next() {
+
+		history := &pb.HitJackpotHistory{}
+		err := rows.Scan(dbUserName, dbChips, dbCreateTime)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "scan jackpot error")
+		}
+		history.UserName = dbUserName
+		history.Chips = dbChips
+		history.CreateTimeUnix = dbCreateTime.Time.Unix()
+		jackpotHistory = append(jackpotHistory, history)
+	}
+	return jackpotHistory, nil
 }

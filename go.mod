@@ -10,7 +10,7 @@ require (
 	github.com/jackc/pgtype v1.14.0
 	github.com/lib/pq v1.10.9
 	github.com/mxschmitt/golang-combinations v1.2.0
-	github.com/nakamaFramework/cgp-common v0.0.0-20240829034007-4e53913ff929
+	github.com/nakamaFramework/cgp-common v0.0.0-20250213045023-ff2ce795e5c1
 	github.com/nats-io/nats.go v1.31.0
 	github.com/qmuntal/stateless v1.6.8
 	github.com/stretchr/testify v1.8.4
