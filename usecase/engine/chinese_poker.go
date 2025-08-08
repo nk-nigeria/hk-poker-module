@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	combinations "github.com/mxschmitt/golang-combinations"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	mockcodegame "github.com/nakamaFramework/cgp-chinese-poker-module/mock_code_game"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/usecase/hand"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	mockcodegame "github.com/nk-nigeria/hk-poker-module/mock_code_game"
+	"github.com/nk-nigeria/hk-poker-module/pkg/log"
+	"github.com/nk-nigeria/hk-poker-module/usecase/hand"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 type Engine struct {

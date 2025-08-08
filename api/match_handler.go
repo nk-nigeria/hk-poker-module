@@ -19,16 +19,17 @@ import (
 	"database/sql"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/api/presenter"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/cgbdb"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/usecase/engine"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/usecase/processor"
-	gsm "github.com/nakamaFramework/cgp-chinese-poker-module/usecase/state_machine"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/api/presenter"
+	"github.com/nk-nigeria/hk-poker-module/cgbdb"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/pkg/packager"
+	"github.com/nk-nigeria/hk-poker-module/usecase/engine"
+	"github.com/nk-nigeria/hk-poker-module/usecase/processor"
+	gsm "github.com/nk-nigeria/hk-poker-module/usecase/state_machine"
 	"github.com/qmuntal/stateless"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // Compile-time check to make sure all required functions are implemented.
@@ -45,7 +46,7 @@ func (m *MatchHandler) MatchSignal(ctx context.Context, logger runtime.Logger, d
 	return s, ""
 }
 
-func NewMatchHandler(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions) *MatchHandler {
+func NewMatchHandler(marshaler *proto.MarshalOptions, unmarshaler *proto.UnmarshalOptions) *MatchHandler {
 	return &MatchHandler{
 		processor: processor.NewMatchProcessor(marshaler, unmarshaler, engine.NewChinesePokerEngine()),
 		machine:   gsm.NewGameStateMachine(),
@@ -58,19 +59,20 @@ func (m *MatchHandler) GetState() stateless.State {
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
 	logger.Info("match init: %v", params)
-	label, ok := params["data"].(string)
+	label, ok := params["label"].(string)
 	if !ok {
-		logger.WithField("params", params).Error("invalid match init parameter \"data\"")
+		logger.WithField("params", params).Error("invalid match init parameter \"label\"")
 		return nil, entity.TickRate, ""
 	}
 	matchInfo := &pb.Match{}
-	err := entity.DefaulUnmarshaler.Unmarshal([]byte(label), matchInfo)
+	err := protojson.Unmarshal([]byte(label), matchInfo)
 	if err != nil {
 		logger.Error("match init json label failed ", err)
 		return nil, entity.TickRate, ""
 	}
 	matchInfo.MatchId, _ = ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-	labelJSON, err := entity.DefaultMarshaler.Marshal(matchInfo)
+	matchInfo.NumBot = 1
+	labelJSON, err := protojson.Marshal(matchInfo)
 
 	if err != nil {
 		logger.Error("match init json label failed ", err)

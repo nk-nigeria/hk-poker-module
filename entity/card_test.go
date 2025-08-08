@@ -3,7 +3,7 @@ package entity
 import (
 	"testing"
 
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

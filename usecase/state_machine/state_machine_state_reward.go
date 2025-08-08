@@ -3,9 +3,9 @@ package state_machine
 import (
 	"context"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	log "github.com/nk-nigeria/hk-poker-module/pkg/log"
+	"github.com/nk-nigeria/hk-poker-module/pkg/packager"
 )
 
 type StateReward struct {

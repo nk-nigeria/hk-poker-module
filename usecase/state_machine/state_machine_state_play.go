@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	log "github.com/nk-nigeria/hk-poker-module/pkg/log"
+	"github.com/nk-nigeria/hk-poker-module/pkg/packager"
 )
 
 type StatePlay struct {
@@ -43,7 +43,7 @@ func (s *StatePlay) Enter(ctx context.Context, agrs ...interface{}) error {
 		procPkg.GetLogger(),
 		procPkg.GetDispatcher(),
 		&pb.UpdateGameState{
-			State:     pb.GameState_GameStatePlay,
+			State:     pb.GameState_GAME_STATE_PLAY,
 			CountDown: int64(state.GetRemainCountDown()),
 		},
 	)

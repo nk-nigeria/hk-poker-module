@@ -3,9 +3,9 @@ package hand
 import (
 	"testing"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/entity"
 
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 func TestCheckCleanDragon(t *testing.T) {

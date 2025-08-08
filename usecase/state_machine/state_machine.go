@@ -3,20 +3,20 @@ package state_machine
 import (
 	"context"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/pkg/packager"
 	"github.com/qmuntal/stateless"
 )
 
 const (
-	StateInitType      = pb.GameState_GameStateUnknown // Only for initialize
-	StateIdleType      = pb.GameState_GameStateIdle
-	StateMatchingType  = pb.GameState_GameStateMatching
-	StatePreparingType = pb.GameState_GameStatePreparing
-	StatePlayType      = pb.GameState_GameStatePlay
-	StateRewardType    = pb.GameState_GameStateReward
-	StateFinishType    = pb.GameState_GameStateFinish
+	StateInitType      = pb.GameState_GAME_STATE_UNKNOWN // Only for initialize
+	StateIdleType      = pb.GameState_GAME_STATE_IDLE
+	StateMatchingType  = pb.GameState_GAME_STATE_MATCHING
+	StatePreparingType = pb.GameState_GAME_STATE_PREPARING
+	StatePlayType      = pb.GameState_GAME_STATE_PLAY
+	StateRewardType    = pb.GameState_GAME_STATE_REWARD
+	StateFinishType    = pb.GameState_GAME_STATE_FINISH
 )
 
 const (
@@ -116,17 +116,17 @@ func (m *Machine) MustState() stateless.State {
 func (m *Machine) GetPbState() pb.GameState {
 	switch m.state.MustState() {
 	case StateIdleType:
-		return pb.GameState_GameStateIdle
+		return pb.GameState_GAME_STATE_IDLE
 	case StateMatchingType:
-		return pb.GameState_GameStateMatching
+		return pb.GameState_GAME_STATE_MATCHING
 	case StatePreparingType:
-		return pb.GameState_GameStatePreparing
+		return pb.GameState_GAME_STATE_PREPARING
 	case StatePlayType:
-		return pb.GameState_GameStatePlay
+		return pb.GameState_GAME_STATE_PLAY
 	case StateRewardType:
-		return pb.GameState_GameStateReward
+		return pb.GameState_GAME_STATE_REWARD
 	default:
-		return pb.GameState_GameStateUnknown
+		return pb.GameState_GAME_STATE_UNKNOWN
 	}
 }
 

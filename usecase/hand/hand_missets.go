@@ -1,6 +1,6 @@
 package hand
 
-import "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
+import "github.com/nk-nigeria/hk-poker-module/pkg/log"
 
 func IsMisSets(hand *Hand) bool {
 	if hand.backHand.Compare(hand.middleHand) < 0 {

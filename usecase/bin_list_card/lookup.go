@@ -2,7 +2,7 @@ package bin_list_card
 
 import (
 	"github.com/bits-and-blooms/bitset"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/entity"
 )
 
 func createResult(size uint, sets ...*bitset.BitSet) entity.ListCard {

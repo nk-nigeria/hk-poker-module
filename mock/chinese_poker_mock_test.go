@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/emirpasic/gods/maps/linkedhashmap"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/usecase/engine"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/usecase/engine"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

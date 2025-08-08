@@ -2,7 +2,7 @@ package mock
 
 import (
 	"github.com/heroiclabs/nakama-common/runtime"
-	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
+	log "github.com/nk-nigeria/hk-poker-module/pkg/log"
 )
 
 type MockDispatcher struct {

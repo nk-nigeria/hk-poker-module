@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/entity"
 )
 
 const JackpotHisotryTableName = "jackpot_history"

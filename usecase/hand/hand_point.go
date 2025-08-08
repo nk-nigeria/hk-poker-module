@@ -3,9 +3,9 @@ package hand
 import (
 	"fmt"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	blc "github.com/nakamaFramework/cgp-chinese-poker-module/usecase/bin_list_card"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	blc "github.com/nk-nigeria/hk-poker-module/usecase/bin_list_card"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 //  				t1		s1		s2		s3		s4		s5

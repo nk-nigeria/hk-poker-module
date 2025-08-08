@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 var MapMockCodeListCard = make(map[int][]*pb.Card)

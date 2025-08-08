@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	log "github.com/nk-nigeria/hk-poker-module/pkg/log"
+	"github.com/nk-nigeria/hk-poker-module/pkg/packager"
 )
 
 type StatePreparing struct {
@@ -52,7 +52,7 @@ func (s *StatePreparing) Enter(ctx context.Context, args ...interface{}) error {
 		procPkg.GetLogger(),
 		procPkg.GetDispatcher(),
 		&pb.UpdateGameState{
-			State:     pb.GameState_GameStatePreparing,
+			State:     pb.GameState_GAME_STATE_PREPARING,
 			CountDown: int64(state.GetRemainCountDown()),
 		},
 	)
@@ -89,7 +89,7 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 				procPkg.GetLogger(),
 				procPkg.GetDispatcher(),
 				&pb.UpdateGameState{
-					State:     pb.GameState_GameStatePreparing,
+					State:     pb.GameState_GAME_STATE_PREPARING,
 					CountDown: int64(remain),
 				},
 			)

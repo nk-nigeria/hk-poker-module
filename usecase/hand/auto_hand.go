@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/entity"
 )
 
 type autoHand struct {

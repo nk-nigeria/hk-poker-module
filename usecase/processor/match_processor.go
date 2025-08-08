@@ -10,27 +10,26 @@ import (
 
 	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/cgbdb"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/constant"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/message_queue"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/usecase/engine"
-	"github.com/nakamaFramework/cgp-common/define"
-	"github.com/nakamaFramework/cgp-common/lib"
-	pb "github.com/nakamaFramework/cgp-common/proto"
-	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/nk-nigeria/cgp-common/define"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/cgbdb"
+	"github.com/nk-nigeria/hk-poker-module/constant"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	"github.com/nk-nigeria/hk-poker-module/message_queue"
+	"github.com/nk-nigeria/hk-poker-module/usecase/engine"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type processor struct {
 	engine      engine.UseCase
-	marshaler   *protojson.MarshalOptions
-	unmarshaler *protojson.UnmarshalOptions
+	marshaler   *proto.MarshalOptions
+	unmarshaler *proto.UnmarshalOptions
 	emitBot     bool
 }
 
-func NewMatchProcessor(marshaler *protojson.MarshalOptions, unmarshaler *protojson.UnmarshalOptions, engine engine.UseCase) UseCase {
+func NewMatchProcessor(marshaler *proto.MarshalOptions, unmarshaler *proto.UnmarshalOptions, engine engine.UseCase) UseCase {
 	return &processor{
 		marshaler:   marshaler,
 		unmarshaler: unmarshaler,
@@ -118,7 +117,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 		}
 		if len(userMoveCard) > 0 {
 			msg := pb.UpdateGameState{
-				State: pb.GameState_GameStatePlay,
+				State: pb.GameState_GAME_STATE_PLAY,
 				ArrangeCard: &pb.ArrangeCard{
 					Presence:  strings.Join(userMoveCard, ","),
 					CardEvent: pb.CardEvent_MOVE,
@@ -137,7 +136,7 @@ func (p *processor) ProcessMessageUser(ctx context.Context,
 	s *entity.MatchState,
 ) {
 	for _, message := range messages {
-		if s.Label.GameState == pb.GameState_GameStatePlay {
+		if s.Label.GameState == pb.GameState_GAME_STATE_PLAY {
 			switch pb.OpCodeRequest(message.GetOpCode()) {
 			case pb.OpCodeRequest_OPCODE_REQUEST_COMBINE_CARDS:
 				p.CombineCard(logger, dispatcher, s, message)
@@ -151,7 +150,7 @@ func (p *processor) ProcessMessageUser(ctx context.Context,
 				s.ResetUserNotInteract(message.GetUserId())
 				if s.LastMoveCardUnix[message.GetUserId()] == 0 {
 					msg := pb.UpdateGameState{
-						State: pb.GameState_GameStatePlay,
+						State: pb.GameState_GAME_STATE_PLAY,
 						ArrangeCard: &pb.ArrangeCard{
 							Presence:  message.GetUserId(),
 							CardEvent: pb.CardEvent_MOVE,
@@ -174,7 +173,7 @@ func (m *processor) ProcessFinishGame(ctx context.Context, logger runtime.Logger
 	logger.Info("process finish game len cards %v", len(s.Cards))
 	// send organize card to all
 	pbGameState := pb.UpdateGameState{
-		State: pb.GameState_GameStateReward,
+		State: pb.GameState_GAME_STATE_REWARD,
 	}
 	pbGameState.PresenceCards = make([]*pb.PresenceCards, 0, len(s.Cards))
 	for k, v := range s.Cards {
@@ -254,7 +253,7 @@ func (m *processor) CombineCard(logger runtime.Logger, dispatcher runtime.MatchD
 	logger.Info("User %s request combineCard", message.GetUserId())
 	m.removeShowCard(logger, s, message)
 	msg := pb.UpdateGameState{
-		State: pb.GameState_GameStatePlay,
+		State: pb.GameState_GAME_STATE_PLAY,
 		ArrangeCard: &pb.ArrangeCard{
 			Presence:  message.GetUserId(),
 			CardEvent: pb.CardEvent_COMBINE,
@@ -267,7 +266,7 @@ func (m *processor) ShowCard(logger runtime.Logger, dispatcher runtime.MatchDisp
 	logger.Info("User %s request showCard", message.GetUserId())
 	m.saveCard(logger, s, message)
 	msg := pb.UpdateGameState{
-		State: pb.GameState_GameStatePlay,
+		State: pb.GameState_GAME_STATE_PLAY,
 		ArrangeCard: &pb.ArrangeCard{
 			Presence:  message.GetUserId(),
 			CardEvent: pb.CardEvent_SHOW,
@@ -281,7 +280,7 @@ func (m *processor) DeclareCard(logger runtime.Logger, dispatcher runtime.MatchD
 	// TODO: check royalties
 	m.saveCard(logger, s, message)
 	msg := pb.UpdateGameState{
-		State: pb.GameState_GameStatePlay,
+		State: pb.GameState_GAME_STATE_PLAY,
 		ArrangeCard: &pb.ArrangeCard{
 			Presence:  message.GetUserId(),
 			CardEvent: pb.CardEvent_DECLARE,
@@ -653,7 +652,7 @@ func (m *processor) ProcessPresencesJoin(ctx context.Context,
 	// 		m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET), balanceResult, presences, nil, true)
 	// 	}
 	// }
-	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, presences, true)
+	m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, presences, nil, true)
 }
 
 func (m *processor) ProcessPresencesLeave(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB, dispatcher runtime.MatchDispatcher, s *entity.MatchState, presences []runtime.Presence) {
@@ -703,7 +702,7 @@ func (m *processor) ProcessApplyPresencesLeave(ctx context.Context,
 		// }
 
 		// m.NotifyUpdateTable(s, logger, dispatcher, msg)
-		m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, nil, false)
+		// m.notifyUpdateTable(ctx, logger, nk, dispatcher, s, nil, nil, false)
 	}()
 	if len(pendingLeaves) == 0 {
 		return
@@ -917,7 +916,7 @@ func (m *processor) handlerSyncData(ctx context.Context,
 		}
 	}
 	// send update wallet for new user join
-	if s.Label.GameState == pb.GameState_GameStateReward {
+	if s.Label.GameState == pb.GameState_GAME_STATE_REWARD {
 		if balanceResult := s.GetBalanceResult(); balanceResult != nil {
 			m.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_WALLET), balanceResult, presences, nil, true)
 		}

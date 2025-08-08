@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 func TestAddOrUpdateChipJackpot(t *testing.T) {

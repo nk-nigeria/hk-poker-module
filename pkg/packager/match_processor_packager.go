@@ -5,8 +5,8 @@ import (
 	"database/sql"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	processor_interface "github.com/nakamaFramework/cgp-chinese-poker-module/usecase/processor"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	processor_interface "github.com/nk-nigeria/hk-poker-module/usecase/processor"
 )
 
 const processorKey = "pd"

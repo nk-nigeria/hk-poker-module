@@ -1,6 +1,6 @@
 package bin_list_card
 
-import "github.com/nakamaFramework/cgp-chinese-poker-module/entity"
+import "github.com/nk-nigeria/hk-poker-module/entity"
 
 type CombineType = int
 

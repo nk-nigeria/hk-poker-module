@@ -5,14 +5,11 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/snowflake"
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
-var DefaultMarshaler = &protojson.MarshalOptions{
-	UseEnumNumbers:  true,
-	EmitUnpopulated: true,
-}
-var DefaulUnmarshaler = &protojson.UnmarshalOptions{
+var DefaultMarshaler = &proto.MarshalOptions{}
+var DefaulUnmarshaler = &proto.UnmarshalOptions{
 	DiscardUnknown: false,
 }
 
@@ -22,10 +19,7 @@ const (
 	JackpotPercentTax = 1 // 1%
 )
 
-var defaultMarshaler = &protojson.MarshalOptions{
-	UseEnumNumbers:  true,
-	EmitUnpopulated: true,
-}
+var defaultMarshaler = &proto.MarshalOptions{}
 
 // free game by lv
 // [level]=%

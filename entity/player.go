@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-common/bot"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/cgp-common/bot"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 type ArrPbPlayer []*pb.Player

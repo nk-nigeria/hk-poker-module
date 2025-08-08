@@ -6,9 +6,9 @@ import (
 	"sort"
 
 	"github.com/bits-and-blooms/bitset"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	blc "github.com/nakamaFramework/cgp-chinese-poker-module/usecase/bin_list_card"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	blc "github.com/nk-nigeria/hk-poker-module/usecase/bin_list_card"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 var (

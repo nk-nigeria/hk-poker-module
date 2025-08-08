@@ -3,11 +3,11 @@ package state_machine
 import (
 	"context"
 
-	"github.com/nakamaFramework/cgp-chinese-poker-module/api/presenter"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/entity"
-	log "github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/packager"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/hk-poker-module/api/presenter"
+	"github.com/nk-nigeria/hk-poker-module/entity"
+	log "github.com/nk-nigeria/hk-poker-module/pkg/log"
+	"github.com/nk-nigeria/hk-poker-module/pkg/packager"
 )
 
 type StateIdle struct {
@@ -40,7 +40,7 @@ func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 		procPkg.GetLogger(),
 		procPkg.GetDispatcher(),
 		&pb.UpdateGameState{
-			State: pb.GameState_GameStateIdle,
+			State: pb.GameState_GAME_STATE_IDLE,
 		},
 	)
 

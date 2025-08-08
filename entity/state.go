@@ -7,13 +7,13 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/nakamaFramework/cgp-common/bot"
-	"github.com/nakamaFramework/cgp-common/define"
-	"github.com/nakamaFramework/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/bot"
+	"github.com/nk-nigeria/cgp-common/define"
+	"github.com/nk-nigeria/cgp-common/lib"
 
 	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"github.com/heroiclabs/nakama-common/runtime"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 var BotLoader = bot.NewBotLoader(nil, "", 0)
@@ -105,7 +105,7 @@ func (s *MatchState) Init() {
 	s.Cards = make(map[string]*pb.ListCard)
 	s.OrganizeCards = make(map[string]*pb.ListCard)
 	s.LastMoveCardUnix = make(map[string]int64)
-	playtimeout := GameStateDuration[pb.GameState_GameStatePlay].Seconds()
+	playtimeout := GameStateDuration[pb.GameState_GAME_STATE_PLAY].Seconds()
 	for idx, v := range s.Bots {
 		opt := bot.TurnOpt{MinTick: 5 * TickRate, MaxTick: int(playtimeout-playtimeout/3) * TickRate, MaxOccur: 1}
 		v.InitTurnWithOption(opt, func() {

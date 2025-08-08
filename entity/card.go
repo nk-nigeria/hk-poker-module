@@ -3,7 +3,7 @@ package entity
 import (
 	"fmt"
 
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 type Card uint8

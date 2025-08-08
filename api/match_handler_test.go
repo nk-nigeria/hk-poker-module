@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/mock"
-	"github.com/nakamaFramework/cgp-chinese-poker-module/pkg/log"
-	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/nk-nigeria/hk-poker-module/mock"
+	"github.com/nk-nigeria/hk-poker-module/pkg/log"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestMatch(t *testing.T) {
@@ -21,10 +21,8 @@ func TestMatch(t *testing.T) {
 	//	t.Logf("compare %v with %v", pair[0], pair[1])
 	//}
 
-	marshaler := &protojson.MarshalOptions{
-		UseEnumNumbers: true,
-	}
-	unmarshaler := &protojson.UnmarshalOptions{
+	marshaler := &proto.MarshalOptions{}
+	unmarshaler := &proto.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
 
